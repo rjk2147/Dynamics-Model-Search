@@ -5,7 +5,7 @@ import numpy as np
 from torch import nn, optim
 from collections import deque
 import random
-from model_based.mcts import MCTS
+from model_based.parallel_mcts import MCTS
 from model_free.TD3 import TD3
 from model_free.TD3 import ReplayBuffer as Replay
 # from model_free.SAC import SAC
@@ -15,7 +15,7 @@ import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Agent:
-    def __init__(self, env_learner, l=5, with_tree=True):
+    def __init__(self, env_learner, l=1, with_tree=True):
         self.model = env_learner
         self.model.model.train()
         self.act_dim = env_learner.act_dim
@@ -24,7 +24,7 @@ class Agent:
         self.lookahead = l
         self.from_update = 0
         self.rl_learner = TD3(self.state_dim, self.act_dim)
-        self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=2)
+        self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=64)
         self.model_replay = deque(maxlen=25000)
         self.sm_batch = 512
         

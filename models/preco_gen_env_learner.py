@@ -220,6 +220,46 @@ class PreCoGenEnvLearner(EnvLearner):
         self.is_reset = True
         return obs_in, self.h
 
+
+    def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None):
+        self.model.eval()
+        if obs_in is not None and state_in:
+            state_in = obs_in[1]
+            obs_in = obs_in[0]
+        else:
+            state_in = None
+        tensor = True
+        a = action_in
+        if state_in is not None:
+            new_obs, h = self.model(a, state_in, None, 'single')
+            state_out = h
+        elif obs_in is not None:
+            x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(0)
+            if save:
+                _, self.h = self.model(x, None, None, cmd='reset')
+                new_obs, h = self.model(a, self.h, None, cmd='single')
+                self.h = self.h.detach()
+                state_out = self.h
+            else:
+                _, h = self.model(x, None, None, cmd='reset')
+                new_obs, h = self.model(a, h, None, cmd='single')
+                state_out = h
+        else:
+            new_obs, h = self.model(a, self.h, None, cmd='single')
+            self.h = self.h.detach()
+            state_out = self.h
+        self.is_reset = False
+
+        new_obs = new_obs.squeeze(1).detach()*self.state_mul_const_tensor.to(new_obs.device)
+        if not tensor:
+            new_obs = new_obs.detach().cpu().numpy()
+        if new_obs.shape[0] == 1:
+            new_obs = new_obs.squeeze(0)
+        if state:
+            return new_obs, state_out.detach()
+        else:
+            return new_obs
+
     def step(self, action_in, obs_in=None, save=True, state=False, state_in=None):
         self.model.eval()
         if obs_in is not None and state_in:

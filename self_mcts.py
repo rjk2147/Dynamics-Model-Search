@@ -24,6 +24,10 @@ class Agent:
         elif agent == 'SAC':
             from model_free.SAC import SAC as Agent
             from model_free.SAC import ReplayMemory as Replay
+        else:
+            from model_free.TD3 import TD3 as Agent
+            from model_free.TD3 import ReplayBuffer as Replay
+        self.replay = Replay(self.state_dim, self.act_dim)
 
         self.rl_learner = Agent(self.state_dim, self.act_dim)
         self.model = env_learner
@@ -86,7 +90,6 @@ class Agent:
             self.y_seq = deque(maxlen=self.seq_len)
 
     def learn(self, env, num_episodes=100):
-        self.replay = Replay(self.state_dim, self.act_dim)
         self.model.max_seq_len = 10
         self.seq_len = self.model.max_seq_len
         self.x_seq = deque(maxlen=self.seq_len)

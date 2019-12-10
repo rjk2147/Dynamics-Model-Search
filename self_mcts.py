@@ -6,27 +6,30 @@ from torch import nn, optim
 from collections import deque
 import random
 from model_based.parallel_mcts import MCTS
-from model_free.TD3 import TD3
-from model_free.TD3 import ReplayBuffer as Replay
-# from model_free.SAC import SAC
-# from model_free.SAC import ReplayMemory as Replay
 import datetime
 import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Agent:
-    def __init__(self, env_learner, l=1, with_tree=True):
-        self.model = env_learner
-        self.model.model.train()
+    def __init__(self, env_learner, width=64, depth=1, agent='TD3', with_tree=True):
         self.act_dim = env_learner.act_dim
         self.state_dim = env_learner.state_dim
         self.act_mul_const = env_learner.act_mul_const
-        self.lookahead = l
+        self.lookahead = depth
         self.from_update = 0
-        self.rl_learner = TD3(self.state_dim, self.act_dim)
-        self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=64)
-        self.model_replay = deque(maxlen=25000)
         self.sm_batch = 512
+        if agent == 'TD3':
+            from model_free.TD3 import TD3 as Agent
+            from model_free.TD3 import ReplayBuffer as Replay
+        elif agent == 'SAC':
+            from model_free.SAC import SAC as Agent
+            from model_free.SAC import ReplayMemory as Replay
+
+        self.rl_learner = Agent(self.state_dim, self.act_dim)
+        self.model = env_learner
+        self.model.model.train()
+        self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width)
+        self.model_replay = deque(maxlen=25000)
         
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')

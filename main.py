@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # print(args.episodes)
 
     env = RealerWalkerWrapper(gym.make(args.env))
-    env_learner = PreCoGenEnvLearner(env, width=int(args.width), depth=int(args.depth), agent=args.agent)
-    agent = Agent(env_learner)
+    env_learner = PreCoGenEnvLearner(env)
+    agent = Agent(env_learner, width=int(args.width), depth=int(args.depth), agent=args.agent)
     agent.learn(env, int(args.episodes))
     # agent.play(env, 10)

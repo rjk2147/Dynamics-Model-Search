@@ -10,7 +10,10 @@ import pickle
 import torch
 from torch import nn
 from torch.utils.data import Dataset, DataLoader
+# import torch.multiprocessing as ctx
+import queue as ctx
 counter = 0
+# ctx = mp.get_context("spawn")
 
 class NullDataset(Dataset):
     def __init__(self, data):
@@ -69,7 +72,7 @@ class MCTS(MPC):
     def __init__(self, lookahead, env_learner, agent=None, initial_width=2):
         MPC.__init__(self, lookahead, env_learner, agent)
         self.width = initial_width
-        self.populate_queue = deque()
+        self.populate_queue = ctx.Queue()
         self.start = time.time()
         self.batch_size = 262144
         self.clear()
@@ -85,45 +88,41 @@ class MCTS(MPC):
         return new_state
 
     def serve_queue(self, q):
-        n_skips = 0
-        while len(q) > 0:
+        while not q.empty():
             obs = []
             states = []
             depths = []
             acts = []
-            while len(acts)+self.width <= self.batch_size and len(q) > 0:
-                item = q.pop()
+            while len(acts)+self.width <= self.batch_size and not q.empty():
+                item = q.get()
                 if item is None:
                     return
                 state, depth = item
                 if depth < self.lookahead:
                     for _ in range(self.width):
-                        act = self.agent.act(state.obs[0])
-                        acts.append(act)
                         obs.append(state.obs)
                         states.append(state)
                         depths.append(depth)
-            if len(acts) == 0:
+            if len(states) == 0:
                 continue
 
-            acts = np.array(acts)
-            acts_in = torch.from_numpy(acts).float().to(devices[0])
+            obs_in = (torch.cat([obs[i][0].unsqueeze(0) for i in range(len(obs))]),
+                   torch.cat([obs[i][1] for i in range(len(obs))]))
+            acts_in = self.agent.act(obs_in[0])
             while len(acts_in.shape) < 3:
                 acts_in = acts_in.unsqueeze(1)
-            obs_in = (torch.cat([obs[i][0] for i in range(len(obs))]),
-                   torch.cat([obs[i][1] for i in range(len(obs))]))
 
             new_obs = self.env_learner.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
-            rs = self.agent.value(obs[0], acts, new_obs[0].cpu())
+            rs = self.agent.value(obs[0], acts_in, new_obs[0].cpu())
 
-            these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(acts))]
+            these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
 
-            for i in range(len(acts)):
-                new_state = self.add(these_new_obs[i], states[i], acts[i], rs[i].item(), depth=depths[i]+1)
-                q.appendleft((new_state, depths[i]+1))
+            for i in range(len(states)):
+                new_state = self.add(these_new_obs[i], states[i], acts_in[i], rs[i].item(), depth=depths[i]+1)
+                q.put((new_state, depths[i]+1))
 
     def populate(self, obs, depth=0):
-        self.populate_queue.appendleft((obs, depth))
+        self.populate_queue.put((obs, depth))
         self.serve_queue(self.populate_queue)
 
     def best_move(self, obs):
@@ -132,6 +131,7 @@ class MCTS(MPC):
         obs = (torch.from_numpy(obs[0]), obs[1])
         root = self.add(obs)
         self.populate(root)
+        start = time.time()
         self.state_list.reverse()
         for state, depth in self.state_list:
             state.update_Q()
@@ -139,4 +139,4 @@ class MCTS(MPC):
         best_act = root.acts[i]
         root.best_act = best_act
         root.best_r = root.rs[i]
-        return best_act, root
+        return best_act.cpu().data.numpy().flatten(), root

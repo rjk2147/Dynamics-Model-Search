@@ -5,7 +5,7 @@ import numpy as np
 from torch import nn, optim
 from collections import deque
 import random
-from model_based.parallel_mcts import MCTS
+from model_based.mcts import MCTS
 import datetime
 import os
 
@@ -33,7 +33,7 @@ class Agent:
         self.model = env_learner
         self.model.model.train()
         self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width)
-        self.model_replay = deque(maxlen=25000)
+        self.model_replay = deque(maxlen=100000)
         
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
@@ -71,7 +71,7 @@ class Agent:
         if len(self.x_seq) == self.seq_len:
             self.model_replay.append((np.array(self.x_seq), np.array(self.a_seq), np.array(self.y_seq)))
         if len(self.model_replay) >= self.sm_batch:
-            random.shuffle(self.model_replay)
+            # random.shuffle(self.model_replay)
             data = list(self.model_replay)[:self.sm_batch]
             obs_dist = np.array([step[0][0] for step in data])
             obs_mean = np.mean(obs_dist, 0)
@@ -115,7 +115,7 @@ class Agent:
                 obs = self.planner.env_learner.reset(obs)
                 if self.with_tree:
                     act, node = self.planner.best_move(obs)
-                    ex_r = node.future[str(act)][3][0][0]
+                    ex_r = node.best_r
                     self.planner.clear()
                 else:
                     act = self.rl_learner.act(obs[0])

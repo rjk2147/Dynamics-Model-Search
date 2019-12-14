@@ -153,19 +153,19 @@ class TD3(object):
         return action
 
     def value(self, obs, act, new_obs):
-        obs = torch.Tensor(obs).to(device)
-        act = torch.Tensor(act).to(device)
-        if len(obs.shape) < 2:
-            obs = obs.unsqueeze(0)
-        if len(act.shape) < 2:
-            act = act.unsqueeze(0)
-        target_Q1, target_Q2 = self.critic(obs, act)
-        target_Q = torch.min(target_Q1, target_Q2)
-        while target_Q.shape[0] == 0:
-            target_Q = target_Q.unsqueeze(0)
-        return target_Q.cpu().detach().numpy()
-        # r = new_obs[0]
-        # return r
+        # obs = torch.Tensor(obs).to(device)
+        # act = torch.Tensor(act).to(device)
+        # if len(obs.shape) < 2:
+        #     obs = obs.unsqueeze(0)
+        # if len(act.shape) < 2:
+        #     act = act.unsqueeze(0)
+        # target_Q1, target_Q2 = self.critic(obs, act)
+        # target_Q = torch.min(target_Q1, target_Q2)
+        # while target_Q.shape[0] == 0:
+        #     target_Q = target_Q.unsqueeze(0)
+        # return target_Q.cpu().detach().numpy()
+        r = new_obs[:,0]
+        return r
 
     def update(self, replay_buffer, batch_size=100, u=0):
         self.total_it += 1

@@ -15,14 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('--episodes', type=int, default=10000) # training episodes
     args = parser.parse_args()
 
-    # print(args.env)
-    # print(args.agent)
-    # print(args.width)
-    # print(args.depth)
-    # print(args.episodes)
-
     env = RealerWalkerWrapper(gym.make(args.env))
     env_learner = PreCoGenEnvLearner(env)
     agent = Agent(env_learner, width=int(args.width), depth=int(args.depth), agent=args.agent)
     agent.learn(env, int(args.episodes))
-    # agent.play(env, 10)

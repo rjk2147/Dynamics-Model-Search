@@ -39,7 +39,10 @@ class Node:
 # 8s to run Cross Entropy with width 4 on parallel
 # 78s to run no CE with width 8 on standard
 # 62s to run no CE with width 8 on parallel
-devices = [torch.device("cuda:"+str(i)) for i in range(0, torch.cuda.device_count())]
+if torch.cuda.is_available():
+    devices = [torch.device("cuda:"+str(i)) for i in range(0, torch.cuda.device_count())]
+else:
+    devices = [torch.device('cpu')]
 class MCTS(MPC):
     def __init__(self, lookahead, env_learner, agent=None, initial_width=2):
         MPC.__init__(self, lookahead, env_learner, agent)
@@ -119,7 +122,9 @@ class MCTS(MPC):
     def to_key(self, x):
         if x is None:
             return None
-        return str(self.discritize(x))
+        key = self.discritize(x).tostring()
+        # print(key)
+        return key
 
     def update_node(self, key, obs, avg_future_r, states):
         for i in range(len(states[key].past)):
@@ -167,6 +172,7 @@ class MCTS(MPC):
                 depth = item[1]
                 if depth < self.lookahead:
                     for _ in range(self.width):
+                        # print(depth)
                         state = item[0][0]
                         act = self.agent.act(state)
                         acts.append(act)
@@ -206,6 +212,7 @@ class MCTS(MPC):
         self.serve_queue(self.populate_queue)
 
     def best_move(self, obs):
+
         self.clear()
         self.tree_add(self.to_key(obs), obs, self.states)
         self.populate(obs)

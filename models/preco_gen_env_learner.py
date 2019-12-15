@@ -49,6 +49,7 @@ class PreCoGenModel(nn.Module):
         out = self.decode(out)
         return out, h
 
+    # seq_len, batch_len, input_size
     def pred_seq(self, a, h=None):
         out_enc, enc_h = self.pred_rnn(a, h)
         out_tmp = self.decode(out_enc)

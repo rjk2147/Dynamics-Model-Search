@@ -143,16 +143,16 @@ class TD3(object):
         return self.actor(state).cpu().data.numpy().flatten()
 
     def act(self, obs):
-        # if self.steps > 10000:
-        if torch.is_tensor(obs):
-            obs = obs.to(device)
+        if self.steps > 10000:
+            if torch.is_tensor(obs):
+                obs = obs.to(device)
+            else:
+                obs = torch.FloatTensor(obs.reshape(1, -1)).to(device)
+            action = self.actor(obs).detach()
+            action += torch.randn_like(action)*self.expl_noise
+            action.clamp(-self.max_action, self.max_action)
         else:
-            obs = torch.FloatTensor(obs.reshape(1, -1)).to(device)
-        action = self.actor(obs)
-        action += torch.randn_like(action)*self.expl_noise
-        action.clamp(-self.max_action, self.max_action)
-        # else:
-        #     action = np.random.uniform(-1, 1, self.act_dim)
+            action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(device).float()
         return action
 
     def value(self, obs, act, new_obs):

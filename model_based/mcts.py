@@ -15,27 +15,6 @@ import queue as ctx
 counter = 0
 # ctx = mp.get_context("spawn")
 
-class NullDataset(Dataset):
-    def __init__(self, data):
-        self.data = data
-        self.size = data.size
-        self.dim = data.dim
-    def __getitem__(self, index):
-        return self.data[index]
-    def __len__(self):
-        return len(self.data)
-
-class Node:
-    def __init__(self, obs, past_obs=None, act=None, r=None, avg_future_r=0):
-        self.past = []
-        self.obs = obs
-        if past_obs is not None:
-            self.past.append((past_obs, act, r))
-        self.future = dict() # self.future[act] = (new_obs, r+future_r)
-        self.avg_future_r = avg_future_r
-        self.best_act = None
-        self.depth = 0
-
 class State:
     def __init__(self, obs):
         self.obs = obs
@@ -113,7 +92,7 @@ class MCTS(MPC):
                 acts_in = acts_in.unsqueeze(1)
 
             new_obs = self.env_learner.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
-            rs = self.agent.value(obs[0], acts_in, new_obs[0].cpu())
+            rs = self.agent.value(obs[0], acts_in, new_obs[0])
 
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
 
@@ -126,7 +105,6 @@ class MCTS(MPC):
         self.serve_queue(self.populate_queue)
 
     def best_move(self, obs):
-        global A, B, C, D, E, Q
         self.clear()
         obs = (torch.from_numpy(obs[0]), obs[1])
         root = self.add(obs)

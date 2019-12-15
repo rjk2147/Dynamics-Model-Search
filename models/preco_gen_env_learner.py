@@ -232,8 +232,7 @@ class PreCoGenEnvLearner(EnvLearner):
         tensor = True
         a = action_in
         if state_in is not None:
-            new_obs, h = self.model(a, state_in, None, 'single')
-            state_out = h
+            new_obs, state_out = self.model(a, state_in, None, 'single')
         elif obs_in is not None:
             x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(0)
             if save:

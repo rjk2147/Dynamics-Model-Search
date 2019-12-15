@@ -92,7 +92,7 @@ class MCTS(MPC):
                 acts_in = acts_in.unsqueeze(1)
 
             new_obs = self.env_learner.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
-            rs = self.agent.value(obs[0], acts_in, new_obs[0])
+            rs = self.agent.value(obs_in[0], acts_in, new_obs[0])
 
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
 
@@ -106,7 +106,7 @@ class MCTS(MPC):
 
     def best_move(self, obs):
         self.clear()
-        obs = (torch.from_numpy(obs[0]), obs[1])
+        obs = (torch.from_numpy(obs[0]).to(devices[0]), obs[1])
         root = self.add(obs)
         self.populate(root)
         start = time.time()

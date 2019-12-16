@@ -116,12 +116,12 @@ class TD3(object):
         noise_clip=0.5,
         policy_freq=2
     ):
-
-        self.actor = Actor(state_dim, action_dim, max_action).to(device)
+        self.device = device
+        self.actor = Actor(state_dim, action_dim, max_action).to(self.device)
         self.actor_target = copy.deepcopy(self.actor)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
 
-        self.critic = Critic(state_dim, action_dim).to(device)
+        self.critic = Critic(state_dim, action_dim).to(self.device)
         self.critic_target = copy.deepcopy(self.critic)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
 
@@ -138,39 +138,44 @@ class TD3(object):
         self.total_it = 0
         self.steps = 0
 
+    def to(self, dev):
+        self.device = dev
+        self.critic = self.critic.to(self.device)
+        self.actor = self.actor.to(self.device)
+
     def select_action(self, state):
-        state = torch.FloatTensor(state.reshape(1, -1)).to(device)
+        state = torch.FloatTensor(state.reshape(1, -1)).to(self.device)
         return self.actor(state).cpu().data.numpy().flatten()
 
     def act(self, obs):
         if self.steps > 10000:
             if torch.is_tensor(obs):
-                obs = obs.to(device)
+                obs = obs.to(self.device)
             else:
-                obs = torch.FloatTensor(obs.reshape(1, -1)).to(device)
+                obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
             action = self.actor(obs).detach()
             action += torch.randn_like(action)*self.expl_noise
             action.clamp(-self.max_action, self.max_action)
         else:
-            action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(device).float()
+            action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(self.device).float()
         return action
 
     def value(self, obs, act, new_obs):
-        if not torch.is_tensor(obs):
-           obs = torch.Tensor(obs).to(device)
-        if not torch.is_tensor(act):
-            act = torch.Tensor(act).to(device)
-        if len(obs.shape) > 2:
-            obs = obs.unsqueeze(1)
-        if len(act.shape) > 2:
-            act = act.squeeze(1)
-        target_Q1, target_Q2 = self.critic(obs, act)
-        target_Q = torch.min(target_Q1, target_Q2)
-        while target_Q.shape[0] == 0:
-            target_Q = target_Q.unsqueeze(0)
-        return target_Q.cpu().detach().numpy()
-        # r = new_obs[:,0]
-        # return r
+        # if not torch.is_tensor(obs):
+        #    obs = torch.Tensor(obs).to(self.device)
+        # if not torch.is_tensor(act):
+        #     act = torch.Tensor(act).to(self.device)
+        # if len(obs.shape) > 2:
+        #     obs = obs.unsqueeze(1)
+        # if len(act.shape) > 2:
+        #     act = act.squeeze(1)
+        # target_Q1, target_Q2 = self.critic(obs, act)
+        # target_Q = torch.min(target_Q1, target_Q2)
+        # while target_Q.shape[0] == 0:
+        #     target_Q = target_Q.unsqueeze(0)
+        # return target_Q.cpu().detach().numpy()
+        r = new_obs[:,0]
+        return r
 
     def update(self, replay_buffer, batch_size=100, u=0):
         self.total_it += 1
@@ -228,7 +233,6 @@ class TD3(object):
         torch.save(self.critic_optimizer.state_dict(), filename + "_critic_optimizer")
         torch.save(self.actor.state_dict(), filename + "_actor")
         torch.save(self.actor_optimizer.state_dict(), filename + "_actor_optimizer")
-
 
     def load(self, filename):
         self.critic.load_state_dict(torch.load(filename + "_critic"))

@@ -29,6 +29,9 @@ class State:
         self.acts.append(act)
         self.future.append(new_state)
 
+    def exit(self):
+        return
+
     def get_avg_r(self):
         return np.mean(self.rs)
 

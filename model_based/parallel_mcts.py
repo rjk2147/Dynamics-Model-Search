@@ -118,8 +118,13 @@ class MCTS(MPC):
         self.env_learner.to(self.device)
         self.agent.to(self.device)
         while True:
-            obs = q_in.get()
-            if obs is None: return
+            item = q_in.get()
+            if item is None: return
+            obs, agent_state, model_state = item
+            self.agent.load_dict(agent_state)
+            self.env_learner.load_dict(model_state)
+            # new_agent_state = self.agent.save_dict()
+            # print(new_agent_state[0]['l1.weight'])
             obs = (obs[1].to(self.device), obs[1].to(self.device))
             self.clear()
             root = self.add(obs)
@@ -139,12 +144,16 @@ class MCTS(MPC):
 
     def best_move(self, obs):
         obs = (torch.from_numpy(obs[0]).cpu(), obs[1].cpu())
+        agent_state = self.agent.save_dict()
+        model_state = self.env_learner.save_dict()
+        # print('----------------------------------------------------------------------')
+        # print(agent_state[0]['l1.weight'])
         root = State(obs)
         root.best_act = None
         root.best_r = None
         best_q = None
         for q_in in self.q_in:
-            q_in.put(obs)
+            q_in.put((obs, agent_state, model_state))
         for q_out in self.q_out:
             new_act, new_r, new_q = q_out.get()
             if best_q is None or new_q > best_q:

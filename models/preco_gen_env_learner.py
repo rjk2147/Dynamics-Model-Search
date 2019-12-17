@@ -125,6 +125,13 @@ class PreCoGenEnvLearner(EnvLearner):
         self.model.load_state_dict(torch.load(save_str, map_location=self.device))
         self.model.eval()
 
+    def save_dict(self):
+        return self.model.state_dict()
+
+    def load_dict(self, d):
+        # print('Loading Model')
+        self.model.load_state_dict(d)
+
     def to(self, in_device):
         self.model.to(in_device)
 

@@ -148,16 +148,16 @@ class TD3(object):
         return self.actor(state).cpu().data.numpy().flatten()
 
     def act(self, obs):
-        if self.steps > 10000:
-            if torch.is_tensor(obs):
-                obs = obs.to(self.device)
-            else:
-                obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-            action = self.actor(obs).detach()
-            action += torch.randn_like(action)*self.expl_noise
-            action.clamp(-self.max_action, self.max_action)
+        # if self.steps > 10000:
+        if torch.is_tensor(obs):
+            obs = obs.to(self.device)
         else:
-            action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(self.device).float()
+            obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
+        action = self.actor(obs).detach()
+        action += torch.randn_like(action)*self.expl_noise
+        action.clamp(-self.max_action, self.max_action)
+        # else:
+        #     action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(self.device).float()
         return action
 
     def value(self, obs, act, new_obs):
@@ -174,8 +174,12 @@ class TD3(object):
         # while target_Q.shape[0] == 0:
         #     target_Q = target_Q.unsqueeze(0)
         # return target_Q.cpu().detach().numpy()
-        r = new_obs[:,0]
-        return r
+        # print(new_obs.shape)
+        if len(new_obs.shape) == 2:
+            r = new_obs[:,0]
+            return r
+        else:
+            return [new_obs[0]]
 
     def update(self, replay_buffer, batch_size=100, u=0):
         self.total_it += 1
@@ -227,6 +231,9 @@ class TD3(object):
             for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
                 target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
 
+            # print('Actor Loss: '+str(actor_loss.item()))
+            # print('Critic Loss: '+str(critic_loss.item()))
+
 
     def save(self, filename):
         torch.save(self.critic.state_dict(), filename + "_critic")
@@ -234,8 +241,16 @@ class TD3(object):
         torch.save(self.actor.state_dict(), filename + "_actor")
         torch.save(self.actor_optimizer.state_dict(), filename + "_actor_optimizer")
 
+    def save_dict(self):
+        return (self.critic.state_dict(), self.actor.state_dict())
+
     def load(self, filename):
         self.critic.load_state_dict(torch.load(filename + "_critic"))
         self.critic_optimizer.load_state_dict(torch.load(filename + "_critic_optimizer"))
         self.actor.load_state_dict(torch.load(filename + "_actor"))
         self.actor_optimizer.load_state_dict(torch.load(filename + "_actor_optimizer"))
+
+    def load_dict(self, d):
+        # print('Loading Agent')
+        self.critic.load_state_dict(d[0])
+        self.actor.load_state_dict(d[1])

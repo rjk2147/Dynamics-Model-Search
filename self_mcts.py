@@ -5,7 +5,7 @@ import numpy as np
 from torch import nn, optim
 from collections import deque
 import random
-from model_based.parallel_mcts import MCTS
+from model_based.mcts import MCTS
 import datetime
 import os
 
@@ -151,6 +151,7 @@ class Agent:
                 self.avg_train_loss = None
             self.rl_learner.save(self.save_str)
             self.model.save(self.save_str+'_self_model.pt')
+        self.planner.exit()
 
     def play(self, env, num_episodes):
         for i in range(num_episodes):

@@ -125,7 +125,7 @@ class MCTS(MPC):
             self.env_learner.load_dict(model_state)
             # new_agent_state = self.agent.save_dict()
             # print(new_agent_state[0]['l1.weight'])
-            obs = (obs[1].to(self.device), obs[1].to(self.device))
+            obs = (obs[0].to(self.device), obs[1].to(self.device))
             self.clear()
             root = self.add(obs)
             self.populate(root)

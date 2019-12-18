@@ -11,17 +11,18 @@ if __name__ == '__main__':
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     parser.add_argument('--agent', type=str, default='TD3') # model free agent algorithm
     parser.add_argument('--width', type=str, default=4) # width of the search tree at every level
-    parser.add_argument('--depth', type=int, default=3) # depth of the search tree
+    parser.add_argument('--depth', type=int, default=5) # depth of the search tree
     parser.add_argument('--episodes', type=int, default=10000) # training episodes
     parser.add_argument('--load-all', type=str, default=None) # path to general model
     parser.add_argument('--load-model', type=str, default=None) # path to self-model
     parser.add_argument('--load-agent', type=str, default=None) # path to agent model
+    parser.add_argument('--use-state', action='store_true', default=False)
     args = parser.parse_args()
 
-
+    print(args.use_state)
     env = RealerWalkerWrapper(gym.make(args.env))
     env_learner = PreCoGenEnvLearner(env)
-    agent = Agent(env_learner, width=int(args.width), depth=int(args.depth), agent=args.agent)
+    agent = Agent(env_learner, width=int(args.width), depth=int(args.depth), agent=args.agent, with_hidden=args.use_state)
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all

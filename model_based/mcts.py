@@ -51,13 +51,14 @@ else:
     devices = [torch.device('cpu')]
 
 class MCTS(MPC):
-    def __init__(self, lookahead, env_learner, agent=None, initial_width=2):
+    def __init__(self, lookahead, env_learner, agent=None, initial_width=2, with_hidden=False):
         MPC.__init__(self, lookahead, env_learner, agent)
         self.width = initial_width
         self.populate_queue = ctx.Queue()
         self.start = time.time()
         self.batch_size = 262144
         self.clear()
+        self.with_hidden = with_hidden
 
     def clear(self):
         self.state_list = []
@@ -90,6 +91,8 @@ class MCTS(MPC):
 
             obs_in = (torch.cat([obs[i][0].unsqueeze(0) for i in range(len(obs))]),
                    torch.cat([obs[i][1] for i in range(len(obs))]))
+            if self.with_hidden:
+                obs_in = (torch.cat([obs_in[0], obs_in[1].squeeze(1)], -1), obs_in[1])
             acts_in = self.agent.act(obs_in[0])
             while len(acts_in.shape) < 3:
                 acts_in = acts_in.unsqueeze(1)

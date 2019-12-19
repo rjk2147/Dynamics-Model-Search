@@ -5,7 +5,7 @@ import numpy as np
 from torch import nn, optim
 from collections import deque
 import random
-from model_based.mcts import MCTS
+from model_based.parallel_mcts import MCTS
 import datetime
 import os
 

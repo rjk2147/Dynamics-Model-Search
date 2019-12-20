@@ -11,7 +11,7 @@ import os
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Agent:
     def __init__(self, env_learner, width=64, depth=1, agent='TD3', with_tree=True, with_hidden=False,
-                 model_rew=False, parallel=False):
+                 model_rew=False, parallel=False, cross_entropy=False):
         self.act_dim = env_learner.act_dim
         self.state_dim = env_learner.state_dim
         self.act_mul_const = env_learner.act_mul_const
@@ -29,7 +29,7 @@ class Agent:
             from model_free.TD3 import ReplayBuffer as Replay
 
         if parallel:
-            from model_based.parallel_mcts import MCTS
+            from model_based.parallel_mcts import ParallelMCTS as MCTS
         else:
             from model_based.mcts import MCTS
 
@@ -42,7 +42,8 @@ class Agent:
             self.rl_learner = Agent(self.state_dim, self.act_dim)
             self.replay = Replay(self.state_dim, self.act_dim)
         self.rl_learner.model_rew = model_rew
-        self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width, with_hidden=with_hidden)
+        self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width,
+                            with_hidden=with_hidden, cross_entropy=cross_entropy)
         self.model_replay = deque(maxlen=100000)
         
         if not os.path.exists('rl_models/'):

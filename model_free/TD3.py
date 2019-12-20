@@ -164,7 +164,7 @@ class TD3(object):
     def value(self, obs, act, new_obs):
         if self.model_rew:
             if len(new_obs.shape) == 2:
-                r = new_obs[:,0]
+                r = new_obs[:,0].cpu().detach().numpy()
                 return r
             else:
                 return [new_obs[0]]

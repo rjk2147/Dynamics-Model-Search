@@ -19,13 +19,15 @@ if __name__ == '__main__':
     parser.add_argument('--use-state', action='store_true', default=False)
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--parallel', action='store_true', default=False)
+    parser.add_argument('--cross-entropy', action='store_true', default=True)
     args = parser.parse_args()
 
     print(args.use_state)
     env = RealerWalkerWrapper(gym.make(args.env))
     env_learner = PreCoGenEnvLearner(env)
     agent = Agent(env_learner, width=int(args.width), depth=int(args.depth), agent=args.agent,
-                  with_hidden=args.use_state, model_rew=args.model_reward, parallel=args.parallel)
+                  with_hidden=args.use_state, model_rew=args.model_reward, parallel=args.parallel,
+                  cross_entropy=args.cross_entropy)
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all

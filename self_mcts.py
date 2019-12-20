@@ -5,13 +5,13 @@ import numpy as np
 from torch import nn, optim
 from collections import deque
 import random
-from model_based.parallel_mcts import MCTS
 import datetime
 import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Agent:
-    def __init__(self, env_learner, width=64, depth=1, agent='TD3', with_tree=True, with_hidden=False):
+    def __init__(self, env_learner, width=64, depth=1, agent='TD3', with_tree=True, with_hidden=False,
+                 model_rew=False, parallel=False):
         self.act_dim = env_learner.act_dim
         self.state_dim = env_learner.state_dim
         self.act_mul_const = env_learner.act_mul_const
@@ -27,6 +27,12 @@ class Agent:
         else:
             from model_free.TD3 import TD3 as Agent
             from model_free.TD3 import ReplayBuffer as Replay
+
+        if parallel:
+            from model_based.parallel_mcts import MCTS
+        else:
+            from model_based.mcts import MCTS
+
         self.model = env_learner
         self.model.model.train()
         if with_hidden:
@@ -35,6 +41,7 @@ class Agent:
         else:
             self.rl_learner = Agent(self.state_dim, self.act_dim)
             self.replay = Replay(self.state_dim, self.act_dim)
+        self.rl_learner.model_rew = model_rew
         self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width, with_hidden=with_hidden)
         self.model_replay = deque(maxlen=100000)
         
@@ -125,6 +132,9 @@ class Agent:
                     act = self.rl_learner.act(obs[0])
                     ex_r = 0
                 new_obs, r_raw, done, info = env.step(act.flatten()*self.act_mul_const)
+
+                # TODO:         Pass hidden of obs (obs[1]) to env_learner.reset method at each step and update the
+                # TODO: (cont)  training rules to also train with outputs passed in from the last correctors in seq
                 new_obs = self.planner.env_learner.reset(new_obs)
 
                 # Statistics update

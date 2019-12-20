@@ -163,7 +163,6 @@ class TD3(object):
 
     def value(self, obs, act, new_obs):
         if self.model_rew:
-            print('Using Model Rew')
             if len(new_obs.shape) == 2:
                 r = new_obs[:,0]
                 return r

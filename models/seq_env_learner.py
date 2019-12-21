@@ -55,7 +55,7 @@ class SeqModel(nn.Module):
 
     def forward(self, x, a, h=None, y=None):
         if h is None:
-            h = torch.ones((x.shape[0], x.shape[1], self.latent_size))
+            h = torch.ones((x.shape[0], 1, self.latent_size)).to(x.device)
         obs = x.transpose(0, 1)
         act = a.transpose(0, 1)
         h = h.transpose(0,1)
@@ -129,7 +129,7 @@ class SeqEnvLearner(EnvLearner):
             Asi = torch.from_numpy(Asi[1].astype(np.float32)).to(self.device)
             Xsi = torch.from_numpy(Xsi[1].astype(np.float32)).to(self.device)
 
-            single, seq, final, single_out, seq_out, final_out = self.model(Xsi, Asi, Ysi)
+            single, seq, final, single_out, seq_out, final_out = self.model(Xsi, Asi, None, Ysi)
             Single += single.item()
             Seq += seq.item()
             Final += final.item()
@@ -142,7 +142,7 @@ class SeqEnvLearner(EnvLearner):
         Xs = torch.from_numpy(np.array([step[0] for step in data]).astype(np.float32)).to(self.device)
         As = torch.from_numpy(np.array([step[1] for step in data]).astype(np.float32)).to(self.device)
         Ys = torch.from_numpy(np.array([step[2] for step in data]).astype(np.float32)).to(self.device)
-        single, seq, final, single_out, seq_out, final_out = self.model(Xs, As, Ys)
+        single, seq, final, single_out, seq_out, final_out = self.model(Xs, As, None, Ys)
         seq.backward()
         self.optimizer.step()
         return single.item(), seq.item(), final.item()
@@ -184,7 +184,7 @@ class SeqEnvLearner(EnvLearner):
                 Asi = torch.from_numpy(Asi.astype(np.float32)).to(self.device)
                 Ysi = torch.from_numpy(Ysi.astype(np.float32)).to(self.device)
 
-                single, seq, final, single_out, seq_out, final_out = self.model(Xsi, Asi, Ysi)
+                single, seq, final, single_out, seq_out, final_out = self.model(Xsi, Asi, None, Ysi)
                 Single += single.item()
                 Seq += seq.item()
                 Final += final.item()

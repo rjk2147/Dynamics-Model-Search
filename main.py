@@ -2,11 +2,11 @@ import pybullet_envs
 import gym
 from self_mcts import Agent
 from models.preco_gen_env_learner import PreCoGenEnvLearner
+from models.seq_env_learner import SeqEnvLearner
 from pybullet_wrappers import RealerWalkerWrapper
 import argparse
 
 if __name__ == '__main__':
-    
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     parser.add_argument('--agent', type=str, default='TD3') # model free agent algorithm
@@ -20,11 +20,15 @@ if __name__ == '__main__':
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--parallel', action='store_true', default=False)
     parser.add_argument('--cross-entropy', action='store_true', default=True)
+    parser.add_argument('--model-arch', type=str, default='precogen')
     args = parser.parse_args()
 
     print(args.use_state)
     env = RealerWalkerWrapper(gym.make(args.env))
-    env_learner = PreCoGenEnvLearner(env)
+    if args.model_arch == 'precogen':
+        env_learner = PreCoGenEnvLearner(env)
+    elif args.model_arch == 'seq':
+        env_learner = SeqEnvLearner(env)
     agent = Agent(env_learner, width=int(args.width), depth=int(args.depth), agent=args.agent,
                   with_hidden=args.use_state, model_rew=args.model_reward, parallel=args.parallel,
                   cross_entropy=args.cross_entropy)

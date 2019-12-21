@@ -82,25 +82,47 @@ class MCTS(MPC):
         # mu = torch.zeros(act.shape)
         mu = act
         sigma = torch.ones(mu.shape).to(mu.device)*0.1
-
+        A_time = 0
+        B_time = 0
+        C_time = 0
+        D_time = 0
+        E_time = 0
         while t < maxits and (sigma > epsilon).any():
+            start = time.time()
             # Obtain N samples from current sampling distribution
-            mu = mu.repeat((N, 1, 1))
-            sigma = sigma.repeat((N, 1, 1))
+            mu = mu.repeat((N, 1))
+            sigma = sigma.repeat((N, 1))
             A = (torch.randn_like(mu)*sigma + mu).clamp(-1, 1)
+            A_time += time.time()-start
+            start = time.time()
             # Evaluate objective function at sampled points
             S = self.env_learner.step_parallel(obs_in=X, action_in=A, state=True, state_in=True)
             R = self.agent.value(X[0], A, S[0]).flatten()
+            B_time += time.time()-start
+            start = time.time()
             # Splitting Rs and As into their initial groups
             R = np.split(R, b, 0)
             A = torch.chunk(A, b, 0)
-            # Sort X by objective function values in descending order
-            A = [A[i][np.argsort(-R[i])] for i in range(b)]
+            C_time += time.time()-start
+            start = time.time()
+            # Select top Ne actions based on their R score
+            A = [A[i][np.argsort(-R[i])[:Ne]] for i in range(b)]
+            # A = [A[i][np.argpartition(-R[i], Ne)[:Ne]] for i in range(b)]
+            D_time += time.time()-start
+            start = time.time()
             # Update parameters of sampling distribution
-            mu = torch.cat([torch.mean(A[i][:Ne], 0).unsqueeze(0) for i in range(b)])
-            sigma = torch.cat([torch.std(A[i][:Ne], 0).unsqueeze(0) for i in range(b)])
+            mu = torch.cat([torch.mean(A[i], 0).unsqueeze(0) for i in range(b)])
+            sigma = torch.cat([torch.std(A[i], 0).unsqueeze(0) for i in range(b)])
             t = t + 1
+            E_time += time.time()-start
         # Return mean of final sampling distribution as solution
+        # print(mu.shape[0])
+        # print('A: '+str(A_time))
+        # print('B: '+str(B_time))
+        # print('C: '+str(C_time))
+        # print('D: '+str(D_time))
+        # print('E: '+str(E_time))
+        # print('=================')
         return mu
 
     def serve_queue(self, q):
@@ -126,8 +148,6 @@ class MCTS(MPC):
             else:
                 tmp_obs = obs_in[0]
             acts_in = self.agent.act(tmp_obs)
-            while len(acts_in.shape) < 3:
-                acts_in = acts_in.unsqueeze(1)
             if self.with_CE:
                 acts_in = self.cross_entropy(obs_in, acts_in)
             new_obs = self.env_learner.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
@@ -143,7 +163,7 @@ class MCTS(MPC):
 
     def best_move(self, obs):
         self.clear()
-        obs = (torch.from_numpy(obs[0]).to(devices[0]), obs[1])
+        obs = (torch.from_numpy(obs[0]).to(devices[0]), obs[1].to(devices[0]))
         root = self.add(obs)
         self.populate(root)
         start = time.time()

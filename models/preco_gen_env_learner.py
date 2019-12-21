@@ -238,6 +238,8 @@ class PreCoGenEnvLearner(EnvLearner):
             state_in = None
         tensor = True
         a = action_in
+        while len(a.shape) < 3:
+            a = a.unsqueeze(1)
         if state_in is not None:
             new_obs, state_out = self.model(a, state_in, None, 'single')
         elif obs_in is not None:

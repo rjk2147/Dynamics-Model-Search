@@ -221,7 +221,7 @@ class PreCoGenEnvLearner(EnvLearner):
 
         return Corr/idx, Single/idx, Seq/idx, Final/idx
 
-    def reset(self, obs_in):
+    def reset(self, obs_in, h=None):
         x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(1)
         _, self.h = self.model(x, None, None, 'reset')
         self.h = self.h.detach()

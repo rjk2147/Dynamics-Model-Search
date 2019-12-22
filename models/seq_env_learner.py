@@ -198,12 +198,15 @@ class SeqEnvLearner(EnvLearner):
 
         return Single/idx, Seq/idx, Final/idx
 
-    def reset(self, obs_in):
+    def reset(self, obs_in, h=None):
         # x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(1)
         # _, self.h = self.model(x, None, None, 'reset')
         # self.h = self.h.detach()
         self.is_reset = True
-        return obs_in, self.model.reset()
+        if h is None:
+            return obs_in, self.model.reset()
+        else:
+            return obs_in, h
 
     def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None):
         self.model.eval()

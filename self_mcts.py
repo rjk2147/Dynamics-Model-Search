@@ -119,7 +119,7 @@ class Agent:
         self.start_time = time.time()
         for i in range(num_episodes):
             obs = env.reset()
-            obs = self.planner.env_learner.reset(obs)
+            obs = self.planner.env_learner.reset(obs, None)
             done = False
             ep_r = 0
             ep_exp_r = 0
@@ -134,9 +134,12 @@ class Agent:
                     ex_r = 0
                 new_obs, r_raw, done, info = env.step(act.flatten()*self.act_mul_const)
 
-                # TODO:         Pass hidden of obs (obs[1]) to env_learner.reset method at each step and update the
-                # TODO: (cont)  training rules to also train with outputs passed in from the last correctors in seq
-                new_obs = self.planner.env_learner.reset(new_obs)
+                # TODO: Efficiently pass this h value from the search since it is already calculated
+                _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
+                                                              action_in=torch.from_numpy(act).unsqueeze(0).to(device),
+                                                              state=True, state_in=True)
+                # _, h = self.planner.env_learner.step_parallel(obs, act)
+                new_obs = self.planner.env_learner.reset(new_obs, h)
 
                 # Statistics update
                 self.steps += 1

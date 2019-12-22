@@ -103,7 +103,7 @@ class EnvLearner:
     def get_loss(self, data):
         return NotImplementedError
 
-    def reset(self, obs_in):
+    def reset(self, obs_in, h=None):
         return NotImplementedError
 
     def step(self, action_in, obs_in=None, save=True, state=False, state_in=None):

@@ -1,10 +1,6 @@
 from model_based.mpc import MPC, NullAgent
 import numpy as np
-# from queue import Queue
 from collections import deque
-from threading import Thread, Lock
-import multiprocessing
-# from multiprocessing import Process, Lock
 import time
 import torch
 

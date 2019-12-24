@@ -1,19 +1,7 @@
-from model_based.mpc import MPC, NullAgent
 from model_based.mcts import MCTS, State
 import numpy as np
-# from queue import Queue
-from collections import deque
-from threading import Thread, Lock
-import multiprocessing
-# from multiprocessing import Process, Lock
-import time
-import pickle
 import torch
-from torch import nn
-from torch.utils.data import Dataset, DataLoader
 import torch.multiprocessing as mp
-# import queue as ctx
-# counter = 0
 ctx = mp.get_context("spawn")
 
 if torch.cuda.is_available():
@@ -28,9 +16,10 @@ class ParallelMCTS(MCTS):
         self.spawn_processes()
 
     def spawn_processes(self):
+        from multiprocessing import Queue
         self.processes = []
-        self.q_in = [ctx.Queue() for _ in range(self.n_proc)]
-        self.q_out = [ctx.Queue() for _ in range(self.n_proc)]
+        self.q_in = [Queue() for _ in range(self.n_proc)]
+        self.q_out = [Queue() for _ in range(self.n_proc)]
         for i in range(self.n_proc):
             dev_id = i%len(devices)
             p = ctx.Process(target=self.multi_best_act, args=(dev_id, self.q_in[i], self.q_out[i]))

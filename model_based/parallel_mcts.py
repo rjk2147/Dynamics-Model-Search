@@ -16,10 +16,10 @@ class ParallelMCTS(MCTS):
         self.spawn_processes()
 
     def spawn_processes(self):
-        from multiprocessing import Queue
+        from multiprocessing import Pipe
         self.processes = []
-        self.q_in = [Queue() for _ in range(self.n_proc)]
-        self.q_out = [Queue() for _ in range(self.n_proc)]
+        self.q_in = [Pipe() for _ in range(self.n_proc)]
+        self.q_out = [Pipe() for _ in range(self.n_proc)]
         for i in range(self.n_proc):
             dev_id = i%len(devices)
             p = ctx.Process(target=self.multi_best_act, args=(dev_id, self.q_in[i], self.q_out[i]))
@@ -47,7 +47,8 @@ class ParallelMCTS(MCTS):
         self.env_learner.to(self.device)
         self.agent.to(self.device)
         while True:
-            item = q_in.get()
+            item = q_in[0].recv()
+            # print('Got')
             if item is None: return
             obs, agent_state, model_state = item
             self.agent.load_dict(agent_state)
@@ -63,7 +64,7 @@ class ParallelMCTS(MCTS):
             best_act = root.acts[i]
             root.best_act = best_act
             root.best_r = root.rs[i]
-            q_out.put((root.acts[i], root.rs[i], root.Qs[i]))
+            q_out[0].send((root.acts[i], root.rs[i], root.Qs[i]))
 
     def best_move(self, obs):
         obs = (torch.from_numpy(obs[0]).cpu(), obs[1].cpu())
@@ -72,9 +73,9 @@ class ParallelMCTS(MCTS):
         root = State(obs)
         best_q = None
         for q_in in self.q_in:
-            q_in.put((obs, agent_state, model_state))
+            q_in[1].send((obs, agent_state, model_state))
         for q_out in self.q_out:
-            new_act, new_r, new_q = q_out.get()
+            new_act, new_r, new_q = q_out[1].recv()
             if best_q is None or new_q > best_q:
                 best_q = new_q
                 root.best_act = new_act

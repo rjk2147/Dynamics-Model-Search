@@ -16,14 +16,20 @@ if __name__ == '__main__':
     parser.add_argument('--load-all', type=str, default=None) # path to general model
     parser.add_argument('--load-model', type=str, default=None) # path to self-model
     parser.add_argument('--load-agent', type=str, default=None) # path to agent model
+    parser.add_argument('--model-arch', type=str, default='precogen') # type of self-model
     parser.add_argument('--use-state', action='store_true', default=False)
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--parallel', action='store_true', default=False)
     parser.add_argument('--cross-entropy', action='store_true', default=False)
-    parser.add_argument('--model-arch', type=str, default='precogen')
     args = parser.parse_args()
-
-    print(args.use_state)
+    cmd = 'python main.py --env '+str(args.env)+' --agent '+str(args.agent)+' --width '+str(args.width)+' --depth '+str(args.depth)+\
+          ' --episodes '+str(args.episodes)+' --model-arch '+str(args.model_arch)
+    if args.use_state:      cmd += ' --use-state'
+    if args.model_reward:   cmd += ' --model-reward'
+    if args.parallel:       cmd += ' --parallel'
+    if args.cross_entropy:  cmd += ' --cross-entropy'
+    print(cmd)
+    # print(args.use_state)
     env = RealerWalkerWrapper(gym.make(args.env))
     if args.model_arch == 'precogen':
         env_learner = PreCoGenEnvLearner(env)

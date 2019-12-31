@@ -143,10 +143,23 @@ class SAC(object):
         return action.detach().cpu().numpy()[0]
 
     def act(self, obs):
-        if self.steps > 10000:
-            action = self.select_action(obs, eval=False)
+        # if self.steps > 10000:
+        #     action = self.select_action(obs, eval=False)
+        # else:
+        #     action = np.random.uniform(-1, 1, self.act_dim)
+        # return action
+
+        # if self.steps > 10000:
+        if torch.is_tensor(obs):
+            obs = obs.to(self.device)
         else:
-            action = np.random.uniform(-1, 1, self.act_dim)
+            obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
+        action, _, _ = self.policy.sample(obs)
+        # action = self.actor(obs).detach()
+        # action += torch.randn_like(action)*self.expl_noise
+        # action.clamp(-self.max_action, self.max_action)
+        # else:
+        #     action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(self.device).float()
         return action
 
     def value(self, obs, act, new_obs):
@@ -156,8 +169,26 @@ class SAC(object):
         # qf1_pi, qf2_pi = self.critic(obs, pi)
         # min_qf_pi = torch.min(qf1_pi, qf2_pi)
         # return min_qf_pi.cpu().detach().numpy()
-        r = new_obs[0]
-        return r
+        # r = new_obs[0]
+        # return r
+        if self.model_rew:
+            if len(new_obs.shape) == 2:
+                r = new_obs[:,0].cpu().detach().numpy()
+                return r
+            else:
+                return [new_obs[0]]
+        else:
+            if not torch.is_tensor(obs):
+               obs = torch.Tensor(obs).to(self.device)
+            if not torch.is_tensor(act):
+                act = torch.Tensor(act).to(self.device)
+            if len(obs.shape) > 2:
+                obs = obs.unsqueeze(1)
+            if len(act.shape) > 2:
+                act = act.squeeze(1)
+            qf1, qf2 = self.critic(obs, act)  # Two Q-functions to mitigate positive bias in the policy improvement step
+            min_qf_pi = torch.min(qf1, qf2)
+            return min_qf_pi.cpu().detach().numpy()
 
     def update(self, memory, batch_size, updates):
         # Sample a batch from memory

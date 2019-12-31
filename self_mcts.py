@@ -24,6 +24,9 @@ class Agent:
         elif agent == 'SAC':
             from model_free.SAC import SAC as Agent
             from model_free.SAC import ReplayMemory as Replay
+        elif agent == 'None':
+            from model_free.Null import NullAgent as Agent
+            from model_free.Null import NullReplay as Replay
         else:
             from model_free.TD3 import TD3 as Agent
             from model_free.TD3 import ReplayBuffer as Replay
@@ -148,6 +151,7 @@ class Agent:
                 ep_exp_r += ex_r
                 ep_len += 1
 
+                # TODO could try to use state and rerun all obs through the self-model before RL-update
                 ## RL Learner Update
                 if self.with_hidden:
                     obs_cat = torch.cat([torch.from_numpy(obs[0]), obs[1].flatten().cpu()], -1).numpy()

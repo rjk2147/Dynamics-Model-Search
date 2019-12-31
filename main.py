@@ -27,7 +27,7 @@ if __name__ == '__main__':
     if args.use_state:      cmd += ' --use-state'
     if args.model_reward:   cmd += ' --model-reward'
     if args.parallel:       cmd += ' --parallel'
-    if args.cross_entropy:  cmd += ' --cross-entropy'
+    if args.cross_entropy:  cmd += ' --cross-entrop0'
     print(cmd)
     # print(args.use_state)
     env = RealerWalkerWrapper(gym.make(args.env))

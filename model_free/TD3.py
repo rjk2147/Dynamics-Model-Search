@@ -157,10 +157,10 @@ class TD3(object):
         action = self.actor(obs).detach()
         action += torch.randn_like(action)*self.expl_noise
         action.clamp(-self.max_action, self.max_action)
-        print(obs.shape)
+        # print(obs.shape)
         # else:
         #     action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(self.device).float()
-        print(action.shape)
+        # print(action.shape)
         return action
 
     def value(self, obs, act, new_obs):

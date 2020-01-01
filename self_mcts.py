@@ -86,8 +86,9 @@ class Agent:
         if len(self.x_seq) == self.seq_len:
             self.model_replay.append((np.array(self.x_seq), np.array(self.a_seq), np.array(self.y_seq)))
         if len(self.model_replay) >= self.sm_batch:
-            # random.shuffle(self.model_replay)
-            data = list(self.model_replay)[:self.sm_batch]
+            data = random.sample(self.model_replay, self.sm_batch)
+            # data = list(self.model_replay)[:self.sm_batch]
+
             obs_dist = np.array([step[0][0] for step in data])
             obs_mean = np.mean(obs_dist, 0)
             obs_std = np.std(obs_dist, 0)

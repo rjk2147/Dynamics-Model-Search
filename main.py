@@ -21,13 +21,15 @@ if __name__ == '__main__':
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--parallel', action='store_true', default=False)
     parser.add_argument('--cross-entropy', action='store_true', default=False)
+    parser.add_argument('--no-search', action='store_true', default=False)
     args = parser.parse_args()
     cmd = 'python main.py --env '+str(args.env)+' --agent '+str(args.agent)+' --width '+str(args.width)+' --depth '+str(args.depth)+\
           ' --episodes '+str(args.episodes)+' --model-arch '+str(args.model_arch)
     if args.use_state:      cmd += ' --use-state'
     if args.model_reward:   cmd += ' --model-reward'
     if args.parallel:       cmd += ' --parallel'
-    if args.cross_entropy:  cmd += ' --cross-entrop0'
+    if args.cross_entropy:  cmd += ' --cross-entropy'
+    if args.no_search:      cmd += ' --no-search'
     print(cmd)
     # print(args.use_state)
     env = RealerWalkerWrapper(gym.make(args.env))
@@ -37,7 +39,7 @@ if __name__ == '__main__':
         env_learner = SeqEnvLearner(env)
     agent = Agent(env_learner, width=int(args.width), depth=int(args.depth), agent=args.agent,
                   with_hidden=args.use_state, model_rew=args.model_reward, parallel=args.parallel,
-                  cross_entropy=args.cross_entropy)
+                  cross_entropy=args.cross_entropy, with_tree=not args.no_search)
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all

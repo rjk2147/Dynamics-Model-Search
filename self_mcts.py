@@ -139,7 +139,7 @@ class Agent:
                     ex_r = node.best_r
                     self.planner.clear()
                 else:
-                    act = self.rl_learner.act(obs[0])
+                    act = self.rl_learner.act(obs[0]).cpu().numpy()
                     ex_r = 0
                 new_obs, r_raw, done, info = env.step(act.flatten()*self.act_mul_const)
 

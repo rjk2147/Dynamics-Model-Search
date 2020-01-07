@@ -92,6 +92,11 @@ class Agent:
             obs_dist = np.array([step[0][0] for step in data])
             obs_mean = np.mean(obs_dist, 0)
             obs_std = np.std(obs_dist, 0)
+
+            # This line ensures that is there is no variance in an element of the states it is unchanged
+            # Otherwise when the observations are divided those values will become NaN
+            obs_std[obs_std == 0] = 1
+
             self.model.model.norm_mean = obs_mean
             self.model.model.norm_std = obs_std
             train_loss = self.model.update(data)

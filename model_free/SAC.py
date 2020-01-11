@@ -160,7 +160,7 @@ class SAC(object):
         # action.clamp(-self.max_action, self.max_action)
         # else:
         #     action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(self.device).float()
-        return action
+        return action.detach()
 
     def value(self, obs, act, new_obs):
         # qf1, qf2 = self.critic(obs, act)  # Two Q-functions to mitigate positive bias in the policy improvement step

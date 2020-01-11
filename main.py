@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--load-all', type=str, default=None) # path to general model
     parser.add_argument('--load-model', type=str, default=None) # path to self-model
     parser.add_argument('--load-agent', type=str, default=None) # path to agent model
-    parser.add_argument('--model-arch', type=str, default='precogen') # type of self-model
+    parser.add_argument('--model-arch', type=str, default='seq') # type of self-model
     parser.add_argument('--use-state', action='store_true', default=False)
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--parallel', action='store_true', default=False)

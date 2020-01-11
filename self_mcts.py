@@ -80,6 +80,9 @@ class Agent:
             self.n_updates += 1
 
     def sm_update(self, obs, act, new_obs, done):
+        # epsilon = 0
+        epsilon = 1e-5
+
         self.x_seq.append(obs[0] / self.model.state_mul_const)
         self.a_seq.append(act / self.act_mul_const)
         self.y_seq.append(new_obs[0] / self.model.state_mul_const)
@@ -95,7 +98,7 @@ class Agent:
 
             # This line ensures that is there is no variance in an element of the states it is unchanged
             # Otherwise when the observations are divided those values will become NaN
-            obs_std[obs_std == 0] = 1
+            obs_std[obs_std <= epsilon] = 1
 
             self.model.model.norm_mean = obs_mean
             self.model.model.norm_std = obs_std
@@ -136,12 +139,13 @@ class Agent:
             while not done:
                 if self.with_tree:
                     act, node = self.planner.best_move(obs)
+                    act = act.flatten()
                     ex_r = node.best_r
                     self.planner.clear()
                 else:
-                    act = self.rl_learner.act(obs[0]).cpu().numpy()
+                    act = self.rl_learner.act(obs[0]).cpu().numpy().flatten()
                     ex_r = 0
-                new_obs, r_raw, done, info = env.step(act.flatten()*self.act_mul_const)
+                new_obs, r_raw, done, info = env.step(act*self.act_mul_const)
 
                 # TODO: Efficiently pass this h value from the search since it is already calculated
                 _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),

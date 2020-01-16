@@ -22,7 +22,7 @@ if __name__ == '__main__':
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--parallel', action='store_true', default=False)
     parser.add_argument('--cross-entropy', action='store_true', default=False)
-    parser.add_argument('--no-search', action='store_true', default=False)
+    parser.add_argument('--no-search', action='store_true', default=True)
     args = parser.parse_args()
     cmd = 'python main.py --env '+str(args.env)+' --agent '+str(args.agent)+' --width '+str(args.width)+' --depth '+str(args.depth)+\
           ' --episodes '+str(args.episodes)+' --model-arch '+str(args.model_arch)

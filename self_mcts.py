@@ -25,9 +25,9 @@ class Agent:
         elif agent == 'SAC':
             from model_free.SAC import SAC as Agent
             from model_free.SAC import ReplayMemory as Replay
-        elif agent == 'PPO':
-            from model_free.PPO import PPO as Agent
-            from model_free.PPO import ReplayMemory as Replay
+        elif agent == 'TRPO':
+            from model_free.TRPO import TRPO as Agent
+            from model_free.TRPO import Memory as Replay
         elif agent == 'None':
             from model_free.Null import NullAgent as Agent
             from model_free.Null import NullReplay as Replay

@@ -56,7 +56,7 @@ class WalkerBaseBulletEnv(MJCFBaseBulletEnv):
       self.stateId = self._p.saveState()
       #print("saving state self.stateId:",self.stateId)
     print(self.obstacle_height)
-    self.obstacle = self.load_obstacle((0, 1.2, 0), (0, 0, 0), 'cube', self.obstacle_height)
+    self.obstacle = self.load_obstacle((1.5, 0, 0), (0, 0, 0), 'cube', self.obstacle_height)
     return r
 
   def _isDone(self):

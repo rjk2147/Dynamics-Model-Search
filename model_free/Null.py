@@ -17,8 +17,14 @@ class NullAgent:
         self.steps = 0
 
     def act(self, obs):
-        action = torch.randn((obs.shape[0], self.act_dim))
-        return action.to(obs.device)
+        if torch.is_tensor(obs):
+            action = torch.randn((obs.shape[0], self.act_dim))
+            return action.to(obs.device)
+        else:
+            action = torch.randn((self.act_dim, ))
+            return action
+
+        # return np.random.normal(0, 1, self.act_dim).clip(-1, 1)
 
     def value(self, obs, act, new_obs):
         r = new_obs[:,0].cpu().detach().numpy()

@@ -1,4 +1,5 @@
 import pybullet_envs
+import challenging_envs
 import gym
 from self_mcts import Agent
 from models.preco_gen_env_learner import PreCoGenEnvLearner

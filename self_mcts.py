@@ -18,15 +18,20 @@ class Agent:
         self.lookahead = depth
         self.from_update = 0
         self.sm_batch = 512
+        self.null_agent = False
         if agent == 'TD3':
             from model_free.TD3 import TD3 as Agent
             from model_free.TD3 import ReplayBuffer as Replay
         elif agent == 'SAC':
             from model_free.SAC import SAC as Agent
             from model_free.SAC import ReplayMemory as Replay
+        elif agent == 'PPO':
+            from model_free.PPO import PPO as Agent
+            from model_free.PPO import ReplayMemory as Replay
         elif agent == 'None':
             from model_free.Null import NullAgent as Agent
             from model_free.Null import NullReplay as Replay
+            self.null_agent = True
         else:
             from model_free.TD3 import TD3 as Agent
             from model_free.TD3 import ReplayBuffer as Replay
@@ -137,7 +142,7 @@ class Agent:
             ep_exp_r = 0
             ep_len = 0
             while not done:
-                if self.with_tree:
+                if self.with_tree and not self.null_agent:
                     act, node = self.planner.best_move(obs)
                     act = act.flatten()
                     ex_r = node.best_r

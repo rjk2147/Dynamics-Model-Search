@@ -8,14 +8,15 @@ from robot_locomotors import Hopper, Walker2D, HalfCheetah, Ant, Humanoid, Human
 
 class WalkerBaseBulletEnv(MJCFBaseBulletEnv):
 
-  def __init__(self, robot, render=False):
+  def __init__(self, robot, render=False, h=0.1):
     # print("WalkerBase::__init__ start")
     self.camera_x = 0
     self.walk_target_x = 1e3  # kilometer away
     self.walk_target_y = 0
     self.stateId = -1
     MJCFBaseBulletEnv.__init__(self, robot, render)
-
+    self.obstacle = None
+    self.obstacle_height = h
 
   def create_single_player_scene(self, bullet_client):
     self.stadium_scene = SinglePlayerStadiumScene(bullet_client,
@@ -38,6 +39,8 @@ class WalkerBaseBulletEnv(MJCFBaseBulletEnv):
     self._p.removeBody(obs_idx)
 
   def reset(self):
+    if self.obstacle is not None:
+      self.remove_obstacle(self.obstacle)
     if (self.stateId >= 0):
       self._p.restoreState(self.stateId)
 
@@ -52,7 +55,8 @@ class WalkerBaseBulletEnv(MJCFBaseBulletEnv):
     if (self.stateId < 0):
       self.stateId = self._p.saveState()
       #print("saving state self.stateId:",self.stateId)
-
+    print(self.obstacle_height)
+    self.obstacle = self.load_obstacle((0, 1.2, 0), (0, 0, 0), 'cube', self.obstacle_height)
     return r
 
   def _isDone(self):
@@ -169,9 +173,9 @@ class HalfCheetahBulletEnv(WalkerBaseBulletEnv):
 
 class AntBulletEnv(WalkerBaseBulletEnv):
 
-  def __init__(self, render=False):
+  def __init__(self, render=False, h=0):
     self.robot = Ant()
-    WalkerBaseBulletEnv.__init__(self, self.robot, render)
+    WalkerBaseBulletEnv.__init__(self, self.robot, render, h)
 
 
 class HumanoidBulletEnv(WalkerBaseBulletEnv):

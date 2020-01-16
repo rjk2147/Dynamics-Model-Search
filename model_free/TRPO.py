@@ -20,8 +20,11 @@ class Memory(object):
         action = np.expand_dims(action, axis=0)
         self.memory.append(Transition(state, action, not done, next_state, reward))
 
-    def sample(self):
-        return Transition(*zip(*self.memory))
+    def sample(self, batch_size=256):
+        return Transition(*zip(*self.memory[-batch_size:]))
+
+    def clear(self):
+        self.memory = []
 
     def __len__(self):
         return len(self.memory)
@@ -166,11 +169,11 @@ class TRPO(object):
 
     def act(self, obs):
         action =  self.select_action(obs)
-        return action
+        return action.detach()
 
     def value(self, obs, act, new_obs):
         value = self.value_net(Variable(obs))
-        return value
+        return value.detach()
 
     def select_action(self, state):
         if torch.is_tensor(state):
@@ -217,7 +220,12 @@ class TRPO(object):
         return loss
 
     def update(self, replay_buffer, batch_size=100, u=0):
+        # if len(replay_buffer) > self.batch_size:
         batch = replay_buffer.sample()
+        replay_buffer.clear()
+        # else:
+        #     return
+        print('Updating with '+str(len(batch.action))+' steps')
         rewards = torch.Tensor(batch.reward).to(self.device)
         masks = torch.Tensor(batch.mask).to(self.device)
         actions = torch.Tensor(np.concatenate(batch.action, 0)).to(self.device)

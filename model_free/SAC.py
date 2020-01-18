@@ -116,6 +116,7 @@ class SAC(object):
         self.gamma = gamma
         self.tau = tau
         self.alpha = alpha
+        self.replay = ReplayMemory(num_inputs, act_dim)
 
         self.target_update_interval = target_update_interval
         self.automatic_entropy_tuning = automatic_entropy_tuning
@@ -190,9 +191,9 @@ class SAC(object):
             min_qf_pi = torch.min(qf1, qf2)
             return min_qf_pi.cpu().detach().numpy()
 
-    def update(self, memory, batch_size, updates):
+    def update(self, batch_size, updates):
         # Sample a batch from memory
-        state_batch, action_batch, reward_batch, next_state_batch, mask_batch = memory.sample(batch_size=batch_size)
+        state_batch, action_batch, reward_batch, next_state_batch, mask_batch = self.replay.sample(batch_size=batch_size)
 
         state_batch = torch.FloatTensor(state_batch).to(self.device)
         next_state_batch = torch.FloatTensor(next_state_batch).to(self.device)

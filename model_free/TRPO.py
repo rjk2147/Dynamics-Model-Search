@@ -7,24 +7,26 @@ import numpy as np
 import math
 # Taken from
 # https://github.com/ikostrikov/pytorch-trpo
-
+from collections import deque
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 Transition = namedtuple('Transition', ('state', 'action', 'mask', 'next_state',
                                        'reward'))
 class Memory(object):
     def __init__(self, state_dim, act_dim):
-        self.memory = []
+        self.memory = deque(maxlen=100000)
 
     def add(self, state, action, next_state, reward, done):
         """Saves a transition."""
         action = np.expand_dims(action, axis=0)
         self.memory.append(Transition(state, action, not done, next_state, reward))
 
-    def sample(self, batch_size=256):
-        return Transition(*zip(*self.memory[-batch_size:]))
+    def sample(self, batch_size=32):
+        data = list(self.memory)[-batch_size:]
+        return Transition(*zip(*data))
 
     def clear(self):
-        self.memory = []
+        # self.memory = []
+        self.memory = deque(maxlen=100000)
 
     def __len__(self):
         return len(self.memory)
@@ -153,7 +155,7 @@ class TRPO(object):
         self,
         state_dim,
         action_dim,
-        gamma=0.995, tau=0.97, l2_reg=1e-3, max_kl=1e-2, damping=1e-1, batch_size=15000
+        gamma=0.99, tau=0.98, l2_reg=1e-3, max_kl=0.01, damping=0.01, batch_size=100
     ):
         self.gamma = gamma
         self.tau = tau
@@ -165,6 +167,7 @@ class TRPO(object):
         self.device = device
         self.policy_net = Policy(state_dim, action_dim).to(self.device)
         self.value_net = Value(state_dim).to(self.device)
+        self.replay = Memory(state_dim, action_dim)
         self.steps = 0
 
     def act(self, obs):
@@ -219,13 +222,13 @@ class TRPO(object):
 
         return loss
 
-    def update(self, replay_buffer, batch_size=100, u=0):
-        # if len(replay_buffer) > self.batch_size:
-        batch = replay_buffer.sample()
-        replay_buffer.clear()
-        # else:
-        #     return
-        print('Updating with '+str(len(batch.action))+' steps')
+    def update(self, batch_size=100, u=0):
+        if len(self.replay) > self.batch_size:
+            batch = self.replay.sample()
+            self.replay.clear()
+        else:
+            return
+        # print('Updating with '+str(len(batch.action))+' steps')
         rewards = torch.Tensor(batch.reward).to(self.device)
         masks = torch.Tensor(batch.mask).to(self.device)
         actions = torch.Tensor(np.concatenate(batch.action, 0)).to(self.device)

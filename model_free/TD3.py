@@ -117,6 +117,7 @@ class TD3(object):
         policy_freq=2
     ):
         self.device = device
+        self.replay = ReplayBuffer(state_dim, action_dim)
         self.actor = Actor(state_dim, action_dim, max_action).to(self.device)
         self.actor_target = copy.deepcopy(self.actor)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
@@ -185,11 +186,11 @@ class TD3(object):
                 target_Q = target_Q.unsqueeze(0)
             return target_Q.cpu().detach().numpy()
 
-    def update(self, replay_buffer, batch_size=100, u=0):
+    def update(self, batch_size=100, u=0):
         self.total_it += 1
 
         # Sample replay buffer 
-        state, action, next_state, reward, not_done = replay_buffer.sample(batch_size)
+        state, action, next_state, reward, not_done = self.replay.sample(batch_size)
 
         with torch.no_grad():
             # Select action according to policy and add clipped noise

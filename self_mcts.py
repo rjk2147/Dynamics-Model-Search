@@ -21,20 +21,18 @@ class Agent:
         self.null_agent = False
         if agent == 'TD3':
             from model_free.TD3 import TD3 as Agent
-            from model_free.TD3 import ReplayBuffer as Replay
+            # from model_free.TD3 import ReplayBuffer as Replay
         elif agent == 'SAC':
             from model_free.SAC import SAC as Agent
-            from model_free.SAC import ReplayMemory as Replay
+        elif agent == 'PPO':
+            from model_free.PPO import PPO as Agent
         elif agent == 'TRPO':
             from model_free.TRPO import TRPO as Agent
-            from model_free.TRPO import Memory as Replay
         elif agent == 'None':
             from model_free.Null import NullAgent as Agent
-            from model_free.Null import NullReplay as Replay
             self.null_agent = True
         else:
             from model_free.TD3 import TD3 as Agent
-            from model_free.TD3 import ReplayBuffer as Replay
 
         if parallel:
             from model_based.parallel_mcts import ParallelMCTS as MCTS
@@ -45,10 +43,8 @@ class Agent:
         self.model.model.train()
         if with_hidden:
             self.rl_learner = Agent(self.state_dim+self.model.model.latent_size, self.act_dim)
-            self.replay = Replay(self.state_dim+self.model.model.latent_size, self.act_dim)
         else:
             self.rl_learner = Agent(self.state_dim, self.act_dim)
-            self.replay = Replay(self.state_dim, self.act_dim)
         self.rl_learner.model_rew = model_rew
         self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width,
                             with_hidden=with_hidden, cross_entropy=cross_entropy)
@@ -80,8 +76,8 @@ class Agent:
         print('--------------------------------------\n')
 
     def rl_update(self, batch_size=256):
-        if len(self.replay) > batch_size:
-            self.rl_learner.update(self.replay, batch_size, self.n_updates)
+        if len(self.rl_learner.replay) > batch_size:
+            self.rl_learner.update(batch_size, self.n_updates)
             self.n_updates += 1
 
     def sm_update(self, obs, act, new_obs, done):
@@ -171,9 +167,9 @@ class Agent:
                 if self.with_hidden:
                     obs_cat = torch.cat([torch.from_numpy(obs[0]), obs[1].flatten().cpu()], -1).numpy()
                     new_obs_cat = torch.cat([torch.from_numpy(new_obs[0]), new_obs[1].flatten().cpu()], -1).numpy()
-                    self.replay.add(obs_cat, act, new_obs_cat, r, done)
+                    self.rl_learner.replay.add(obs_cat, act, new_obs_cat, r, done)
                 else:
-                    self.replay.add(obs[0], act, new_obs[0], r, done)
+                    self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                 self.from_update += 1
                 self.rl_update()
                 self.rl_learner.steps += 1

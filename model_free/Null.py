@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 class NullReplay(object):
-    def __init__(self, state_dim, action_dim, max_size=int(1e6)):
+    def __init__(self, state_dim=None, action_dim=None, max_size=int(1e6)):
         pass
 
     def add(self, state, action, next_state, reward, done):
@@ -15,6 +15,7 @@ class NullAgent:
         print('Null agent chosen')
         self.act_dim = act_dim
         self.steps = 0
+        self.replay = NullReplay()
 
     def act(self, obs):
         if torch.is_tensor(obs):

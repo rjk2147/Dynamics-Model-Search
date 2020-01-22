@@ -117,8 +117,15 @@ class PPO:
         return self.policy_old.act(state).cpu().data.numpy().flatten()
 
     def act(self, state):
-        state = torch.FloatTensor(state.reshape(1, -1)).to(device)
-        return self.policy_old.act(state).flatten()
+        if not torch.is_tensor(state):
+            state = torch.FloatTensor(state).to(device)
+        else:
+            state = state.to(device)
+        return self.policy_old.act(state)
+
+    def value(self, state, act, new_state):
+        v = self.policy_old.critic(state)
+        return v
 
     def update(self, batch_size=100, n=0):
         # Monte Carlo estimate of rewards:

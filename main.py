@@ -14,6 +14,8 @@ if __name__ == '__main__':
     parser.add_argument('--width', type=str, default=4) # width of the search tree at every level
     parser.add_argument('--depth', type=int, default=5) # depth of the search tree
     parser.add_argument('--episodes', type=int, default=10000) # training episodes
+    parser.add_argument('--batch-size', type=int, default=512) # SM batch size
+    parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
     parser.add_argument('--load-all', type=str, default=None) # path to general model
     parser.add_argument('--load-model', type=str, default=None) # path to self-model
     parser.add_argument('--load-agent', type=str, default=None) # path to agent model
@@ -25,7 +27,8 @@ if __name__ == '__main__':
     parser.add_argument('--no-search', action='store_true', default=False)
     args = parser.parse_args()
     cmd = 'python main.py --env '+str(args.env)+' --agent '+str(args.agent)+' --width '+str(args.width)+' --depth '+str(args.depth)+\
-          ' --episodes '+str(args.episodes)+' --model-arch '+str(args.model_arch)
+          ' --episodes '+str(args.episodes)+' --batch-size '+str(args.batch_size)+' --replay-size '+str(args.replay_size)+\
+          ' --model-arch '+str(args.model_arch)
     if args.use_state:      cmd += ' --use-state'
     if args.model_reward:   cmd += ' --model-reward'
     if args.parallel:       cmd += ' --parallel'
@@ -40,7 +43,8 @@ if __name__ == '__main__':
         env_learner = SeqEnvLearner(env)
     agent = Agent(env_learner, width=int(args.width), depth=int(args.depth), agent=args.agent,
                   with_hidden=args.use_state, model_rew=args.model_reward, parallel=args.parallel,
-                  cross_entropy=args.cross_entropy, with_tree=not args.no_search)
+                  cross_entropy=args.cross_entropy, with_tree=not args.no_search, batch_size=args.batch_size,
+                  replay_size=args.replay_size)
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all

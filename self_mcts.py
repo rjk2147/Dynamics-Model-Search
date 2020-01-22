@@ -11,13 +11,14 @@ import os
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class Agent:
     def __init__(self, env_learner, width=64, depth=1, agent='TD3', with_tree=True, with_hidden=False,
-                 model_rew=False, parallel=False, cross_entropy=False):
+                 model_rew=False, parallel=False, cross_entropy=False, batch_size=512, replay_size=100000):
         self.act_dim = env_learner.act_dim
         self.state_dim = env_learner.state_dim
         self.act_mul_const = env_learner.act_mul_const
         self.lookahead = depth
         self.from_update = 0
-        self.sm_batch = 512
+        replay_size = max(replay_size, batch_size)
+        self.batch_size = batch_size
         self.null_agent = False
         if agent == 'TD3':
             from model_free.TD3 import TD3 as Agent
@@ -48,7 +49,7 @@ class Agent:
         self.rl_learner.model_rew = model_rew
         self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width,
                             with_hidden=with_hidden, cross_entropy=cross_entropy)
-        self.model_replay = deque(maxlen=100000)
+        self.model_replay = deque(maxlen=replay_size)
         
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
@@ -89,9 +90,8 @@ class Agent:
         self.y_seq.append(new_obs[0] / self.model.state_mul_const)
         if len(self.x_seq) == self.seq_len:
             self.model_replay.append((np.array(self.x_seq), np.array(self.a_seq), np.array(self.y_seq)))
-        if len(self.model_replay) >= self.sm_batch:
-            data = random.sample(self.model_replay, self.sm_batch)
-            # data = list(self.model_replay)[:self.sm_batch]
+        if len(self.model_replay) >= self.batch_size:
+            data = random.sample(self.model_replay, self.batch_size)
 
             obs_dist = np.array([step[0][0] for step in data])
             obs_mean = np.mean(obs_dist, 0)

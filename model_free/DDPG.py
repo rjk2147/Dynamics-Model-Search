@@ -84,14 +84,14 @@ class Critic(nn.Module):
 
 
 class DDPG(object):
-    def __init__(self, state_dim, action_dim, max_action=1, discount=0.99, tau=0.001):
+    def __init__(self, state_dim, action_dim, max_action=1, discount=0.99, tau=0.005):
         self.actor = Actor(state_dim, action_dim, max_action).to(device)
         self.actor_target = copy.deepcopy(self.actor)
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=1e-4)
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
 
         self.critic = Critic(state_dim, action_dim).to(device)
         self.critic_target = copy.deepcopy(self.critic)
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), weight_decay=1e-2)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
 
         self.discount = discount
         self.tau = tau
@@ -132,7 +132,7 @@ class DDPG(object):
         Q = self.critic(obs, act)
         return Q.cpu().detach().numpy()
 
-    def update(self, batch_size=64, n_updates=0):
+    def update(self, batch_size=100, n_updates=0):
         # Sample replay buffer
         state, action, next_state, reward, not_done = self.replay.sample(batch_size)
 

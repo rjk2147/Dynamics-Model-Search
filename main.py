@@ -1,6 +1,7 @@
 import pybullet_envs
 import challenging_envs
 import gym
+import torch
 from self_mcts import Agent
 from models.preco_gen_env_learner import PreCoGenEnvLearner
 from models.seq_env_learner import SeqEnvLearner
@@ -16,6 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('--episodes', type=int, default=10000) # training episodes
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
     parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
+    parser.add_argument('--seed', type=int, default=0) # Initial seed
     parser.add_argument('--load-all', type=str, default=None) # path to general model
     parser.add_argument('--load-model', type=str, default=None) # path to self-model
     parser.add_argument('--load-agent', type=str, default=None) # path to agent model
@@ -28,15 +30,21 @@ if __name__ == '__main__':
     args = parser.parse_args()
     cmd = 'python main.py --env '+str(args.env)+' --agent '+str(args.agent)+' --width '+str(args.width)+' --depth '+str(args.depth)+\
           ' --episodes '+str(args.episodes)+' --batch-size '+str(args.batch_size)+' --replay-size '+str(args.replay_size)+\
-          ' --model-arch '+str(args.model_arch)
+          ' --model-arch '+str(args.model_arch)+' --seed '+str(args.seed)
     if args.use_state:      cmd += ' --use-state'
     if args.model_reward:   cmd += ' --model-reward'
     if args.parallel:       cmd += ' --parallel'
     if args.cross_entropy:  cmd += ' --cross-entropy'
     if args.no_search:      cmd += ' --no-search'
     print(cmd)
-    # print(args.use_state)
+
     env = RealerWalkerWrapper(gym.make(args.env))
+
+    torch.manual_seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(args.seed)
+    env.seed(args.seed)
+
     if args.model_arch == 'precogen':
         env_learner = PreCoGenEnvLearner(env)
     elif args.model_arch == 'seq':

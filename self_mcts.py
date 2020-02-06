@@ -194,16 +194,41 @@ class Agent:
         self.planner.exit()
 
     def play(self, env, num_episodes):
+        self.steps = 0
+        obs_list = []
         for i in range(num_episodes):
+            observations = []
             obs = env.reset()
+            obs = self.planner.env_learner.reset(obs, None)
             done = False
             ep_r = 0
+            ep_exp_r = 0
             ep_len = 0
             while not done:
-                obs = self.planner.env_learner.reset(obs)
-                act, pred_obs = self.planner.best_move(obs)
-                new_obs, r_raw, done, info = env.step(act)
+                if self.with_tree and not self.null_agent:
+                    act, node = self.planner.best_move(obs)
+                    act = act.flatten()
+                    ex_r = node.best_r
+                    self.planner.clear()
+                else:
+                    act = self.rl_learner.act(obs[0]).cpu().numpy().flatten()
+                    ex_r = 0
+                new_obs, r_raw, done, info = env.step(act*self.act_mul_const)
+
+                # TODO: Efficiently pass this h value from the search since it is already calculated
+                # _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
+                #                                               action_in=torch.from_numpy(act).unsqueeze(0).to(device),
+                #                                               state=True, state_in=True)
+                # _, h = self.planner.env_learner.step_parallel(obs, act)
+                # new_obs = self.planner.env_learner.reset(new_obs, h)
+
+                # Statistics update
+                self.steps += 1
                 ep_r += r_raw
+                ep_exp_r += ex_r
                 ep_len += 1
-            print('Episode '+str(i)+'/'+str(num_episodes)+'in '+str(ep_len)+' steps with reward '+str(ep_r))
+                observations.append(new_obs)
+            print('Episode '+str(i)+'/'+str(num_episodes)+' in '+str(ep_len)+' steps with reward '+str(ep_r))
+            obs_list.append(observations)
+        return obs_list
 

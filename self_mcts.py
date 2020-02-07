@@ -24,12 +24,6 @@ class Agent:
             from model_free.TD3 import TD3 as Agent
         elif agent == 'SAC':
             from model_free.SAC import SAC as Agent
-        elif agent == 'DDPG':
-            from model_free.DDPG import DDPG as Agent
-        elif agent == 'PPO':
-            from model_free.PPO import PPO as Agent
-        elif agent == 'TRPO':
-            from model_free.TRPO import TRPO as Agent
         elif agent == 'None':
             from model_free.Null import NullAgent as Agent
             self.null_agent = True

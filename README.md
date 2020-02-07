@@ -18,7 +18,7 @@ To train SAC without DMS just using the pure RL baseline on HalfCheetah:
 ~~~~
 python3 main.py --env HalfCheetahBulletEnv-v0 --agent SAC --no-search
 ~~~~
-To train just the dynamics model on HalfCheetah:
+To train just the dynamics model using the "seq" model architecture on HalfCheetah:
 ~~~~
-python3 main.py --env HalfCheetahBulletEnv-v0 --agent Null
+python3 main.py --model-arch seq --env HalfCheetahBulletEnv-v0 --agent Null
 ~~~~

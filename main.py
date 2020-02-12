@@ -17,7 +17,7 @@ if __name__ == '__main__':
     parser.add_argument('--episodes', type=int, default=10000) # training episodes
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
     parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
-    parser.add_argument('--seed', type=int, default=0) # Initial seed
+    parser.add_argument('--seed', type=int, default=None) # Initial seed
     parser.add_argument('--load-all', type=str, default=None) # path to general model
     parser.add_argument('--load-model', type=str, default=None) # path to self-model
     parser.add_argument('--load-agent', type=str, default=None) # path to agent model
@@ -30,7 +30,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     cmd = 'python main.py --env '+str(args.env)+' --agent '+str(args.agent)+' --width '+str(args.width)+' --depth '+str(args.depth)+\
           ' --episodes '+str(args.episodes)+' --batch-size '+str(args.batch_size)+' --replay-size '+str(args.replay_size)+\
-          ' --model-arch '+str(args.model_arch)+' --seed '+str(args.seed)
+          ' --model-arch '+str(args.model_arch)
+    if args.seed is not None: cmd += ' --seed '+str(args.seed)
     if args.use_state:      cmd += ' --use-state'
     if args.model_reward:   cmd += ' --model-reward'
     if args.parallel:       cmd += ' --parallel'
@@ -38,12 +39,18 @@ if __name__ == '__main__':
     if args.no_search:      cmd += ' --no-search'
     print(cmd)
 
-    env = RealerWalkerWrapper(gym.make(args.env))
+    if args.env[:4].lower() == 'jump' and 'Bullet' in args.env:
+        env = RealerWalkerWrapper(gym.make(args.env[4:]))
+    elif 'Bullet' in args.env:
+        env = RealerWalkerWrapper(gym.make(args.env))
+    else:
+        env = gym.make(args.env)
 
-    torch.manual_seed(args.seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(args.seed)
-    env.seed(args.seed)
+    if args.seed is not None:
+        torch.manual_seed(args.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(args.seed)
+        env.seed(args.seed)
 
     if args.model_arch == 'precogen':
         env_learner = PreCoGenEnvLearner(env)

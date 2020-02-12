@@ -166,7 +166,7 @@ class Agent:
                 else:
                     self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                 self.from_update += 1
-                self.rl_update()
+                # self.rl_update()
                 self.rl_learner.steps += 1
 
                 ## Self-Model Update
@@ -188,10 +188,16 @@ class Agent:
         self.planner.exit()
 
     def play(self, env, num_episodes):
+        self.model.max_seq_len = 10
+        self.seq_len = self.model.max_seq_len
         self.steps = 0
-        obs_list = []
+        self.start_time = time.time()
+
+        obs_lists = []
+        ep_rs = []
+
         for i in range(num_episodes):
-            observations = []
+            obs_list = []
             obs = env.reset()
             obs = self.planner.env_learner.reset(obs, None)
             done = False
@@ -199,6 +205,7 @@ class Agent:
             ep_exp_r = 0
             ep_len = 0
             while not done:
+                obs_list.append(obs[0])
                 if self.with_tree and not self.null_agent:
                     act, node = self.planner.best_move(obs)
                     act = act.flatten()
@@ -210,19 +217,24 @@ class Agent:
                 new_obs, r_raw, done, info = env.step(act*self.act_mul_const)
 
                 # TODO: Efficiently pass this h value from the search since it is already calculated
-                # _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
-                #                                               action_in=torch.from_numpy(act).unsqueeze(0).to(device),
-                #                                               state=True, state_in=True)
-                # _, h = self.planner.env_learner.step_parallel(obs, act)
-                # new_obs = self.planner.env_learner.reset(new_obs, h)
+                _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
+                                                              action_in=torch.from_numpy(act).unsqueeze(0).to(device),
+                                                              state=True, state_in=True)
+                new_obs = self.planner.env_learner.reset(new_obs, h)
 
                 # Statistics update
                 self.steps += 1
-                ep_r += r_raw
+                r = r_raw
+                ep_r += r
                 ep_exp_r += ex_r
                 ep_len += 1
-                observations.append(new_obs)
-            print('Episode '+str(i)+'/'+str(num_episodes)+' in '+str(ep_len)+' steps with reward '+str(ep_r))
-            obs_list.append(observations)
-        return obs_list
 
+                obs = new_obs
+            obs_lists.append(obs_list)
+            ep_rs.append(ep_r)
+            print('Episode '+str(len(obs_lists))+' Reward: '+str(ep_r))
+        self.planner.exit()
+        print('---------------------------')
+        print('Mean Episode Reward: '+str(np.mean(ep_rs)))
+        print('Stdev Episode Reward: '+str(np.std(ep_rs)))
+        return obs_lists

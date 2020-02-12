@@ -32,7 +32,7 @@ class StateWrapper(gym.Env):
         return (obs, state), r, done, info
 
 class RealerWalkerWrapper(gym.Env):
-    def __init__(self, ant_env, ep_len=100):
+    def __init__(self, ant_env, ep_len=100, rew='walk'):
         self.env = ant_env
         # obs_scale = 5
         obs_scale = 1
@@ -60,6 +60,7 @@ class RealerWalkerWrapper(gym.Env):
         # state[-4 to -1] = feet contacts
         self.timestep = 0
         self.max_time = ep_len
+        self.rew = rew
 
     def reset(self):
         obs = self.env.reset()
@@ -74,7 +75,12 @@ class RealerWalkerWrapper(gym.Env):
         new_obs, _, done, info = self.env.step(action)
         # r = (new_obs[3]/0.3)/60 # x velocity
         # r = new_obs[4] # y velocity
-        r = new_obs[3]
+        if self.rew == 'walk':
+            r = new_obs[3]
+        elif self.rew == 'jump':
+            max(new_obs[5], 0) # Only the positive Z velocity (i.e. don't penalize for falling after the jump)
+        else:
+            r = new_obs[3]
 
         # Could clip to +/- 5 since thats what they do in pybullet_envs robot_locomotors.py
         # obs =  np.clip(obs[self.front:-self.back], -5, +5)
@@ -97,3 +103,6 @@ class RealerWalkerWrapper(gym.Env):
         return new_obs, r, done, info
     def render(self, mode='human'):
         return self.env.render(mode)
+
+    # def seed(self, s):
+    #     return self.env.seed(s)

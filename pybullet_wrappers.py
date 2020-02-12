@@ -78,7 +78,7 @@ class RealerWalkerWrapper(gym.Env):
         if self.rew == 'walk':
             r = new_obs[3]
         elif self.rew == 'jump':
-            max(new_obs[5], 0) # Only the positive Z velocity (i.e. don't penalize for falling after the jump)
+            r = max(new_obs[5], 0) # Only the positive Z velocity (i.e. don't penalize for falling after the jump)
         else:
             r = new_obs[3]
 

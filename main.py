@@ -1,5 +1,4 @@
 import pybullet_envs
-import challenging_envs
 import gym
 import torch
 from self_mcts import Agent

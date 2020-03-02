@@ -5,8 +5,9 @@ import time
 import torch
 
 class State:
-    def __init__(self, obs):
+    def __init__(self, obs, cur_V):
         self.obs = obs
+        self.cur_V = cur_V
         self.Q = 0
         self.acts = []
         self.rs = []
@@ -25,10 +26,10 @@ class State:
         return np.mean(self.rs)
 
     def update_Q(self, discount=0.99):
-        self.Q = 0
+        # self.Q = 0
         self.Qs = []
         for i in range(len(self.rs)):
-            Q = self.rs[i] + self.future[i].Q * discount
+            Q = self.cur_V + (self.future[i].Q - self.rs[i]) * discount
             self.Q += Q
             self.Qs.append(Q)
         self.Q = self.Q / max(len(self.future), 1)
@@ -50,14 +51,17 @@ class MCTS(MPC):
         self.clear()
         self.with_hidden = with_hidden
         self.with_CE = cross_entropy
+
+        self.estimated_Q = 0
+
         if self.with_CE:
             self.CE_N = 64
 
     def clear(self):
         self.state_list = []
 
-    def add(self, new_obs, state=None, act=None, r=None, depth=0):
-        new_state = State(new_obs)
+    def add(self, new_obs, state=None, act=None, r=0, depth=0):
+        new_state = State(new_obs, r)
         if state is not None:
             state.connect(act, r, new_state)
         self.state_list.append((new_state, depth))
@@ -151,6 +155,8 @@ class MCTS(MPC):
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
             for i in range(len(states)):
                 new_state = self.add(these_new_obs[i], states[i], acts_in[i], rs[i].item(), depth=depths[i]+1)
+                if depth + 1 == self.lookahead:
+                    new_state.Q = rs[i].item()
                 q.appendleft((new_state, depths[i]+1))
 
     def populate(self, obs, depth=0):
@@ -164,9 +170,17 @@ class MCTS(MPC):
         self.populate(root)
         start = time.time()
         self.state_list.reverse()
+
+        discount = 0.99
+
         for state, depth in self.state_list:
-            state.update_Q()
+            state.update_Q(discount)
+
+        for i in range(len(root.Qs)):
+            root.Qs[i] += root.rs[i] * 1/discount
+
         i = np.argmax(root.Qs)
+        root.exp_V = root.Qs[i]
         best_act = root.acts[i]
         root.best_act = best_act
         root.best_r = root.rs[i]

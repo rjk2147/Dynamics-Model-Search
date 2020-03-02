@@ -71,6 +71,34 @@ class Agent:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
         print('--------------------------------------\n')
 
+    def logging(self, ep):
+        st_dir = './log/temp_log.txt'
+        # if os.path.exists(st_dir):
+        with open(st_dir, 'a+') as f:
+            f.write("episode : {} \n".format(ep))
+            if self.ep_lens and len(self.ep_rs) > 0:
+                f.write('Last Episode Reward: ' + str(self.ep_rs[-1]) + '\n')
+            if self.ep_rs and len(self.ep_rs) > 0:
+                f.write('Mean Episode Reward: ' + str(np.mean(self.ep_rs)) + '\n')
+            if self.ep_rs and len(self.ep_rs) > 0:
+                f.write('Stdev Episode Reward: ' + str(np.std((self.ep_rs)))+ '\n')
+            if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
+                f.write('Mean Expected Episode Reward: ' + str(np.mean(self.ex_ep_rs))+ '\n')
+            if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
+                f.write('Stdev Expected Episode Reward: ' + str(np.std(self.ex_ep_rs))+ '\n')
+            if self.avg_train_loss is not None and self.u > 0:
+                f.write('Avg Train Loss: ' + str(self.avg_train_loss / float(self.u))+ '\n')
+            if self.steps:
+                f.write('Total Timesteps: ' + str(self.steps)+ '\n')
+            if self.start_time:
+                f.write('Total Time: ' + str(round(time.time() - self.start_time, 2))+ '\n')
+            Vs = np.array2string(np.array(self.ex_ep_Vs))[1:-1]
+            rs = np.array2string(np.array(self.ep_step_rs))[1:-1]
+            f.write('Vs: \n' + Vs + '\n')
+            f.write('rs: \n' + rs + '\n')
+            f.write('\n\n\n')
+
+
     def rl_update(self, batch_size=256):
         if len(self.rl_learner.replay) > batch_size:
             self.rl_learner.update(batch_size, self.n_updates)
@@ -126,6 +154,9 @@ class Agent:
         # self.steps = 0
         self.start_time = time.time()
         for i in range(num_episodes):
+            self.ex_ep_Vs = []
+            self.ep_step_rs = []
+
             obs = env.reset()
             obs = self.planner.env_learner.reset(obs, None)
             done = False
@@ -137,6 +168,7 @@ class Agent:
                     act, node = self.planner.best_move(obs)
                     act = act.flatten()
                     ex_r = node.best_r
+                    self.ex_ep_Vs.append(node.exp_V)
                     self.planner.clear()
                 else:
                     act = self.rl_learner.act(obs[0]).cpu().numpy().flatten()
@@ -154,6 +186,10 @@ class Agent:
                 self.steps += 1
                 r = r_raw
                 ep_r += r
+
+                self.ep_step_rs.append(r)
+
+                #reason
                 ep_exp_r += ex_r
                 ep_len += 1
 
@@ -173,7 +209,7 @@ class Agent:
                 if self.with_tree:
                     self.sm_update(obs, act, new_obs, done)
                 obs = new_obs
-
+            self.logging(i + 1)
             self.ep_rs.append(ep_r)
             self.ep_lens.append(ep_len)
             self.ex_ep_rs.append(ep_exp_r)

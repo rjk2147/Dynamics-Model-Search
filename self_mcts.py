@@ -209,12 +209,12 @@ class Agent:
                 if self.with_tree:
                     self.sm_update(obs, act, new_obs, done)
                 obs = new_obs
-            self.logging(i + 1)
             self.ep_rs.append(ep_r)
             self.ep_lens.append(ep_len)
             self.ex_ep_rs.append(ep_exp_r)
             print('Models saved to '+str(self.save_str))
             self.print_stats()
+            self.logging(i + 1)
             self.from_update = 0
             self.u = 0
             if self.avg_train_loss is not None:

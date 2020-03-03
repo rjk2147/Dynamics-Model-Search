@@ -9,6 +9,8 @@ import datetime
 import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
 class Agent:
     def __init__(self, env_learner, width=64, depth=1, agent='TD3', with_tree=True, with_hidden=False,
                  model_rew=False, parallel=False, cross_entropy=False, batch_size=512, replay_size=100000):
@@ -38,38 +40,61 @@ class Agent:
         self.model = env_learner
         self.model.model.train()
         if with_hidden:
-            self.rl_learner = Agent(self.state_dim+self.model.model.latent_size, self.act_dim)
+            self.rl_learner = Agent(self.state_dim + self.model.model.latent_size, self.act_dim)
         else:
             self.rl_learner = Agent(self.state_dim, self.act_dim)
         self.rl_learner.model_rew = model_rew
         self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width,
                             with_hidden=with_hidden, cross_entropy=cross_entropy)
         self.model_replay = deque(maxlen=replay_size)
-        
+
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
-        self.save_str = 'rl_models/'+datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        self.save_str = 'rl_models/' + datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         self.with_tree = with_tree
         self.with_hidden = with_hidden
 
     def print_stats(self):
         if self.ep_lens and len(self.ep_rs) > 0:
-            print('Last Episode Reward: '+str(self.ep_rs[-1]))
+            print('Last Episode Reward: ' + str(self.ep_rs[-1]))
         if self.ep_rs and len(self.ep_rs) > 0:
-            print('Mean Episode Reward: '+str(np.mean(self.ep_rs)))
+            print('Mean Episode Reward: ' + str(np.mean(self.ep_rs)))
         if self.ep_rs and len(self.ep_rs) > 0:
-            print('Stdev Episode Reward: '+str(np.std((self.ep_rs))))
+            print('Stdev Episode Reward: ' + str(np.std((self.ep_rs))))
         if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
-            print('Mean Expected Episode Reward: '+str(np.mean(self.ex_ep_rs)))
+            print('Mean Expected Episode Reward: ' + str(np.mean(self.ex_ep_rs)))
         if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
-            print('Stdev Expected Episode Reward: '+str(np.std(self.ex_ep_rs)))
+            print('Stdev Expected Episode Reward: ' + str(np.std(self.ex_ep_rs)))
         if self.avg_train_loss is not None and self.u > 0:
-            print('Avg Train Loss: '+str(self.avg_train_loss/float(self.u)))
+            print('Avg Train Loss: ' + str(self.avg_train_loss / float(self.u)))
         if self.steps:
-            print('Total Timesteps: '+str(self.steps))
+            print('Total Timesteps: ' + str(self.steps))
         if self.start_time:
-            print('Total Time: '+str(round(time.time()-self.start_time, 2)))
+            print('Total Time: ' + str(round(time.time() - self.start_time, 2)))
         print('--------------------------------------\n')
+
+    def logging(self, ep):
+        st_dir = './log/temp_log.txt'
+        # if os.path.exists(st_dir):
+        with open(st_dir, 'a+') as f:
+            f.write("episode : {} \n".format(ep))
+            if self.ep_lens and len(self.ep_rs) > 0:
+                f.write('Last Episode Reward: ' + str(self.ep_rs[-1]) + '\n')
+            if self.ep_rs and len(self.ep_rs) > 0:
+                f.write('Mean Episode Reward: ' + str(np.mean(self.ep_rs)) + '\n')
+            if self.ep_rs and len(self.ep_rs) > 0:
+                f.write('Stdev Episode Reward: ' + str(np.std((self.ep_rs))) + '\n')
+            if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
+                f.write('Expected Episode Reward: ' + str(self.expected_reward) + '\n')
+            if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
+                f.write('Stdev Expected Episode Reward: ' + str(np.std(self.ex_ep_rs)) + '\n')
+            if self.avg_train_loss is not None and self.u > 0:
+                f.write('Avg Train Loss: ' + str(self.avg_train_loss / float(self.u)) + '\n')
+            if self.steps:
+                f.write('Total Timesteps: ' + str(self.steps) + '\n')
+            if self.start_time:
+                f.write('Total Time: ' + str(round(time.time() - self.start_time, 2)) + '\n')
+            f.write('\n\n\n')
 
     def rl_update(self, batch_size=256):
         if len(self.rl_learner.replay) > batch_size:
@@ -132,6 +157,7 @@ class Agent:
             ep_r = 0
             ep_exp_r = 0
             ep_len = 0
+            initial = True
             while not done:
                 if self.with_tree and not self.null_agent:
                     act, node = self.planner.best_move(obs)
@@ -141,12 +167,13 @@ class Agent:
                 else:
                     act = self.rl_learner.act(obs[0]).cpu().numpy().flatten()
                     ex_r = 0
-                new_obs, r_raw, done, info = env.step(act*self.act_mul_const)
+                new_obs, r_raw, done, info = env.step(act * self.act_mul_const)
 
                 # TODO: Efficiently pass this h value from the search since it is already calculated
-                _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
-                                                              action_in=torch.from_numpy(act).unsqueeze(0).to(device),
-                                                              state=True, state_in=True)
+                _, h = self.planner.env_learner.step_parallel(
+                    obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
+                    action_in=torch.from_numpy(act).unsqueeze(0).to(device),
+                    state=True, state_in=True)
                 # _, h = self.planner.env_learner.step_parallel(obs, act)
                 new_obs = self.planner.env_learner.reset(new_obs, h)
 
@@ -156,7 +183,9 @@ class Agent:
                 ep_r += r
                 ep_exp_r += ex_r
                 ep_len += 1
-
+                if initial:
+                    initial = False
+                    self.expected_reward = ex_r
                 # TODO could try to use state and rerun all obs through the self-model before RL-update
                 ## RL Learner Update
                 if self.with_hidden:
@@ -177,14 +206,15 @@ class Agent:
             self.ep_rs.append(ep_r)
             self.ep_lens.append(ep_len)
             self.ex_ep_rs.append(ep_exp_r)
-            print('Models saved to '+str(self.save_str))
+            print('Models saved to ' + str(self.save_str))
             self.print_stats()
+            self.logging(i + 1)
             self.from_update = 0
             self.u = 0
             if self.avg_train_loss is not None:
                 self.avg_train_loss = None
             self.rl_learner.save(self.save_str)
-            self.model.save(self.save_str+'_self_model.pt')
+            self.model.save(self.save_str + '_self_model.pt')
         self.planner.exit()
 
     def play(self, env, num_episodes):
@@ -214,12 +244,13 @@ class Agent:
                 else:
                     act = self.rl_learner.act(obs[0]).cpu().numpy().flatten()
                     ex_r = 0
-                new_obs, r_raw, done, info = env.step(act*self.act_mul_const)
+                new_obs, r_raw, done, info = env.step(act * self.act_mul_const)
 
                 # TODO: Efficiently pass this h value from the search since it is already calculated
-                _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
-                                                              action_in=torch.from_numpy(act).unsqueeze(0).to(device),
-                                                              state=True, state_in=True)
+                _, h = self.planner.env_learner.step_parallel(
+                    obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
+                    action_in=torch.from_numpy(act).unsqueeze(0).to(device),
+                    state=True, state_in=True)
                 new_obs = self.planner.env_learner.reset(new_obs, h)
 
                 # Statistics update
@@ -232,9 +263,9 @@ class Agent:
                 obs = new_obs
             obs_lists.append(obs_list)
             ep_rs.append(ep_r)
-            print('Episode '+str(len(obs_lists))+' Reward: '+str(ep_r))
+            print('Episode ' + str(len(obs_lists)) + ' Reward: ' + str(ep_r))
         self.planner.exit()
         print('---------------------------')
-        print('Mean Episode Reward: '+str(np.mean(ep_rs)))
-        print('Stdev Episode Reward: '+str(np.std(ep_rs)))
+        print('Mean Episode Reward: ' + str(np.mean(ep_rs)))
+        print('Stdev Episode Reward: ' + str(np.std(ep_rs)))
         return obs_lists

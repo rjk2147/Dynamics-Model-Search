@@ -70,8 +70,6 @@ class SeqModel(nn.Module):
             new_obs = self.normalize(new_obs)
             single = torch.abs(seq_out[0]-new_obs[0])
             final = torch.abs(seq_out[-1]-new_obs[-1])
-            import pdb
-            pdb.set_trace()
             seq_errors = torch.abs(seq_out-new_obs)
             return torch.mean(single), torch.mean(seq_errors), torch.mean(final), single_out, seq_out, final_out
         else:

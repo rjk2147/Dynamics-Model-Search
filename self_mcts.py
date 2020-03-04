@@ -111,7 +111,7 @@ class Agent:
         #appending r to new_obs
         new_obs = (np.append(new_obs[0], rew), new_obs[1])
         #until -1. Since the last one is for reward
-        self.x_seq.append(obs[0] / self.model.state_mul_const[:-1])
+        self.x_seq.append(obs[0] / self.model.state_mul_const)
         self.a_seq.append(act / self.act_mul_const)
         self.y_seq.append(new_obs[0] / self.model.state_mul_const)
         if len(self.x_seq) == self.seq_len:

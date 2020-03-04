@@ -6,6 +6,8 @@ class EnvLearner:
         self.state_mul_const = env_in.observation_space.high
         # print(self.state_mul_const)
         self.state_mul_const[self.state_mul_const == np.inf] = 1
+        #add 1 dimension for reward
+        self.state_mul_const = np.append(self.state_mul_const, 1)
         print(self.state_mul_const)
         self.act_mul_const = env_in.action_space.high
         self.act_dim = env_in.action_space.shape[0]

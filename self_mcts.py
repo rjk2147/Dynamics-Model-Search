@@ -104,10 +104,12 @@ class Agent:
             self.rl_learner.update(batch_size, self.n_updates)
             self.n_updates += 1
 
-    def sm_update(self, obs, act, new_obs, done):
+    def sm_update(self, obs, act, new_obs, rew, done):
         # epsilon = 0
         epsilon = 1e-5
 
+        #appending r to new_obs
+        new_obs = (np.append(new_obs[0], rew), new_obs[1])
         self.x_seq.append(obs[0] / self.model.state_mul_const)
         self.a_seq.append(act / self.act_mul_const)
         self.y_seq.append(new_obs[0] / self.model.state_mul_const)
@@ -207,7 +209,7 @@ class Agent:
 
                 ## Self-Model Update
                 if self.with_tree:
-                    self.sm_update(obs, act, new_obs, done)
+                    self.sm_update(obs, act, new_obs, r, done)
                 obs = new_obs
             self.ep_rs.append(ep_r)
             self.ep_lens.append(ep_len)

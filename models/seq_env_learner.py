@@ -26,7 +26,8 @@ class SeqModel(nn.Module):
         self.rnn = nn.GRU(state_dim+act_dim, self.latent_size, num_recurrent_layers)
 
         self.layer1 = nn.Linear(self.latent_size, self.latent_size)
-        self.fc_out = nn.Linear(self.latent_size, state_dim)
+        #+1 is for reward
+        self.fc_out = nn.Linear(self.latent_size, state_dim + 1)
 
     def decode(self, x):
         x = self.layer1(x)
@@ -69,6 +70,8 @@ class SeqModel(nn.Module):
             new_obs = self.normalize(new_obs)
             single = torch.abs(seq_out[0]-new_obs[0])
             final = torch.abs(seq_out[-1]-new_obs[-1])
+            import pdb
+            pdb.set_trace()
             seq_errors = torch.abs(seq_out-new_obs)
             return torch.mean(single), torch.mean(seq_errors), torch.mean(final), single_out, seq_out, final_out
         else:

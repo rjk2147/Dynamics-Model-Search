@@ -5,9 +5,9 @@ import time
 import torch
 
 class State:
-    def __init__(self, obs, cur_V):
+    def __init__(self, obs, rew):
         self.obs = obs
-        self.cur_V = cur_V
+        self.rew = rew
         self.Q = 0
         self.acts = []
         self.rs = []
@@ -29,7 +29,7 @@ class State:
         # self.Q = 0
         self.Qs = []
         for i in range(len(self.rs)):
-            Q = self.cur_V + (self.future[i].Q - self.rs[i]) * discount
+            Q = self.rew + self.future[i].Q * discount
             self.Q += Q
             self.Qs.append(Q)
         self.Q = self.Q / max(len(self.future), 1)
@@ -60,10 +60,10 @@ class MCTS(MPC):
     def clear(self):
         self.state_list = []
 
-    def add(self, new_obs, state=None, act=None, r=0, depth=0):
-        new_state = State(new_obs, r)
+    def add(self, new_obs, state=None, act=None, rew=0, depth=0):
+        new_state = State(new_obs, rew)
         if state is not None:
-            state.connect(act, r, new_state)
+            state.connect(act, rew, new_state)
         self.state_list.append((new_state, depth))
         return new_state
 
@@ -150,13 +150,16 @@ class MCTS(MPC):
             acts_in = self.agent.act(tmp_obs)
             if self.with_CE:
                 acts_in = self.cross_entropy(obs_in, acts_in)
-            new_obs = self.env_learner.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
-            rs = self.agent.value(tmp_obs, acts_in, new_obs[0])
+            new_obs_with_r = self.env_learner.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
+            new_obs = (new_obs_with_r[0][:,:-1], new_obs_with_r[1])
+            #you can speed up the code by not doing q calculations for all obs.
+            qs = self.agent.value(tmp_obs, acts_in, new_obs[0])
+            rs = np.expand_dims(new_obs_with_r[0][:, -1], 1)
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
             for i in range(len(states)):
                 new_state = self.add(these_new_obs[i], states[i], acts_in[i], rs[i].item(), depth=depths[i]+1)
                 if depth + 1 == self.lookahead:
-                    new_state.Q = rs[i].item()
+                    new_state.Q = qs[i].item()
                 q.appendleft((new_state, depths[i]+1))
 
     def populate(self, obs, depth=0):
@@ -175,9 +178,6 @@ class MCTS(MPC):
 
         for state, depth in self.state_list:
             state.update_Q(discount)
-
-        for i in range(len(root.Qs)):
-            root.Qs[i] += root.rs[i] * 1/discount
 
         i = np.argmax(root.Qs)
         root.exp_V = root.Qs[i]

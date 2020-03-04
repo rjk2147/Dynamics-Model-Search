@@ -154,7 +154,7 @@ class MCTS(MPC):
             new_obs = (new_obs_with_r[0][:,:-1], new_obs_with_r[1])
             #you can speed up the code by not doing q calculations for all obs.
             qs = self.agent.value(tmp_obs, acts_in, new_obs[0])
-            rs = np.expand_dims(new_obs_with_r[0][:, -1], 1)
+            rs = torch.unsqueeze(new_obs_with_r[0][:, -1], dim =1)
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
             for i in range(len(states)):
                 new_state = self.add(these_new_obs[i], states[i], acts_in[i], rs[i].item(), depth=depths[i]+1)

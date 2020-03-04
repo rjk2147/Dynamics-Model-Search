@@ -202,7 +202,7 @@ class Agent:
                 else:
                     self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                 self.from_update += 1
-                # self.rl_update()
+                self.rl_update()
                 self.rl_learner.steps += 1
 
                 ## Self-Model Update

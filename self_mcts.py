@@ -85,6 +85,8 @@ class Agent:
             if self.ep_rs and len(self.ep_rs) > 0:
                 f.write('Stdev Episode Reward: ' + str(np.std((self.ep_rs))) + '\n')
             if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
+                f.write('Mean Expected Episode Reward: ' + str(np.mean(self.ex_ep_rs))+ '\n')
+            if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
                 f.write('Expected Episode Reward: ' + str(self.expected_reward) + '\n')
             if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
                 f.write('Stdev Expected Episode Reward: ' + str(np.std(self.ex_ep_rs)) + '\n')

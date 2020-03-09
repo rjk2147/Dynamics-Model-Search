@@ -27,12 +27,14 @@ class State:
 
     def update_Q(self, discount=0.99):
         # self.Q = 0
-        self.Qs = []
-        for i in range(len(self.rs)):
-            Q = self.rew + self.future[i].Q * discount
-            self.Q += Q
-            self.Qs.append(Q)
-        self.Q = self.Q / max(len(self.future), 1)
+        
+        if self.future:
+            self.max_i = np.argmax([x.Q for x in self.future])
+            self.Q = self.rew + self.future[self.max_i].Q * discount
+            
+            
+        
+        #note the last node already has Q value in self.Q    
         return self.Q
 
 if torch.cuda.is_available():
@@ -179,11 +181,12 @@ class MCTS(MPC):
         for state, depth in self.state_list:
             state.update_Q(discount)
 
-        i = np.argmax(root.Qs)
-        root.exp_V = root.Qs[i]
+        i = root.max_i
+        root.exp_V = root.Q
         best_act = root.acts[i]
         root.best_act = best_act
-        root.best_r = root.rs[i]
+        #the same as root.exp_V. refactor it afterwards if you happen to use this version.
+        root.best_r = root.Q
         return best_act.cpu().data.numpy().flatten(), root
 
     def exit(self):

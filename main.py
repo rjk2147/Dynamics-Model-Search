@@ -10,23 +10,31 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+    # Algorithms
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='TD3') # model free agent algorithm
-    parser.add_argument('--planner', type=str, default='MCTS') # model based algorithm
-    parser.add_argument('--width', type=str, default=4) # width of the search tree at every level
-    parser.add_argument('--depth', type=int, default=5) # depth of the search tree
+    parser.add_argument('--planner', type=str, default='CEM') # model based algorithm
+    parser.add_argument('--model-arch', type=str, default='seq') # type of self-model
+
+    # Training Parameters
     parser.add_argument('--episodes', type=int, default=10000) # training episodes
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
     parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
+
+    # Algorithm Parameters
+    parser.add_argument('--use-state', action='store_true', default=False)
+    parser.add_argument('--model-reward', action='store_true', default=False)
+    parser.add_argument('--no-search', action='store_true', default=False)
+    parser.add_argument('--width', type=str, default=4) # width of the search tree at every level
+    parser.add_argument('--depth', type=int, default=5) # depth of the search tree
+
+    # Repeatability
     parser.add_argument('--seed', type=int, default=None) # Initial seed
     parser.add_argument('--load-all', type=str, default=None) # path to general model
     parser.add_argument('--load-model', type=str, default=None) # path to self-model
     parser.add_argument('--load-agent', type=str, default=None) # path to agent model
-    parser.add_argument('--model-arch', type=str, default='seq') # type of self-model
-    parser.add_argument('--use-state', action='store_true', default=False)
-    parser.add_argument('--model-reward', action='store_true', default=False)
-    parser.add_argument('--cross-entropy', action='store_true', default=True)
-    parser.add_argument('--no-search', action='store_true', default=False)
+
     args = parser.parse_args()
     cmd = 'python main.py --env '+str(args.env)+' --agent '+str(args.rl)+' --planner '+str(args.planner)+' --width '+str(args.width)+\
           ' --depth '+str(args.depth)+' --episodes '+str(args.episodes)+' --batch-size '+str(args.batch_size)+\
@@ -34,7 +42,6 @@ if __name__ == '__main__':
     if args.seed is not None: cmd += ' --seed '+str(args.seed)
     if args.use_state:      cmd += ' --use-state'
     if args.model_reward:   cmd += ' --model-reward'
-    if args.cross_entropy:  cmd += ' --cross-entropy'
     if args.no_search:      cmd += ' --no-search'
     print(cmd)
 

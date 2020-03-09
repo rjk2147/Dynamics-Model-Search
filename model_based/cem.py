@@ -19,6 +19,7 @@ class CEM(MPC):
         self.N = N
         self.Ne = Ne
         self.initial_sd = initial_sd
+        self.discount = 0.95
 
     def best_move(self, obs, act=None):
         t = 0
@@ -57,6 +58,9 @@ class CEM(MPC):
                 S.append(out_s)
                 R.append(r)
                 in_s = out_s
+
+            for i in range(2, self.lookahead+1):
+                R[-i] += R[-i+1]*self.discount
 
             # Splitting Rs and As into their initial groups
             R = [np.split(R[i], b, 0) for i in range(self.lookahead)]

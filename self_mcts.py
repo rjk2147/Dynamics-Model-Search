@@ -72,7 +72,7 @@ class Agent:
         print('--------------------------------------\n')
 
     def logging(self, ep):
-        st_dir = './log/2_temp_log_rl_d_r.txt'
+        st_dir = './log/2_temp_log_rl_d_r_max.txt'
         # if os.path.exists(st_dir):
         with open(st_dir, 'a+') as f:
             f.write("episode : {} \n".format(ep))

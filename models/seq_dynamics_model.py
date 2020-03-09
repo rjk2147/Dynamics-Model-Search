@@ -1,4 +1,4 @@
-from models.env_learner import EnvLearner
+from models.dynamics_model import DynamicsModel
 import numpy as np
 import torch
 from torch import nn, optim
@@ -70,14 +70,16 @@ class SeqModel(nn.Module):
             single = torch.abs(seq_out[0]-new_obs[0])
             final = torch.abs(seq_out[-1]-new_obs[-1])
             seq_errors = torch.abs(seq_out-new_obs)
+            e = torch.mean(seq_errors, -1)
+            e = torch.mean(e, -1)
             return torch.mean(single), torch.mean(seq_errors), torch.mean(final), single_out, seq_out, final_out
         else:
             return seq_out, seq_h.transpose(0, 1)
 
-class SeqEnvLearner(EnvLearner):
+class SeqDynamicsModel(DynamicsModel):
     def __init__(self, env_in, dev=None):
-        EnvLearner.__init__(self, env_in)
-        lr = 1e-5
+        DynamicsModel.__init__(self, env_in)
+        self.lr = 1e-5
         self.is_reset = False
         self.val_seq_len = 100
         self.train_seq = 1
@@ -95,7 +97,27 @@ class SeqEnvLearner(EnvLearner):
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
         self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
 
-        self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
+        self.model.eval()
+
+    def reinit(self, state_dim, state_mul_const, act_dim, act_mul_const):
+        self.state_mul_const = state_mul_const
+        # print(self.state_mul_const)
+        self.state_mul_const[self.state_mul_const == np.inf] = 1
+        print(self.state_mul_const)
+        self.act_mul_const = act_mul_const
+        self.act_dim = act_dim
+        self.state_dim = state_dim
+
+        self.buff_init = [np.zeros(self.state_dim+self.act_dim)]
+        self.seq_init = [np.zeros(self.act_dim)]
+
+        self.model = SeqModel(self.state_dim, self.act_dim)
+        self.model.to(self.device)
+        self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
+        self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
+
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.model.eval()
 
     def save(self, save_str):

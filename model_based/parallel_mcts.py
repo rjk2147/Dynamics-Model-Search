@@ -80,7 +80,7 @@ class ParallelMCTS(MCTS):
                 best_q = new_q
                 root.best_act = new_act
                 root.best_r = new_r
-        return root.best_act.cpu().data.numpy().flatten(), root
+        return root.best_act.cpu().data.numpy().flatten(), root.best_r
 
     def exit(self):
         for q_in in self.q_in:

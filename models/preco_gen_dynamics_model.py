@@ -1,4 +1,4 @@
-from models.env_learner import EnvLearner
+from models.dynamics_model import DynamicsModel
 import numpy as np
 import torch
 from torch import nn, optim
@@ -11,7 +11,7 @@ from collections import deque
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class PreCoGenModel(nn.Module):
-    def __init__(self, state_dim, act_dim, drop_rate=0.5):
+    def __init__(self, state_dim, act_dim):
         super(PreCoGenModel, self).__init__()
         self.state_dim = state_dim
         self.act_dim = act_dim
@@ -90,13 +90,9 @@ class PreCoGenModel(nn.Module):
         else:
             return single_out, seq_out
 
-class PreCoGenEnvLearner(EnvLearner):
+class PreCoGenDynamicsModel(DynamicsModel):
     def __init__(self, env_in, dev=None):
-        # seed = 100
-        # torch.manual_seed(seed)
-        # if device.type == 'cuda':
-        #     torch.cuda.manual_seed(seed)
-        EnvLearner.__init__(self, env_in)
+        DynamicsModel.__init__(self, env_in)
         lr = 1e-5
         self.is_reset = False
         self.val_seq_len = 100
@@ -116,6 +112,26 @@ class PreCoGenEnvLearner(EnvLearner):
         self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        self.model.eval()
+
+    def reinit(self, state_dim, state_mul_const, act_dim, act_mul_const):
+        self.state_mul_const = state_mul_const
+        # print(self.state_mul_const)
+        self.state_mul_const[self.state_mul_const == np.inf] = 1
+        print(self.state_mul_const)
+        self.act_mul_const = act_mul_const
+        self.act_dim = act_dim
+        self.state_dim = state_dim
+
+        self.buff_init = [np.zeros(self.state_dim+self.act_dim)]
+        self.seq_init = [np.zeros(self.act_dim)]
+
+        self.model = PreCoGenModel(self.state_dim, self.act_dim)
+        self.model.to(self.device)
+        self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
+        self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
+
+        self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.model.eval()
 
     def save(self, save_str):

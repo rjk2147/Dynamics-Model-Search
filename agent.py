@@ -9,41 +9,50 @@ import datetime
 import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def model_rew_value(obs, act, new_obs):
+    return new_obs[...,0].detach().cpu().numpy()
+
 class Agent:
-    def __init__(self, env_learner, width=64, depth=1, agent='TD3', with_tree=True, with_hidden=False,
-                 model_rew=False, parallel=False, cross_entropy=False, batch_size=512, replay_size=100000):
-        self.act_dim = env_learner.act_dim
-        self.state_dim = env_learner.state_dim
-        self.act_mul_const = env_learner.act_mul_const
+    def __init__(self, dynamics_model, width=64, depth=1, rl='TD3', with_tree=True, with_hidden=False,
+                 model_rew=False, planner='MCTS', batch_size=512, replay_size=100000):
+        self.act_dim = dynamics_model.act_dim
+        self.state_dim = dynamics_model.state_dim
+        self.model_rew = model_rew
+        self.act_mul_const = dynamics_model.act_mul_const
         self.lookahead = depth
         self.from_update = 0
         replay_size = max(replay_size, batch_size)
         self.batch_size = batch_size
         self.null_agent = False
-        if agent == 'TD3':
-            from model_free.TD3 import TD3 as Agent
-        elif agent == 'SAC':
-            from model_free.SAC import SAC as Agent
-        elif agent == 'None':
-            from model_free.Null import NullAgent as Agent
+        if rl == 'TD3':
+            from model_free.TD3 import TD3 as RL
+        elif rl == 'SAC':
+            from model_free.SAC import SAC as RL
+        elif rl == 'None':
+            from model_free.Null import NullAgent as RL
             self.null_agent = True
         else:
-            from model_free.TD3 import TD3 as Agent
+            from model_free.TD3 import TD3 as RL
 
-        if parallel:
-            from model_based.parallel_mcts import ParallelMCTS as MCTS
+        if planner == 'MCTS':
+            from model_based.mcts import MCTS as Planner
+        elif planner == 'CEM':
+            from model_based.cem import CEM as Planner
         else:
-            from model_based.mcts import MCTS
+            from model_based.mcts import MCTS as Planner
 
-        self.model = env_learner
+        self.model = dynamics_model
         self.model.model.train()
         if with_hidden:
-            self.rl_learner = Agent(self.state_dim+self.model.model.latent_size, self.act_dim)
+            self.rl_learner = RL(self.state_dim+self.model.model.latent_size, self.act_dim)
         else:
-            self.rl_learner = Agent(self.state_dim, self.act_dim)
-        self.rl_learner.model_rew = model_rew
-        self.planner = MCTS(self.lookahead, env_learner, self.rl_learner, initial_width=width,
-                            with_hidden=with_hidden, cross_entropy=cross_entropy)
+            self.rl_learner = RL(self.state_dim, self.act_dim)
+
+        if self.model_rew: # nullifying the value function in favor or the model based approach
+            self.rl_learner.value = model_rew_value
+
+        self.planner = Planner(self.lookahead, dynamics_model, self.rl_learner, width)
         self.model_replay = deque(maxlen=replay_size)
         
         if not os.path.exists('rl_models/'):
@@ -127,32 +136,35 @@ class Agent:
         self.start_time = time.time()
         for i in range(num_episodes):
             obs = env.reset()
-            obs = self.planner.env_learner.reset(obs, None)
+            if self.model_rew: # appending initial reward of 0 to obs
+                obs = np.concatenate([np.zeros(1), obs]).astype(obs.dtype)
+            obs = self.planner.dynamics_model.reset(obs, None)
             done = False
             ep_r = 0
             ep_exp_r = 0
             ep_len = 0
             while not done:
-                if self.with_tree and not self.null_agent:
-                    act, node = self.planner.best_move(obs)
-                    act = act.flatten()
-                    ex_r = node.best_r
+                if self.with_tree:
+                    act, best_r = self.planner.best_move(obs)
+                    act = act.cpu().data.numpy().flatten()
+                    ex_r = best_r
                     self.planner.clear()
                 else:
                     act = self.rl_learner.act(obs[0]).cpu().numpy().flatten()
                     ex_r = 0
-                new_obs, r_raw, done, info = env.step(act*self.act_mul_const)
+                new_obs, r, done, info = env.step(act*self.act_mul_const)
+                if self.model_rew: # appending reward to obs
+                    new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)
 
                 # TODO: Efficiently pass this h value from the search since it is already calculated
-                _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
+                _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
                                                               action_in=torch.from_numpy(act).unsqueeze(0).to(device),
                                                               state=True, state_in=True)
-                # _, h = self.planner.env_learner.step_parallel(obs, act)
-                new_obs = self.planner.env_learner.reset(new_obs, h)
+                # _, h = self.planner.dynamics_model.step_parallel(obs, act)
+                new_obs = self.planner.dynamics_model.reset(new_obs, h)
 
                 # Statistics update
                 self.steps += 1
-                r = r_raw
                 ep_r += r
                 ep_exp_r += ex_r
                 ep_len += 1
@@ -166,7 +178,7 @@ class Agent:
                 else:
                     self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                 self.from_update += 1
-                # self.rl_update()
+                self.rl_update()
                 self.rl_learner.steps += 1
 
                 ## Self-Model Update
@@ -199,7 +211,7 @@ class Agent:
         for i in range(num_episodes):
             obs_list = []
             obs = env.reset()
-            obs = self.planner.env_learner.reset(obs, None)
+            obs = self.planner.dynamics_model.reset(obs, None)
             done = False
             ep_r = 0
             ep_exp_r = 0
@@ -217,10 +229,10 @@ class Agent:
                 new_obs, r_raw, done, info = env.step(act*self.act_mul_const)
 
                 # TODO: Efficiently pass this h value from the search since it is already calculated
-                _, h = self.planner.env_learner.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
+                _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
                                                               action_in=torch.from_numpy(act).unsqueeze(0).to(device),
                                                               state=True, state_in=True)
-                new_obs = self.planner.env_learner.reset(new_obs, h)
+                new_obs = self.planner.dynamics_model.reset(new_obs, h)
 
                 # Statistics update
                 self.steps += 1

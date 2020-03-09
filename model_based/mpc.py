@@ -29,11 +29,11 @@ class NullAgent:
             return new_obs[0]
 
 class MPC:
-    def __init__(self, lookahead, env_learner, agent=None):
+    def __init__(self, lookahead, dynamics_model, agent=None):
         self.lookahead = lookahead
-        self.env_learner = env_learner
-        self.act_dim = self.env_learner.act_dim
-        self.act_mul_const = self.env_learner.act_mul_const
+        self.dynamics_model = dynamics_model
+        self.act_dim = self.dynamics_model.act_dim
+        self.act_mul_const = self.dynamics_model.act_mul_const
 
         self.agent = agent
         if self.agent is None:
@@ -58,7 +58,7 @@ class MPC:
         i = 0
         expected_r = 0
         while not done:
-            obs = self.env_learner.reset(obs)
+            obs = self.dynamics_model.reset(obs)
             act, node = self.best_move(obs)
             pred_r = node.future[str(act)][-1]
             # pred_r = 0
@@ -75,3 +75,6 @@ class MPC:
 
     def best_move(self, obs):
         raise NotImplementedError
+
+    def clear(self):
+        pass

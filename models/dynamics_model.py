@@ -1,7 +1,7 @@
 import numpy as np
 from collections import deque
 
-class EnvLearner:
+class DynamicsModel:
     def __init__(self, env_in):
         self.state_mul_const = env_in.observation_space.high
         # print(self.state_mul_const)

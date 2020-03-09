@@ -1,4 +1,6 @@
 from model_based.mpc import MPC, NullAgent
+from model_based.cem import CEM
+
 import numpy as np
 from collections import deque
 import time
@@ -40,8 +42,8 @@ else:
     devices = [torch.device('cpu')]
 
 class MCTS(MPC):
-    def __init__(self, lookahead, env_learner, agent=None, initial_width=2, with_hidden=False, cross_entropy=False):
-        MPC.__init__(self, lookahead, env_learner, agent)
+    def __init__(self, lookahead, dynamics_model, agent=None, initial_width=2, with_hidden=False, cross_entropy=False):
+        MPC.__init__(self, lookahead, dynamics_model, agent)
         self.width = initial_width
         self.populate_queue = deque()
         self.start = time.time()
@@ -51,7 +53,7 @@ class MCTS(MPC):
         self.with_hidden = with_hidden
         self.with_CE = cross_entropy
         if self.with_CE:
-            self.CE_N = 64
+            self.CEM = CEM(1, dynamics_model, agent)
 
     def clear(self):
         self.state_list = []
@@ -62,64 +64,6 @@ class MCTS(MPC):
             state.connect(act, r, new_state)
         self.state_list.append((new_state, depth))
         return new_state
-
-    def cross_entropy(self, obs, act):
-        # Initialize parameters
-        epsilon = 1e-3
-        t = 0
-        maxits = 32
-        N = self.CE_N
-        Ne = 16
-        b = act.shape[0]
-        # While maxits not exceeded and not
-        # Expands the states and actions batch size to be b*N
-        X = (obs[0].repeat((N, 1)), obs[1].repeat((N, 1, 1)))
-        # A_raw = act.repeat((N, 1, 1))
-        # mu = torch.zeros(act.shape)
-        mu = act
-        sigma = torch.ones(mu.shape).to(mu.device)*0.1
-        A_time = 0
-        B_time = 0
-        C_time = 0
-        D_time = 0
-        E_time = 0
-        while t < maxits and (sigma > epsilon).any():
-            start = time.time()
-            # Obtain N samples from current sampling distribution
-            mu = mu.repeat((N, 1))
-            sigma = sigma.repeat((N, 1))
-            A = (torch.randn_like(mu)*sigma + mu).clamp(-1, 1)
-            A_time += time.time()-start
-            start = time.time()
-            # Evaluate objective function at sampled points
-            S = self.env_learner.step_parallel(obs_in=X, action_in=A, state=True, state_in=True)
-            R = self.agent.value(X[0], A, S[0]).flatten()
-            B_time += time.time()-start
-            start = time.time()
-            # Splitting Rs and As into their initial groups
-            R = np.split(R, b, 0)
-            A = torch.chunk(A, b, 0)
-            C_time += time.time()-start
-            start = time.time()
-            # Select top Ne actions based on their R score
-            A = [A[i][np.argsort(-R[i])[:Ne]] for i in range(b)]
-            # A = [A[i][np.argpartition(-R[i], Ne)[:Ne]] for i in range(b)]
-            D_time += time.time()-start
-            start = time.time()
-            # Update parameters of sampling distribution
-            mu = torch.cat([torch.mean(A[i], 0).unsqueeze(0) for i in range(b)])
-            sigma = torch.cat([torch.std(A[i], 0).unsqueeze(0) for i in range(b)])
-            t = t + 1
-            E_time += time.time()-start
-        # Return mean of final sampling distribution as solution
-        # print(mu.shape[0])
-        # print('A: '+str(A_time))
-        # print('B: '+str(B_time))
-        # print('C: '+str(C_time))
-        # print('D: '+str(D_time))
-        # print('E: '+str(E_time))
-        # print('=================')
-        return mu
 
     def serve_queue(self, q):
         while len(q) > 0:
@@ -145,8 +89,8 @@ class MCTS(MPC):
                 tmp_obs = obs_in[0]
             acts_in = self.agent.act(tmp_obs)
             if self.with_CE:
-                acts_in = self.cross_entropy(obs_in, acts_in)
-            new_obs = self.env_learner.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
+                acts_in, avg_rs = self.CEM.best_move(obs_in, acts_in)
+            new_obs = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
             rs = self.agent.value(tmp_obs, acts_in, new_obs[0])
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
             for i in range(len(states)):
@@ -170,7 +114,7 @@ class MCTS(MPC):
         best_act = root.acts[i]
         root.best_act = best_act
         root.best_r = root.rs[i]
-        return best_act.cpu().data.numpy().flatten(), root
+        return best_act, root.best_r
 
     def exit(self):
         self.clear()

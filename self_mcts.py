@@ -114,19 +114,23 @@ class Agent:
         self.x_seq.append(obs[0] / self.model.state_mul_const[:-1])
         self.a_seq.append(act / self.act_mul_const)
         self.y_seq.append(new_obs[0] / self.model.state_mul_const)
+    
         if len(self.x_seq) == self.seq_len:
             self.model_replay.append((np.array(self.x_seq), np.array(self.a_seq), np.array(self.y_seq)))
         if len(self.model_replay) >= self.batch_size:
             data = random.sample(self.model_replay, self.batch_size)
 
-            obs_dist = np.array([step[0][0] for step in data])
+
+#tell Robert that y is np.float64 now.
+
+
+            #normalize with output
+            obs_dist = np.array([step[2][0] for step in data]).astype(np.float32)
             obs_mean = np.mean(obs_dist, 0)
             obs_std = np.std(obs_dist, 0)
-
             # This line ensures that is there is no variance in an element of the states it is unchanged
             # Otherwise when the observations are divided those values will become NaN
             obs_std[obs_std <= epsilon] = 1
-
             self.model.model.norm_mean = obs_mean
             self.model.model.norm_std = obs_std
             train_loss = self.model.update(data)

@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # Algorithms
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='TD3') # model free agent algorithm
-    parser.add_argument('--planner', type=str, default='CEM') # model based algorithm
+    parser.add_argument('--planner', type=str, default='MCTS') # model based algorithm
     parser.add_argument('--model-arch', type=str, default='seq') # type of self-model
 
     # Training Parameters

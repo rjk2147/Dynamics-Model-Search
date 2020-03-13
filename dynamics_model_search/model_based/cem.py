@@ -1,6 +1,6 @@
 import torch
 import time
-from model_based.mpc import MPC, NullAgent
+from dynamics_model_search.model_based.mpc import MPC, NullAgent
 import numpy as np
 
 if torch.cuda.is_available():
@@ -9,7 +9,7 @@ else:
     devices = [torch.device('cpu')]
 
 class CEM(MPC):
-    def __init__(self, lookahead, dynamics_model, agent=None, N=64, Ne=16, epsilon=1e-3, maxits=32, initial_sd=0.1, with_hidden=False):
+    def __init__(self, lookahead, dynamics_model, agent=None, N=64, Ne_ratio=0.25, epsilon=1e-3, maxits=32, initial_sd=0.1, with_hidden=False):
         MPC.__init__(self, lookahead, dynamics_model, agent)
         self.start = time.time()
         self.batch_size = 262144
@@ -17,7 +17,7 @@ class CEM(MPC):
         self.epsilon = epsilon
         self.maxits = maxits
         self.N = N
-        self.Ne = Ne
+        self.Ne = int(Ne_ratio*N)
         self.initial_sd = initial_sd
         self.discount = 0.95
 
@@ -80,3 +80,4 @@ class CEM(MPC):
 
         # Return mean of initial step 0 of the final sampling distribution as solution
         return mu[0], r
+

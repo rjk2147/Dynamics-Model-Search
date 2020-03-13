@@ -9,11 +9,50 @@ import torch.nn.functional as F
 import time
 from collections import deque
 
+def conv2d_bn_relu(inch,outch,kernel_size,stride=1,padding=0):
+    convlayer = torch.nn.Sequential(
+        torch.nn.Conv2d(inch,outch,kernel_size=kernel_size,stride=stride,padding=padding),
+        torch.nn.BatchNorm2d(outch),
+        torch.nn.ReLU()
+    )
+    return convlayer
+
+def conv2d_bn_sigmoid(inch,outch,kernel_size,stride=1,padding=0):
+    convlayer = torch.nn.Sequential(
+        torch.nn.Conv2d(inch,outch,kernel_size=kernel_size,stride=stride,padding=padding),
+        torch.nn.BatchNorm2d(outch),
+        torch.nn.Sigmoid()
+    )
+    return convlayer
+
+def deconv_sigmoid(inch,outch,kernel_size,stride=1,padding=0):
+    convlayer = torch.nn.Sequential(
+        torch.nn.ConvTranspose2d(inch,outch,kernel_size=kernel_size,stride=stride,padding=padding),
+        torch.nn.Sigmoid()
+    )
+    return convlayer
+
+def deconv_relu(inch,outch,kernel_size,stride=1,padding=0):
+    convlayer = torch.nn.Sequential(
+        torch.nn.ConvTranspose2d(inch,outch,kernel_size=kernel_size,stride=stride,padding=padding),
+        torch.nn.BatchNorm2d(outch),
+        torch.nn.ReLU()
+    )
+    return convlayer
+
+def product(l):
+    p = 1
+    for i in l:
+        p *= i
+    return p
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-class SeqModel(nn.Module):
-    def __init__(self, state_dim, act_dim, drop_rate=0.5):
-        super(SeqModel, self).__init__()
-        self.state_dim = state_dim
+class SeqCNNModel(nn.Module):
+    def __init__(self, state_dim, act_dim):
+        super(SeqCNNModel, self).__init__()
+        self.state_dim = list(state_dim)
+        state_size = product(state_dim)
+        w, h, c = state_dim
         self.act_dim = act_dim
         self.h = None
 
@@ -23,16 +62,48 @@ class SeqModel(nn.Module):
         self.norm_mean = np.array([0]).astype(np.float32)
         self.norm_std = np.array([1]).astype(np.float32)
 
-        self.rnn = nn.GRU(state_dim+act_dim, self.latent_size, num_recurrent_layers)
+        # Encode
+        self.conv1 = conv2d_bn_relu(4, 16, kernel_size=5, stride=2)
+        self.conv2 = conv2d_bn_relu(16, 32, kernel_size=5, stride=2)
+        self.conv3 = conv2d_bn_relu(32, 32, kernel_size=5, stride=2)
 
+        # Number of Linear input connections depends on output of conv2d layers
+        # and therefore the input image size, so compute it.
+        def conv2d_size_out(size, kernel_size = 5, stride = 2):
+            return (size - (kernel_size - 1) - 1) // stride  + 1
+        convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
+        convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
+        linear_input_size = convw * convh * 32
+
+        # RNN
+        self.rnn = nn.GRU(linear_input_size+act_dim, self.latent_size, num_recurrent_layers)
+
+        # Decode
         self.layer1 = nn.Linear(self.latent_size, self.latent_size)
-        self.fc_out = nn.Linear(self.latent_size, state_dim)
+        self.fc_out = nn.Linear(self.latent_size, state_size)
 
-    def decode(self, x):
+    def encode(self, x):
+        out = []
+        for i in range(x.shape[0]):
+            # From N, W, H, C to N, C, H, W
+            x_i = x[i].permute(0, 3, 2, 1).to(torch.float)
+            x_i = self.conv1(x_i)
+            x_i = self.conv2(x_i)
+            x_i = self.conv3(x_i)
+            out.append(x_i.view(x_i.size(0), -1).unsqueeze(0))
+        return torch.cat(out)
+
+    def decode_linear(self, x):
         x = self.layer1(x)
         x = torch.relu(x)
-        x = self.fc_out(x)
+        x = F.sigmoid(self.fc_out(x))
+        reshape_tuple = [x.shape[i] for i in range(len(x.shape)-1)]
+        reshape_tuple.extend(self.state_dim)
+        x = x.view(reshape_tuple)
         return x
+
+    def decode(self, x):
+        return self.decode_linear(x)
 
     def reset(self):
         return torch.ones((1,1,self.latent_size))
@@ -40,9 +111,10 @@ class SeqModel(nn.Module):
     def get_device(self):
         return self.fc_out._parameters['weight'].device
 
-    # seq_len, batch_len, input_size
+    # seq_len, batch_len, w, h, c
     def pred(self, x, a, h=None):
-        tmp_in = torch.cat([x, a], dim=-1)
+        x_enc = self.encode(x)
+        tmp_in = torch.cat([x_enc, a.to(torch.float)], dim=-1)
         out_enc, enc_h = self.rnn(tmp_in, h)
         out_tmp = self.decode(out_enc)
         return out_tmp, enc_h
@@ -61,12 +133,12 @@ class SeqModel(nn.Module):
         h = h.transpose(0,1)
 
         seq_out, seq_h = self.pred(obs, act, h)
-        seq_out = self.normalize(seq_out)
+        # seq_out = self.normalize(seq_out)
         single_out = seq_out[0]
         final_out = seq_out[-1]
         if y is not None:
             new_obs = y.transpose(0, 1)
-            new_obs = self.normalize(new_obs)
+            # new_obs = self.normalize(new_obs)
             single = torch.abs(seq_out[0]-new_obs[0])
             final = torch.abs(seq_out[-1]-new_obs[-1])
             seq_errors = torch.abs(seq_out-new_obs)
@@ -74,9 +146,9 @@ class SeqModel(nn.Module):
             e = torch.mean(e, -1)
             return torch.mean(single), torch.mean(seq_errors), torch.mean(final), single_out, seq_out, final_out
         else:
-            return seq_out, seq_h.transpose(0, 1)
+            return seq_out.to(torch.uint8), seq_h.transpose(0, 1)
 
-class SeqDynamicsModel(DynamicsModel):
+class SeqCNNDynamicsModel(DynamicsModel):
     def __init__(self, env_in, dev=None):
         DynamicsModel.__init__(self, env_in)
         self.lr = 1e-5
@@ -87,7 +159,7 @@ class SeqDynamicsModel(DynamicsModel):
         self.batch_size = 64
         self.max_seq_len = 100
         
-        self.model = SeqModel(self.state_dim, self.act_dim)
+        self.model = SeqCNNModel(self.state_dim, self.act_dim)
         if dev is None:
             self.model.to(device)
             self.device = device
@@ -95,24 +167,18 @@ class SeqDynamicsModel(DynamicsModel):
             self.model.to(dev)
             self.device = dev
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
-        self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.model.eval()
 
     def reinit(self, state_dim, state_mul_const, act_dim, act_mul_const):
         self.state_mul_const = state_mul_const
-        # print(self.state_mul_const)
         self.state_mul_const[self.state_mul_const == np.inf] = 1
-        print(self.state_mul_const)
         self.act_mul_const = act_mul_const
         self.act_dim = act_dim
         self.state_dim = state_dim
 
-        self.buff_init = [np.zeros(self.state_dim+self.act_dim)]
-        self.seq_init = [np.zeros(self.act_dim)]
-
-        self.model = SeqModel(self.state_dim, self.act_dim)
+        self.model = SeqCNNModel(self.state_dim, self.act_dim)
         self.model.to(self.device)
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
         self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
@@ -221,9 +287,6 @@ class SeqDynamicsModel(DynamicsModel):
         return Single/idx, Seq/idx, Final/idx
 
     def reset(self, obs_in, h=None):
-        # x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(1)
-        # _, self.h = self.model(x, None, None, 'reset')
-        # self.h = self.h.detach()
         self.is_reset = True
         if h is None:
             return obs_in, self.model.reset()
@@ -260,7 +323,7 @@ class SeqDynamicsModel(DynamicsModel):
             state_out = self.h
         self.is_reset = False
 
-        new_obs = new_obs.squeeze(1).detach()*self.state_mul_const_tensor.to(new_obs.device)
+        new_obs = new_obs.squeeze(1).detach()*self.state_mul_const_tensor.to(new_obs.device).to(new_obs.dtype)
         if not tensor:
             new_obs = new_obs.detach().cpu().numpy()
         if new_obs.shape[0] == 1:

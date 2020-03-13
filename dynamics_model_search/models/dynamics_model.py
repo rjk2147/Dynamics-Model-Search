@@ -4,18 +4,22 @@ from collections import deque
 class DynamicsModel:
     def __init__(self, env_in):
         self.state_mul_const = env_in.observation_space.high
-        # print(self.state_mul_const)
         self.state_mul_const[self.state_mul_const == np.inf] = 1
-        print(self.state_mul_const)
-        self.act_mul_const = env_in.action_space.high
-        self.act_dim = env_in.action_space.shape[0]
-        self.state_dim = env_in.observation_space.shape[0]
 
-        self.action_space = env_in.action_space
+        # Continuous Action Space
+        try:
+            self.act_mul_const = env_in.action_space.high
+            self.act_dim = env_in.action_space.shape[0]
+            self.action_space = env_in.action_space
+
+        # Discrete Action Space
+        except:
+            self.act_dim = 1
+            self.act_mul_const = 1
+
+        self.state_dim = env_in.observation_space.shape
         self.observation_space = env_in.observation_space
-
-        self.buff_init = [np.zeros(self.state_dim+self.act_dim)]
-        self.seq_init = [np.zeros(self.act_dim)]
+        print('State Dim: '+str(self.state_dim))
 
         self.norm_mean = 0
         self.norm_std = 1

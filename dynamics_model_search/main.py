@@ -3,22 +3,23 @@ import gym
 import torch
 import numpy as np
 from agent import Agent
-from models.preco_gen_dynamics_model import PreCoGenDynamicsModel
-from models.seq_dynamics_model import SeqDynamicsModel
 from pybullet_wrappers import RealerWalkerWrapper
+from atari_wrapper import make_env
 import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Algorithms
-    parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
-    parser.add_argument('--rl', type=str, default='TD3') # model free agent algorithm
+    # parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
+    parser.add_argument('--env', type=str, default='Breakout-v0') # pybullet environment
+    parser.add_argument('--rl', type=str, default='DQN') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='seq') # type of self-model
+    parser.add_argument('--model-arch', type=str, default='seq-cnn') # type of self-model
+    parser.add_argument('--atari', action='store_true', default=True)
 
     # Training Parameters
-    parser.add_argument('--episodes', type=int, default=10000) # training episodes
+    parser.add_argument('--steps', type=int, default=1e6) # training steps
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
     parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
 
@@ -37,7 +38,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     cmd = 'python main.py --env '+str(args.env)+' --agent '+str(args.rl)+' --planner '+str(args.planner)+' --width '+str(args.width)+\
-          ' --depth '+str(args.depth)+' --episodes '+str(args.episodes)+' --batch-size '+str(args.batch_size)+\
+          ' --depth '+str(args.depth)+' --steps '+str(args.steps)+' --batch-size '+str(args.batch_size)+\
           ' --replay-size '+str(args.replay_size)+' --model-arch '+str(args.model_arch)
     if args.seed is not None: cmd += ' --seed '+str(args.seed)
     if args.use_state:      cmd += ' --use-state'
@@ -51,6 +52,8 @@ if __name__ == '__main__':
     elif 'Bullet' in args.env:
         print('Bullet env chosen')
         env = RealerWalkerWrapper(gym.make(args.env))
+    elif args.atari:
+        env = make_env(gym.make(args.env))
     else:
         env = gym.make(args.env)
 
@@ -61,15 +64,47 @@ if __name__ == '__main__':
         env.seed(args.seed)
 
     if args.model_arch == 'precogen':
+        from models.preco_gen_dynamics_model import PreCoGenDynamicsModel
         dynamics_model = PreCoGenDynamicsModel(env)
     elif args.model_arch == 'seq':
+        from models.seq_dynamics_model import SeqDynamicsModel
         dynamics_model = SeqDynamicsModel(env)
+    elif args.model_arch == 'seq-cnn':
+        from models.seq_cnn_dynamics_model import SeqCNNDynamicsModel
+        dynamics_model = SeqCNNDynamicsModel(env)
+
     if args.model_reward:
         dynamics_model.reinit(dynamics_model.state_dim+1,np.concatenate([np.ones(1), dynamics_model.state_mul_const]).astype(dynamics_model.state_mul_const.dtype),
                            dynamics_model.act_dim, dynamics_model.act_mul_const)
-    agent = Agent(dynamics_model, width=int(args.width), depth=int(args.depth), rl=args.rl,
-                  with_hidden=args.use_state, model_rew=args.model_reward, planner=args.planner,
-                  with_tree=not args.no_search, batch_size=args.batch_size, replay_size=args.replay_size)
+
+    if args.rl.upper() == 'TD3':
+        from model_free.TD3 import TD3
+        rl_learner = TD3(env)
+    elif args.rl.upper() == 'SAC':
+        from model_free.SAC import SAC
+        rl_learner = SAC(env)
+    elif args.rl.upper() == 'DQN':
+        from model_free.DQN import DQN
+        rl_learner = DQN(env)
+    elif args.rl.lower() == 'none' or args.rl.lower() == 'null':
+        from model_free.Null import NullAgent
+        rl_learner = NullAgent(env)
+    else:
+        from model_free.Null import NullAgent
+        rl_learner = NullAgent(env)
+
+    if args.planner == 'MCTS':
+        from model_based.mcts import MCTS
+        planner = MCTS(args.depth, dynamics_model, rl_learner, args.width)
+    elif args.planner == 'CEM':
+        from model_based.cem import CEM
+        planner = CEM(args.depth, dynamics_model, rl_learner, args.width)
+    else:
+        from model_based.mcts import MCTS
+        planner = MCTS(args.depth, dynamics_model, rl_learner, args.width)
+
+    agent = Agent(dynamics_model, rl_learner, planner, model_rew=args.model_reward, with_tree=not args.no_search,
+                  batch_size=args.batch_size, replay_size=args.replay_size)
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all
@@ -79,4 +114,4 @@ if __name__ == '__main__':
     if args.load_agent is not None:
         print('Loading Agent...')
         agent.rl_learner.load(args.load_agent)
-    agent.learn(env, int(args.episodes))
+    agent.learn(env, int(args.steps))

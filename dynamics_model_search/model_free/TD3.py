@@ -107,8 +107,7 @@ class Critic(nn.Module):
 class TD3(object):
     def __init__(
         self,
-        state_dim,
-        action_dim,
+        env,
         max_action=1,
         discount=0.99,
         tau=0.005,
@@ -116,6 +115,10 @@ class TD3(object):
         noise_clip=0.5,
         policy_freq=2
     ):
+
+        action_dim = env.action_space.shape[0]
+        state_dim = env.observation_space.shape[0]
+
         self.device = device
         self.replay = ReplayBuffer(state_dim, action_dim)
         self.actor = Actor(state_dim, action_dim, max_action).to(self.device)
@@ -149,7 +152,6 @@ class TD3(object):
         return self.actor(state).cpu().data.numpy().flatten()
 
     def act(self, obs):
-        # if self.steps > 10000:
         if torch.is_tensor(obs):
             obs = obs.to(self.device)
         else:
@@ -157,10 +159,6 @@ class TD3(object):
         action = self.actor(obs).detach()
         action += torch.randn_like(action)*self.expl_noise
         action.clamp(-self.max_action, self.max_action)
-        # print(obs.shape)
-        # else:
-        #     action = torch.from_numpy(np.random.uniform(-1, 1, (len(obs), self.act_dim))).to(self.device).float()
-        # print(action.shape)
         return action
 
     def value(self, obs, act, new_obs):
@@ -227,10 +225,6 @@ class TD3(object):
 
             for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
                 target_param.data.copy_(self.tau * param.data + (1 - self.tau) * target_param.data)
-
-            # print('Actor Loss: '+str(actor_loss.item()))
-            # print('Critic Loss: '+str(critic_loss.item()))
-
 
     def save(self, filename):
         torch.save(self.critic.state_dict(), filename + "_critic")

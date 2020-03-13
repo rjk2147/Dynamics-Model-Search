@@ -11,9 +11,17 @@ class NullReplay(object):
         return 0
 
 class NullAgent:
-    def __init__(self, state_dim, act_dim):
+    def __init__(self, env):
         print('Null agent chosen')
-        self.act_dim = act_dim
+        # Continuous Action Space
+        try:
+            self.act_mul_const = env.action_space.high
+            self.act_dim = env.action_space.shape[0]
+            self.action_space = env.action_space
+
+        # Discrete Action Space
+        except:
+            self.act_dim = env.action_space.n
         self.steps = 0
         self.replay = NullReplay()
 

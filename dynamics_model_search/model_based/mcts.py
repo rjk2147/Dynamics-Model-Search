@@ -1,5 +1,5 @@
-from model_based.mpc import MPC, NullAgent
-from model_based.cem import CEM
+from dynamics_model_search.model_based.mpc import MPC, NullAgent
+from dynamics_model_search.model_based.cem import CEM
 
 import numpy as np
 from collections import deque
@@ -42,7 +42,7 @@ else:
     devices = [torch.device('cpu')]
 
 class MCTS(MPC):
-    def __init__(self, lookahead, dynamics_model, agent=None, initial_width=2, with_hidden=False, cross_entropy=False):
+    def __init__(self, lookahead, dynamics_model, agent=None, initial_width=2, cross_entropy=False):
         MPC.__init__(self, lookahead, dynamics_model, agent)
         self.width = initial_width
         self.populate_queue = deque()
@@ -50,7 +50,6 @@ class MCTS(MPC):
         self.batch_size = 262144
         self.CE_N = 1
         self.clear()
-        self.with_hidden = with_hidden
         self.with_CE = cross_entropy
         if self.with_CE:
             self.CEM = CEM(1, dynamics_model, agent)
@@ -81,17 +80,13 @@ class MCTS(MPC):
                         depths.append(depth)
             if len(states) == 0:
                 continue
-            obs_in = (torch.cat([obs[i][0].unsqueeze(0) for i in range(len(obs))]),
+            obs_in = (torch.cat([obs[i][0].unsqueeze(0) for i in range(len(obs))]).unsqueeze(1),
                    torch.cat([obs[i][1] for i in range(len(obs))]))
-            if self.with_hidden:
-                tmp_obs = torch.cat([obs_in[0], obs_in[1].squeeze(1)], -1)
-            else:
-                tmp_obs = obs_in[0]
-            acts_in = self.agent.act(tmp_obs)
+            acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
             if self.with_CE:
                 acts_in, avg_rs = self.CEM.best_move(obs_in, acts_in)
             new_obs = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
-            rs = self.agent.value(tmp_obs, acts_in, new_obs[0])
+            rs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
             for i in range(len(states)):
                 new_state = self.add(these_new_obs[i], states[i], acts_in[i], rs[i].item(), depth=depths[i]+1)

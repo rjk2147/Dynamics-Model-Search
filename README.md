@@ -1,4 +1,18 @@
 # Dynamics Model Search
+
+## Installation
+Clone the repo and cd into it
+~~~
+git clone https://github.com/rjk2147/Dynamics-Model-Search
+cd Dynamics-Model-Search
+~~~
+Install the package
+~~~
+pip3 install -e .
+~~~
+
+## Usage
+
 ~~~~
 usage: main.py [-h] [--env ENV] [--rl RL] [--planner PLANNER] [--width WIDTH]
                [--depth DEPTH] [--episodes EPISODES] [--batch-size BATCH_SIZE]

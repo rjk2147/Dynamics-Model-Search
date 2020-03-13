@@ -33,7 +33,7 @@ class MPC:
         self.lookahead = lookahead
         self.dynamics_model = dynamics_model
         self.act_dim = self.dynamics_model.act_dim
-        self.act_mul_const = self.dynamics_model.act_mul_const
+        # self.act_mul_const = self.dynamics_model.act_mul_const
 
         self.agent = agent
         if self.agent is None:
@@ -42,9 +42,9 @@ class MPC:
     def plan(self, env, num_eps):
         final_rs = []
         for i in range(num_eps):
-            start = time.time()
+            # start = time.time()
             final_r = self.plan_episode(env)
-            t = round(time.time()-start, 2)
+            # t = round(time.time()-start, 2)
             # print('Trial '+str(i+1)+'/'+str(num_eps)+' completed in '+str(t)+'s with Final Reward: '+str(final_r))
             final_rs.append(final_r)
         final_rs = np.array(final_rs)

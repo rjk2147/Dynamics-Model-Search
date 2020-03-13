@@ -110,8 +110,12 @@ class ReplayMemory:
         return len(self.buffer)
 
 class SAC(object):
-    def __init__(self, num_inputs, act_dim, gamma=0.99, tau=0.005, alpha=0.2,
+    def __init__(self, env, gamma=0.99, tau=0.005, alpha=0.2,
                  target_update_interval=1, automatic_entropy_tuning=False, hidden_size=256, lr=0.0003):
+
+        act_dim = env.action_space.shape[0]
+        num_inputs = env.observation_space.shape[0]
+
         self.act_dim = act_dim
         self.gamma = gamma
         self.tau = tau

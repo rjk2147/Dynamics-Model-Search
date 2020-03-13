@@ -47,7 +47,6 @@ class RealerWalkerWrapper(gym.Env):
         self.observation_space = spaces.Box(high=self.env.observation_space.high[self.front:-self.back],
                                             low=self.env.observation_space.low[self.front:-self.back])
         # self.observation_space = self.env.observation_space.high
-        print('State Dim: '+str(obs_ones.shape[0]))
         # State Summary (dim=25):
         # state[0] = vx
         # state[1] = vy

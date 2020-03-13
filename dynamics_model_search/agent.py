@@ -14,52 +14,27 @@ def model_rew_value(obs, act, new_obs):
     return new_obs[...,0].detach().cpu().numpy()
 
 class Agent:
-    def __init__(self, dynamics_model, width=64, depth=1, rl='TD3', with_tree=True, with_hidden=False,
-                 model_rew=False, planner='MCTS', batch_size=512, replay_size=100000):
-        self.act_dim = dynamics_model.act_dim
-        self.state_dim = dynamics_model.state_dim
+    def __init__(self, dynamics_model, rl, planner, with_tree=True, model_rew=False, batch_size=512, replay_size=1e5):
         self.model_rew = model_rew
         self.act_mul_const = dynamics_model.act_mul_const
-        self.lookahead = depth
         self.from_update = 0
-        replay_size = max(replay_size, batch_size)
         self.batch_size = batch_size
-        self.null_agent = False
-        if rl == 'TD3':
-            from model_free.TD3 import TD3 as RL
-        elif rl == 'SAC':
-            from model_free.SAC import SAC as RL
-        elif rl == 'None':
-            from model_free.Null import NullAgent as RL
-            self.null_agent = True
-        else:
-            from model_free.TD3 import TD3 as RL
-
-        if planner == 'MCTS':
-            from model_based.mcts import MCTS as Planner
-        elif planner == 'CEM':
-            from model_based.cem import CEM as Planner
-        else:
-            from model_based.mcts import MCTS as Planner
+        self.with_tree = with_tree
 
         self.model = dynamics_model
-        self.model.model.train()
-        if with_hidden:
-            self.rl_learner = RL(self.state_dim+self.model.model.latent_size, self.act_dim)
-        else:
-            self.rl_learner = RL(self.state_dim, self.act_dim)
+        self.rl_learner = rl
+        self.planner = planner
 
         if self.model_rew: # nullifying the value function in favor or the model based approach
             self.rl_learner.value = model_rew_value
+        self.model.model.train()
 
-        self.planner = Planner(self.lookahead, dynamics_model, self.rl_learner, width)
-        self.model_replay = deque(maxlen=replay_size)
+        replay_size = max(replay_size, batch_size)
+        self.model_replay = deque(maxlen=int(replay_size))
         
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
         self.save_str = 'rl_models/'+datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
-        self.with_tree = with_tree
-        self.with_hidden = with_hidden
 
     def print_stats(self):
         if self.ep_lens and len(self.ep_rs) > 0:
@@ -118,7 +93,7 @@ class Agent:
             self.a_seq = deque(maxlen=self.seq_len)
             self.y_seq = deque(maxlen=self.seq_len)
 
-    def learn(self, env, num_episodes=100):
+    def learn(self, env, max_timesteps=1e6):
         self.model.max_seq_len = 10
         self.seq_len = self.model.max_seq_len
         self.x_seq = deque(maxlen=self.seq_len)
@@ -134,7 +109,7 @@ class Agent:
         self.ep_lens = deque(maxlen=100)
         # self.steps = 0
         self.start_time = time.time()
-        for i in range(num_episodes):
+        while self.steps < max_timesteps:
             obs = env.reset()
             if self.model_rew: # appending initial reward of 0 to obs
                 obs = np.concatenate([np.zeros(1), obs]).astype(obs.dtype)
@@ -150,15 +125,15 @@ class Agent:
                     ex_r = best_r
                     self.planner.clear()
                 else:
-                    act = self.rl_learner.act(obs[0]).cpu().numpy().flatten()
+                    act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     ex_r = 0
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
                 if self.model_rew: # appending reward to obs
                     new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)
 
                 # TODO: Efficiently pass this h value from the search since it is already calculated
-                _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
-                                                              action_in=torch.from_numpy(act).unsqueeze(0).to(device),
+                _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), obs[1].to(device)),
+                                                              action_in=torch.from_numpy(act).unsqueeze(0).unsqueeze(1).to(device),
                                                               state=True, state_in=True)
                 # _, h = self.planner.dynamics_model.step_parallel(obs, act)
                 new_obs = self.planner.dynamics_model.reset(new_obs, h)
@@ -171,12 +146,7 @@ class Agent:
 
                 # TODO could try to use state and rerun all obs through the self-model before RL-update
                 ## RL Learner Update
-                if self.with_hidden:
-                    obs_cat = torch.cat([torch.from_numpy(obs[0]), obs[1].flatten().cpu()], -1).numpy()
-                    new_obs_cat = torch.cat([torch.from_numpy(new_obs[0]), new_obs[1].flatten().cpu()], -1).numpy()
-                    self.rl_learner.replay.add(obs_cat, act, new_obs_cat, r, done)
-                else:
-                    self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
+                self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                 self.from_update += 1
                 self.rl_update()
                 self.rl_learner.steps += 1
@@ -218,7 +188,7 @@ class Agent:
             ep_len = 0
             while not done:
                 obs_list.append(obs[0])
-                if self.with_tree and not self.null_agent:
+                if self.with_tree:
                     act, node = self.planner.best_move(obs)
                     act = act.flatten()
                     ex_r = node.best_r

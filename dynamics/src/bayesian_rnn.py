@@ -143,22 +143,27 @@ class BayesianSequenceModel(nn.Module):
 
         with pyro.plate('data', X_.shape[0], device = X_.device) as ix:
             batch_X = X_[ix]
-            batch_Y = Y[ix]
+            batch_Y = Y[ix] if Y is not None else None
 
             # print("batch shape: ", batch.shape, end="")
             N = batch_X.shape[0]
             T = batch_X.shape[1]
             Y_hat, Z = self.prior(N,T)    # shape of Y_hat or Z is (N, T, D)
-
+            O = []
             # print("Z shape: ", Z.shape, "Y_hat shape: ", Y_hat.shape)
-            for t in range(Y.shape[1]):
+            # print(self.likelihood_sd)
+            for t in range(X    .shape[1]):
                 # print(Y_hat[:, t, :].shape, torch.ones(Y_hat[:, t, :].shape[0], Y_hat[:, t, :].shape[1]).shape)
-                pyro.sample('obs_{}'.format(t),
+                obs = pyro.sample('obs_{}'.format(t),
                             dist.Normal(Y_hat[:, t, :],
                                         self.likelihood_sd*torch.ones(Y_hat[:, t, :].shape[0], Y_hat[:, t, :].shape[1]).to(self.device))
                                 .to_event(1),
-                            obs=batch_Y[:, t, :]
+                            obs=batch_Y[:, t, :] if Y is not None else None
                             )
+                O.append(obs)
+            O = torch.stack(O).transpose(0,1)
+        
+        return Y_hat, Z, O
 
     # N = number of samples 
     def prior(self, N, T):
@@ -192,6 +197,7 @@ class BayesianSequenceModel(nn.Module):
     def predict(self, X, A, Y, lookahead=5):
         T = X.shape[1]
         Y_hat = []
+        O = []
         for i in range(0, T, lookahead):
             x0 = X[:, i:i+1, :]
             z, h, c = None, None, None
@@ -204,29 +210,14 @@ class BayesianSequenceModel(nn.Module):
                 else:
                     trace = poutine.trace(self.guide).get_trace(X=x0, A=a0, Y=y0, batch_size=1, z_prev=z, h_prev=h, c_prev=c)
                 z, h, c = torch.from_numpy(self.z_prev).to(self.device), torch.from_numpy(self.h_prev).to(self.device), torch.from_numpy(self.c_prev).to(self.device)
-                y_hat, _ = poutine.replay(self.prior, trace=trace)(x0.shape[0], x0.shape[1])
+                # y_hat, _ = poutine.replay(self.prior, trace=trace)(x0.shape[0], x0.shape[1])
+                y_hat, _, o = poutine.replay(self.model, trace=trace)(x0, a0, None, batch_size=1)
+                O.append(o.data.cpu().numpy())
                 Y_hat.append(y_hat.data.cpu().numpy())
                 x0 = y_hat
         Y_hat = np.array(Y_hat)
-        return Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1]))
-
-
-
-
-
-
-    def foresee(self, x, a, lookahead=5):
-        T = x.shape[1]
-        Y_hat = []
-        for i in range(0, T, lookahead):
-            x0 = torch.from_numpy(x[:, i:i+1, :]).to(self.device)
-            h0 = torch.ones((x0.shape[0], 1, self.latent_dim)).to(self.device)
-            for j in range(lookahead):
-                a0 = torch.from_numpy(a[:, i+j:i+j+1, :]).to(self.device)
-                x0, h0 = self.internal_predict(x0, a0, h0)
-                Y_hat.append(x0.data.cpu().numpy())
-        return np.array(Y_hat).reshape((x.shape[0], T, x.shape[2]))  
-
+        O = np.array(O)
+        return Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1])), O.reshape((O.shape[1], O.shape[0], O.shape[-1]))
 
 class Trainer:
     def __init__(self, model, device, learing_rate=1e-5):

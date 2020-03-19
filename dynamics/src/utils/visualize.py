@@ -10,6 +10,21 @@ def plot_velocity_curve(true, pred):
     data.plot(legend=True)
     plt.show()
 
+def plot_velocity_curve_with_uncertainty(true, pred, error1, error2):
+    data = DataFrame()
+    data["y"] = true
+    data["y_hat_mean"] = pred
+    data["-std"] = error1
+    data["+std"] = error2
+    data.plot(legend=True)
+    plt.show()
+
+def plot_velocity_curve_with_uncertainty_shaded(true, pred, error1, error2):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 6), sharey=True)
+    ax.plot(pred)
+    ax.fill_between(x=[i for i in range(pred.shape[0])], y1=error1, y2=error2, alpha=0.5)
+    ax.plot(true)
+
 def compute_link(angle1, angle2, quad, r=1):
     x1, y1 = (r*math.cos(angle1), r*math.sin(angle1))
     x2, y2 = (r*math.cos(angle1) + r*math.cos(angle1+angle2), r*math.sin(angle2) + r*math.sin(angle1+angle2))

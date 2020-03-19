@@ -3,3 +3,4 @@ __pycache__
 *~
 dynamics/datasets/
 dynamics/models/
+dynamics/src/.data/

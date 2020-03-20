@@ -55,9 +55,11 @@ class Decoder(nn.Module):
         return y
 
 class BayesianSequenceModel(nn.Module):
-    def __init__(self, state_size=21, action_size=8, z_size=32, hidden_state_size=256, device=None):
+    def __init__(self, state_size=21, action_size=8, z_size=32, hidden_state_size=256, likelihood_std=0.1, device=None, path=None):
         super().__init__()
         self.device = device
+        self.path = path
+        
         self.z_size = z_size
         self.input_size = state_size+action_size
         self.output_size = state_size
@@ -95,7 +97,7 @@ class BayesianSequenceModel(nn.Module):
             "c_prev":   None    
         }
         
-        self.likelihood_sd = 0.0001 # ???
+        self.likelihood_std = likelihood_std
 
 
     def guide(self, X, A, Y, batch_size, prev_z=None, prev_h=None, prev_c=None):
@@ -169,12 +171,10 @@ class BayesianSequenceModel(nn.Module):
                 #             obs=batch_Y[:, t, :] if batch_Y is not None else None
                 #             )
                 obs = pyro.sample('obs_{}'.format(t),
-                                dist.Normal(loc=Y_hat[:, t, :], scale=self.likelihood_sd*torch.ones(Y_hat[:, t, :].shape[0], Y_hat[:, t, :].shape[1]).to(self.device))
+                                dist.Normal(loc=Y_hat[:, t, :], scale=self.likelihood_std*torch.ones(Y_hat[:, t, :].shape[0], Y_hat[:, t, :].shape[1]).to(self.device))
                                     .to_event(1),
                             obs=batch_Y[:, t, :] if batch_Y is not None else None
                             )
-
-
                 O.append(obs)
 
             O = torch.stack(O).transpose(0,1)
@@ -228,11 +228,11 @@ class BayesianSequenceModel(nn.Module):
         O = np.array(O)
         return Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1])), O.reshape((O.shape[1], O.shape[0], O.shape[-1]))
 
-    def save_checkpoint(self, path):
-        torch.save(self.state_dict(), path)
+    def save_checkpoint(self, path=None):
+        torch.save(self.state_dict(), self.path if path is None else path)
         
-    def load_checkpoint(self, path):
-        checkpoint = torch.load(path)
+    def load_checkpoint(self, path=None):
+        checkpoint = torch.load(self.path if path is None else path)
         self.load_state_dict(checkpoint)        
 
 

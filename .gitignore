@@ -4,3 +4,5 @@ __pycache__
 dynamics/datasets/
 dynamics/models/
 dynamics/src/.data/
+dynamics/wandb/
+dynamics/src/wandb/

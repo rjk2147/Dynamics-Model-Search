@@ -10,6 +10,14 @@ def plot_velocity_curve(true, pred):
     data.plot(legend=True)
     plt.show()
 
+def get_velocity_curve(title, true, pred):
+    fig, ax = plt.subplots()
+    ax.plot(true, c="g", label="y")
+    ax.plot(pred, c="r", label="y_hat")
+    ax.set_ylabel("velocity")
+    ax.set_xlabel("timestep")
+    return ax
+    
 def plot_velocity_curve_with_uncertainty(true, pred, error1, error2):
     data = DataFrame()
     data["y"] = true
@@ -71,7 +79,6 @@ def plot_links_side_by_side(true, pred):
     display.clear_output(wait=True)
     display.display(plt.gcf()) 
     plt.clf()
-
 
 def plot_links_overlap(true, pred):
     link1 = compute_link(true[0], true[1], quad=1)

@@ -12,6 +12,7 @@ from bayesian_rnn_experimental import BayesianSequenceModel
 from utils.visualize import *
 import wandb
 import warnings
+from utils.tools import *
 
 class Trainer:
     def __init__(self, vrnn, learning_rate, device, wandb):
@@ -25,33 +26,37 @@ class Trainer:
 
         self.wandb.watch(self.vrnn, log="all")     # track network topology
 
-    def train(self, epochs, batch_size, X, A, Y):
+    def train(self, epochs, batch_size, train, val):
         pyro.poutine.util.enable_validation(True)
         # pyro.clear_param_store()
-        t0 = time.time()
+        X, A, Y = train
+        X_val, A_val, Y_val = val
         N = X.shape[0]
 
+        t0 = time.time()
         for i in range(1, epochs+1):
             elbo_loss = self.svi.step(X=X, 
                             A=A, 
                             Y=Y, 
                             batch_size=batch_size)
 
-            batch_mae_loss, batch_Z, batch_Y_hat, batch_Y = self.vrnn.loss(X=X, A=A, Y=Y, batch_size=batch_size)
-            print('i={}, epochs={:.2f}, elapsed={:.2f}, elbo={:.2f} loss={:.2f}'.format(i, (i * batch_size) / N, (time.time() - t0) / 3600, elbo_loss / N, batch_mae_loss))
+            train_batch_mae_loss, train_batch_Z, train_batch_Y_hat, train_batch_Y = self.vrnn.loss(X=X, A=A, Y=Y, batch_size=batch_size)
+            val_batch_mae_loss, val_batch_Z, val_batch_Y_hat, val_batch_Y = self.vrnn.loss(X=X_val, A=A_val, Y=Y_val, batch_size=batch_size)
+            print('i={}, epochs={:.2f}, elapsed={:.2f}, elbo={:.2f} train_loss={:.2f} val_loss={:.2f}'.format(i, (i * batch_size) / N, (time.time() - t0) / 3600, elbo_loss / N, train_batch_mae_loss, val_batch_mae_loss))
             
             if i % 10 == 0:                
                 self.wandb.log({
-                    "x-velocity"    :   get_velocity_curve(title="x-velocity", true=batch_Y[0, :, 0], pred=batch_Y_hat[0, :, 0]),
-                    "y-velocity"    :   get_velocity_curve(title="y-velocity", true=batch_Y[0, :, 1], pred=batch_Y_hat[0, :, 1]),
-                    "z-velocity"    :   get_velocity_curve(title="z-velocity", true=batch_Y[0, :, 2], pred=batch_Y_hat[0, :, 2])
+                    "x-velocity"    :   get_velocity_curve(title="x-velocity", true=train_batch_Y[0, :, 0], pred=train_batch_Y_hat[0, :, 0]),
+                    "y-velocity"    :   get_velocity_curve(title="y-velocity", true=train_batch_Y[0, :, 1], pred=train_batch_Y_hat[0, :, 1]),
+                    "z-velocity"    :   get_velocity_curve(title="z-velocity", true=train_batch_Y[0, :, 2], pred=train_batch_Y_hat[0, :, 2])
                 }, commit=False)
         
             self.wandb.log({
-                "elbo"  :   elbo_loss / N,
-                "mae"   :   batch_mae_loss,
-                "batch" :   i,
-                "epoch" :   (i * batch_size) / N
+                "elbo"          :   elbo_loss / N,
+                "train_mae"     :   train_batch_mae_loss,
+                "train_val"     :   val_batch_mae_loss,
+                "batch"         :   i,
+                "epoch"         :   (i * batch_size) / N
                 })
             self.vrnn.save_checkpoint()
 
@@ -59,9 +64,9 @@ class Trainer:
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
-    machine = "stronghold"
+    machine = "tesla"
     notes = "testing wandb for the first time!"
-    name = "likelihood_std=0.1"
+    name = "likelihood_std=1+time_standardization"
 
     wandb.init(project="bayesian_sequence_modelling", name=machine+"/"+name, tags=[machine], notes=notes, reinit=True)
 
@@ -72,17 +77,22 @@ if __name__ == "__main__":
     X_val, A_val, Y_val = np.load(dataset+"/val/states.npy"), np.load(dataset+"/val/actions.npy"), np.load(dataset+"/val/next_states.npy")
     X_test, A_test, Y_test = np.load(dataset+"/test/states.npy"), np.load(dataset+"/test/actions.npy"), np.load(dataset+"/test/next_states.npy")
 
+    X_train, Y_train = standardize_across_time(X_train), standardize_across_time(Y_train) 
+    X_val, Y_val = standardize_across_time(X_val), standardize_across_time(Y_val) 
+    X_test, Y_test = standardize_across_time(X_test), standardize_across_time(Y_test) 
+
     config = {
         "dataset"           :   dataset,
         "state_size"        :   X_train.shape[-1],
         "action_size"       :   A_train.shape[-1],
         "z_size"            :   32,
         "hidden_state_size" :   256,
-        "likelihood_std"    :   0.1,
-        "epochs"            :   10000,
+        "likelihood_std"    :   1,
+        "epochs"            :   5000,
         "batch_size"        :   1600,
         "learning_rate"     :   1.0e-3,
-        "device"            :   device
+        "device"            :   device,
+        "preprocessing"     :   "standardization across time"
     }
 
     vrnn = BayesianSequenceModel(state_size=config["state_size"], 
@@ -91,15 +101,15 @@ if __name__ == "__main__":
                                  hidden_state_size=config["hidden_state_size"], 
                                  likelihood_std=config["likelihood_std"],
                                  device=device,
-                                 path=os.path.join(wandb.run.dir, machine+"_"+name+"_bayesian_rnn_model.pth"))
+                                 path=os.path.join(wandb.run.dir, machine+"_"+name+"_bayesian_rnn_time_standardization_model.pth"))
     # vrnn.load_checkpoint()
     trainer = Trainer(vrnn=vrnn, learning_rate=config["learning_rate"], device=device, wandb=wandb)
 
     trainer.train(epochs=config["epochs"], 
                   batch_size=config["batch_size"], 
-                  X=torch.from_numpy(X_train[:]).to(device),
-                  A=torch.from_numpy(A_train[:]).to(device),
-                  Y=torch.from_numpy(Y_train[:]).to(device))
+                  train=(torch.from_numpy(X_train[:]).to(device),torch.from_numpy(A_train[:]).to(device),torch.from_numpy(Y_train[:]).to(device)),
+                  val=(torch.from_numpy(X_val[:]).to(device),torch.from_numpy(A_val[:]).to(device),torch.from_numpy(Y_val[:]).to(device))
+                  )
 
     X_example = torch.from_numpy(X_train[0:5]).to(device)
     A_example = torch.from_numpy(A_train[0:5]).to(device)

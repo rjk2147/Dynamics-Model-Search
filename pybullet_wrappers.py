@@ -86,7 +86,7 @@ class RealerWalkerWrapper(gym.Env):
         # obs =  np.clip(obs[self.front:-self.back], -5, +5)
         new_obs = new_obs[self.front:-self.back]
         self.timestep += 1
-        done = ((self.timestep >= self.max_time) and (r == 0)) or (self.timestep > 5000)
+        # done = ((self.timestep >= self.max_time) and (r == 0)) or (self.timestep > 5000)
         self.ep_rew += r
         info = {}
         if done:

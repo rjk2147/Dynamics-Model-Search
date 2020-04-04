@@ -4,19 +4,18 @@ import torch
 import numpy as np
 from agent import Agent
 from pybullet_wrappers import RealerWalkerWrapper
-from atari_wrapper import make_env
 import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Algorithms
-    # parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
-    parser.add_argument('--env', type=str, default='Breakout-v0') # pybullet environment
-    parser.add_argument('--rl', type=str, default='DQN') # model free agent algorithm
+    parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
+    # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
+    parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='seq-cnn') # type of self-model
-    parser.add_argument('--atari', action='store_true', default=True)
+    parser.add_argument('--model-arch', type=str, default='seq') # type of self-model
+    parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters
     parser.add_argument('--steps', type=int, default=1e6) # training steps
@@ -53,7 +52,12 @@ if __name__ == '__main__':
         print('Bullet env chosen')
         env = RealerWalkerWrapper(gym.make(args.env))
     elif args.atari:
-        env = make_env(gym.make(args.env))
+        from atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch
+        print('Atari env chosen')
+
+        env = make_atari(args.env)
+        env = wrap_deepmind(env)
+        env = wrap_pytorch(env)
     else:
         env = gym.make(args.env)
 
@@ -86,6 +90,9 @@ if __name__ == '__main__':
     elif args.rl.upper() == 'DQN':
         from model_free.DQN import DQN
         rl_learner = DQN(env)
+    elif args.rl.upper() == 'DDQN':
+        from model_free.DDQN import DDQN
+        rl_learner = DDQN(env)
     elif args.rl.lower() == 'none' or args.rl.lower() == 'null':
         from model_free.Null import NullAgent
         rl_learner = NullAgent(env)
@@ -95,16 +102,16 @@ if __name__ == '__main__':
 
     if args.planner == 'MCTS':
         from model_based.mcts import MCTS
-        planner = MCTS(args.depth, dynamics_model, rl_learner, args.width)
+        planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
     elif args.planner == 'CEM':
         from model_based.cem import CEM
-        planner = CEM(args.depth, dynamics_model, rl_learner, args.width)
+        planner = CEM(int(args.depth), dynamics_model, rl_learner, int(args.width))
     else:
         from model_based.mcts import MCTS
-        planner = MCTS(args.depth, dynamics_model, rl_learner, args.width)
+        planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
 
     agent = Agent(dynamics_model, rl_learner, planner, model_rew=args.model_reward, with_tree=not args.no_search,
-                  batch_size=args.batch_size, replay_size=args.replay_size)
+                  batch_size=int(args.batch_size), replay_size=int(args.replay_size))
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all

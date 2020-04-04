@@ -217,9 +217,9 @@ class ReplayBuffer(object):
             Index at which the frame is stored. To be used for `store_effect` later.
         """
         # make sure we are not using low-dimensional observations, such as RAM
-        if len(frame.shape) > 1:
-            # transpose image frame into (img_c, img_h, img_w)
-            frame = frame.transpose(2, 0, 1)
+        # if len(frame.shape) > 1:
+        #     transpose image frame into (img_c, img_h, img_w)
+            # frame = frame.transpose(2, 0, 1)
 
         if self.obs is None:
             self.obs      = np.empty([self.size] + list(frame.shape), dtype=np.uint8)
@@ -262,7 +262,7 @@ class Variable(autograd.Variable):
         data = data.to(self.device)
         super(Variable, self).__init__(data, *args, **kwargs)
 
-class DQNModel(nn.Module):
+class DQNCNNModel(nn.Module):
     def __init__(self, in_channels=4, num_actions=18):
         """
         Initialize a deep Q-learning network as described in
@@ -272,7 +272,7 @@ class DQNModel(nn.Module):
                 i.e The number of most recent frames stacked together as describe in the paper
             num_actions: number of action-value to output, one-to-one correspondence to action in game.
         """
-        super(DQNModel, self).__init__()
+        super(DQNCNNModel, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
@@ -280,23 +280,35 @@ class DQNModel(nn.Module):
         self.fc5 = nn.Linear(512, num_actions)
 
     def forward(self, x):
+        x = x / 255.0
+        # From N, W, H, C to N, C, H, W
+        x = x.permute(0, 3, 2, 1)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
         x = F.relu(self.fc4(x.view(x.size(0), -1)))
         return self.fc5(x)
 
+class DQNLinearModel(nn.Module):
+    def __init__(self, state_dim=4, act_dim=1):
+        super(DQNLinearModel, self).__init__()
+        self.fc4 = nn.Linear(state_dim, 512)
+        self.fc5 = nn.Linear(512, act_dim)
+
+    def forward(self, x):
+        x = F.relu(self.fc4(x))
+        return self.fc5(x)
+
 class DQN:
     def __init__(self,
         env,
         exploration=LinearSchedule(1000000, 0.1),
-        replay_buffer_size=1000000,
-        batch_size=32,
+        replay_buffer_size=100000,
         gamma=0.99,
         lr=0.00025,
         alpha = 0.95,
         eps = 0.01,
-        learning_starts=50000,
+        learning_starts=10000,
         learning_freq=4,
         frame_history_len=4,
         target_update_freq=10000
@@ -350,12 +362,12 @@ class DQN:
         # BUILD MODEL #
         ###############
 
-        # if len(env.observation_space.shape) == 1:
-        # This means we are running on low-dimensional observations (e.g. RAM)
+        if len(env.observation_space.shape) == 1:
+            # This means we are running on low-dimensional observations (e.g. RAM)
+            DQNModel = DQNLinearModel
+        else:
+            DQNModel = DQNCNNModel
         input_arg = env.observation_space.shape[-1]
-        # else:
-        #     img_h, img_w, img_c = env.observation_space.shape
-        #     input_arg = frame_history_len * img_c
         self.num_actions = env.action_space.n
         self.learning_starts = learning_starts
         self.gamma = gamma
@@ -377,30 +389,26 @@ class DQN:
         self.steps = 0
         self.num_param_updates = 0
 
-    # # Construct an epilson greedy policy with given exploration schedule
-    # def select_epilson_greedy_action(self, obs):
-    #     sample = random.random()
-    #     eps_threshold = self.exploration.value(self.steps)
-    #     if sample > eps_threshold:
-    #         obs = torch.from_numpy(obs).type(dtype).unsqueeze(0) / 255.0
-    #         # Use volatile = True if variable is only used in inference mode, i.e. don’t save the history
-    #         return self.Q(Variable(obs, volatile=True)).data.max(1)[1]
-    #     else:
-    #         return torch.IntTensor([[random.randrange(self.num_actions)]]).to(self.device)
-
     def act(self, state):
         sample = random.random()
         eps_threshold = self.exploration.value(self.steps)
-        state = torch.from_numpy(state).type(dtype) / 255.0
-        # From N, W, H, C to N, C, H, W
-        state = state.permute(0, 3, 2, 1)
-        # print(state.shape)
-        action = self.Q(Variable(state, volatile=True)).data.max(1)[1]
-        if sample > eps_threshold and self.steps > self.learning_starts:
-            return action
+        if torch.is_tensor(state):
+            state = state.type(dtype).to(self.device)
         else:
-            torch.randint_like(action, self.num_actions)
-            return torch.IntTensor([[random.randrange(self.num_actions)]]).to(self.device)
+            state = torch.from_numpy(state).type(dtype).to(self.device)
+        max_act = self.Q(Variable(state, volatile=True)).data.max(1)[1]
+        if sample > eps_threshold and self.steps > self.learning_starts:
+            return max_act
+        else:
+            return torch.randint_like(max_act, self.num_actions)
+
+    def value(self, state, act, next_state):
+        if torch.is_tensor(state):
+            state = state.type(dtype).to(self.device)
+        else:
+            state = torch.from_numpy(state).type(dtype).to(self.device)
+        value = self.Q(Variable(state, volatile=True)).data.max(1)[0].unsqueeze(1)
+        return value
 
     def update(self, batch_size=32, num_param_updates=0):
 
@@ -417,10 +425,10 @@ class DQN:
             # episode, only the current state reward contributes to the target
             obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = self.replay.sample(batch_size)
             # Convert numpy nd_array to torch variables for calculation
-            obs_batch = Variable(torch.from_numpy(obs_batch).type(dtype) / 255.0)
+            obs_batch = Variable(torch.from_numpy(obs_batch).type(dtype))
             act_batch = Variable(torch.from_numpy(act_batch).long())
             rew_batch = Variable(torch.from_numpy(rew_batch))
-            next_obs_batch = Variable(torch.from_numpy(next_obs_batch).type(dtype) / 255.0)
+            next_obs_batch = Variable(torch.from_numpy(next_obs_batch).type(dtype))
             not_done_mask = Variable(torch.from_numpy(1 - done_mask)).type(dtype)
 
             if USE_CUDA:

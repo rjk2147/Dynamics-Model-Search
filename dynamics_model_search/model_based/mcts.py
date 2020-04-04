@@ -98,7 +98,7 @@ class MCTS(MPC):
 
     def best_move(self, obs):
         self.clear()
-        obs = (torch.from_numpy(obs[0]).to(devices[0]), obs[1].to(devices[0]))
+        obs = (torch.from_numpy(obs[0]).to(devices[0]).float(), obs[1].to(devices[0]))
         root = self.add(obs)
         self.populate(root)
         start = time.time()

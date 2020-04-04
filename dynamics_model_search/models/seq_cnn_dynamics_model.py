@@ -303,7 +303,7 @@ class SeqCNNDynamicsModel(DynamicsModel):
         else:
             state_in = None
         tensor = True
-        a = action_in
+        a = action_in.float()
         while len(a.shape) < 3:
             a = a.unsqueeze(1)
         if state_in is not None:

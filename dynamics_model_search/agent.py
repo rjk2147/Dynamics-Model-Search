@@ -113,7 +113,10 @@ class Agent:
             obs = env.reset()
             if self.model_rew: # appending initial reward of 0 to obs
                 obs = np.concatenate([np.zeros(1), obs]).astype(obs.dtype)
-            obs = self.planner.dynamics_model.reset(obs, None)
+            if self.with_tree:
+                obs = self.planner.dynamics_model.reset(obs, None)
+            else:
+                obs = (obs, None)
             done = False
             ep_r = 0
             ep_exp_r = 0
@@ -130,13 +133,15 @@ class Agent:
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
                 if self.model_rew: # appending reward to obs
                     new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)
-
-                # TODO: Efficiently pass this h value from the search since it is already calculated
-                _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), obs[1].to(device)),
-                                                              action_in=torch.from_numpy(act).unsqueeze(0).unsqueeze(1).to(device),
-                                                              state=True, state_in=True)
-                # _, h = self.planner.dynamics_model.step_parallel(obs, act)
-                new_obs = self.planner.dynamics_model.reset(new_obs, h)
+                if self.with_tree:
+                    # TODO: Efficiently pass this h value from the search since it is already calculated
+                    _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), obs[1].to(device)),
+                                                                  action_in=torch.from_numpy(act).unsqueeze(0).unsqueeze(1).to(device),
+                                                                  state=True, state_in=True)
+                    # _, h = self.planner.dynamics_model.step_parallel(obs, act)
+                    new_obs = self.planner.dynamics_model.reset(new_obs, h)
+                else:
+                    new_obs = (new_obs, None)
 
                 # Statistics update
                 self.steps += 1

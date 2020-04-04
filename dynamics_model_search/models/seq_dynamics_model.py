@@ -223,7 +223,7 @@ class SeqDynamicsModel(DynamicsModel):
     # l is length of sequence
     # b is batch size
     # d is dimension of state
-    def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None):
+    def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
         self.model.eval()
         if obs_in is not None and state_in:
             state_in = obs_in[1]
@@ -233,7 +233,7 @@ class SeqDynamicsModel(DynamicsModel):
         else:
             state_in = None
         tensor = True
-        a = action_in
+        a = action_in.float()
         if state_in is not None:
             new_obs, state_out = self.model(obs_in, a, state_in)
         elif obs_in is not None:
@@ -257,8 +257,12 @@ class SeqDynamicsModel(DynamicsModel):
         if new_obs.shape[0] == 1:
             new_obs = new_obs.squeeze(0)
         if state:
+            if certainty:
+                return new_obs, state_out.detach(), torch.ones_like(new_obs)
             return new_obs, state_out.detach()
         else:
+            if certainty:
+                return new_obs, torch.ones_like(new_obs)
             return new_obs
 
     def step(self, action_in, obs_in=None, save=True, state=False, state_in=None):

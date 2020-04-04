@@ -247,7 +247,7 @@ class PreCoGenDynamicsModel(DynamicsModel):
         else:
             state_in = None
         tensor = True
-        a = action_in
+        a = action_in.float()
         if state_in is not None:
             new_obs, state_out = self.model(a, state_in, None, 'single')
         elif obs_in is not None:

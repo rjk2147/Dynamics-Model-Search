@@ -94,6 +94,12 @@ class Agent:
             self.y_seq = deque(maxlen=self.seq_len)
 
     def learn(self, env, max_timesteps=1e6):
+        return self.run(training=True, env=env, max_timesteps=max_timesteps)
+
+    def play(self, env, max_timesteps=1000):
+        return self.run(training=False, env=env, max_timesteps=max_timesteps)
+
+    def run(self, training, env, max_timesteps=1e6):
         self.model.max_seq_len = 10
         self.seq_len = self.model.max_seq_len
         self.x_seq = deque(maxlen=self.seq_len)
@@ -103,6 +109,7 @@ class Agent:
         self.n_updates = 0
         self.avg_train_loss = None
         self.steps = 0
+        obs_lists = []
 
         self.ep_rs = deque(maxlen=100)
         self.ex_ep_rs = deque(maxlen=100)
@@ -110,6 +117,7 @@ class Agent:
         # self.steps = 0
         self.start_time = time.time()
         while self.steps < max_timesteps:
+            obs_list = []
             obs = env.reset()
             if self.model_rew: # appending initial reward of 0 to obs
                 obs = np.concatenate([np.zeros(1), obs]).astype(obs.dtype)
@@ -149,32 +157,40 @@ class Agent:
                 ep_exp_r += ex_r
                 ep_len += 1
 
-                # TODO could try to use state and rerun all obs through the self-model before RL-update
-                ## RL Learner Update
-                self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
-                self.from_update += 1
-                self.rl_update()
-                self.rl_learner.steps += 1
+                if training:
+                    # TODO could try to use state and rerun all obs through the self-model before RL-update
+                    ## RL Learner Update
+                    self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
+                    self.from_update += 1
+                    self.rl_update()
+                    self.rl_learner.steps += 1
 
-                ## Self-Model Update
-                if self.with_tree:
-                    self.sm_update(obs, act, new_obs, done)
+                    ## Self-Model Update
+                    if self.with_tree:
+                        self.sm_update(obs, act, new_obs, done)
+                else:
+                    obs_list.append(obs[0])
                 obs = new_obs
 
+            if training:
+                print('Models saved to '+str(self.save_str))
+                self.rl_learner.save(self.save_str)
+                self.model.save(self.save_str+'_self_model.pt')
+            else:
+                obs_lists.append(obs_list)
             self.ep_rs.append(ep_r)
             self.ep_lens.append(ep_len)
             self.ex_ep_rs.append(ep_exp_r)
-            print('Models saved to '+str(self.save_str))
             self.print_stats()
             self.from_update = 0
             self.u = 0
             if self.avg_train_loss is not None:
                 self.avg_train_loss = None
-            self.rl_learner.save(self.save_str)
-            self.model.save(self.save_str+'_self_model.pt')
         self.planner.exit()
+        if not training:
+            return obs_lists
 
-    def play(self, env, num_episodes):
+    def play_old(self, env, num_episodes):
         self.model.max_seq_len = 10
         self.seq_len = self.model.max_seq_len
         self.steps = 0
@@ -194,14 +210,14 @@ class Agent:
             while not done:
                 obs_list.append(obs[0])
                 if self.with_tree:
-                    act, node = self.planner.best_move(obs)
-                    act = act.flatten()
-                    ex_r = node.best_r
+                    act, best_r = self.planner.best_move(obs)
+                    act = act.cpu().data.numpy().flatten()
+                    ex_r = best_r
                     self.planner.clear()
                 else:
-                    act = self.rl_learner.act(obs[0]).cpu().numpy().flatten()
+                    act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     ex_r = 0
-                new_obs, r_raw, done, info = env.step(act*self.act_mul_const)
+                new_obs, r, done, info = env.step(act*self.act_mul_const)
 
                 # TODO: Efficiently pass this h value from the search since it is already calculated
                 _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
@@ -211,7 +227,6 @@ class Agent:
 
                 # Statistics update
                 self.steps += 1
-                r = r_raw
                 ep_r += r
                 ep_exp_r += ex_r
                 ep_len += 1

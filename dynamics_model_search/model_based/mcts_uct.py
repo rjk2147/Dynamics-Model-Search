@@ -3,6 +3,7 @@ from dynamics_model_search.model_based.cem import CEM
 
 import numpy as np
 from collections import deque
+import heapq
 import time
 import torch
 
@@ -14,6 +15,11 @@ class State:
         self.rs = []
         self.future = []
         self.Qs = []
+
+    # for heapsort
+    def __lt__(self,other):
+        # using greater than instead of less than because heap sort returns lowest value and we want highest Q
+        return (self.Q > other.Q)
 
     def connect(self, act, r, new_state):
         self.rs.append(r)
@@ -45,54 +51,69 @@ class MCTS(MPC):
     def __init__(self, lookahead, dynamics_model, agent=None, initial_width=2, cross_entropy=False):
         MPC.__init__(self, lookahead, dynamics_model, agent)
         self.width = initial_width
-        self.populate_queue = deque()
+        # self.populate_queue = deque()
+        self.populate_queue = []
+        # self.populate_queue = heapq()
         self.start = time.time()
-        self.batch_size = 262144
-        self.CE_N = 1
+        # self.batch_size = 262144
+        self.batch_size = 256
+        self.max_tree = 2048
         self.clear()
-        self.with_CE = cross_entropy
-        if self.with_CE:
-            self.CEM = CEM(1, dynamics_model, agent)
 
     def clear(self):
         self.state_list = []
+        self.populate_queue = []
 
-    def add(self, new_obs, state=None, act=None, r=None, depth=0):
+    def add(self, new_obs, state=None, act=None, r=0, depth=0):
         new_state = State(new_obs)
+        new_state.Q = r
         if state is not None:
             state.connect(act, r, new_state)
         self.state_list.append((new_state, depth))
         return new_state
 
     def serve_queue(self, q):
-        while len(q) > 0:
+        i_d = 0
+        while len(q) > 0 and len(self.state_list) < self.max_tree:
             obs = []
             states = []
             depths = []
-            while len(obs)+self.width <= self.batch_size/self.CE_N and len(q) > 0:
-                item = q.pop()
+            while len(obs)+self.width <= self.batch_size and len(q) > 0:
+                # item = q.pop()
+                item = heapq.heappop(q)
                 state, depth = item
                 if depth < self.lookahead:
                     for _ in range(self.width):
                         obs.append(state.obs)
                         states.append(state)
                         depths.append(depth)
+            i_d += 1
+            # print(i_d)
+            # print(len(self.state_list))
+            # print(len(obs))
+            # print('')
             if len(states) == 0:
                 continue
             obs_in = (torch.cat([obs[i][0].unsqueeze(0) for i in range(len(obs))]).unsqueeze(1),
                    torch.cat([obs[i][1] for i in range(len(obs))]))
             acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
-            if self.with_CE:
-                acts_in, avg_rs = self.CEM.best_move(obs_in, acts_in)
-            new_obs = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
+            tmp_obs, tmp_h, uncertainty = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True,
+                                                        state_in=True,certainty=True)
+            new_obs = (tmp_obs, tmp_h)
             rs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])
+
+            # Discounting the reward by the uncertainty
+            rs *= torch.mean(uncertainty, -1).unsqueeze(-1).detach().cpu().numpy()
+
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
             for i in range(len(states)):
                 new_state = self.add(these_new_obs[i], states[i], acts_in[i], rs[i].item(), depth=depths[i]+1)
-                q.appendleft((new_state, depths[i]+1))
+                # q.appendleft((new_state, depths[i]+1))
+                heapq.heappush(q, (new_state, depths[i]+1))
 
     def populate(self, obs, depth=0):
-        self.populate_queue.appendleft((obs, depth))
+        # self.populate_queue.appendleft((obs, depth))
+        heapq.heappush(self.populate_queue, (obs, depth))
         self.serve_queue(self.populate_queue)
 
     def best_move(self, obs):
@@ -102,6 +123,7 @@ class MCTS(MPC):
         self.populate(root)
         start = time.time()
         self.state_list.reverse()
+        # print(len(self.state_list))
         for state, depth in self.state_list:
             state.update_Q()
         i = np.argmax(root.Qs)

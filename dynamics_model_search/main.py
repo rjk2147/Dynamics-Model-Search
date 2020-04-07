@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='seq') # type of self-model
+    parser.add_argument('--model-arch', type=str, default='mdrnn') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters
@@ -73,6 +73,9 @@ if __name__ == '__main__':
     elif args.model_arch == 'seq':
         from models.seq_dynamics_model import SeqDynamicsModel
         dynamics_model = SeqDynamicsModel(env)
+    elif args.model_arch == 'mdrnn':
+        from models.mdrnn_dynamics_model import MDRNNDynamicsModel
+        dynamics_model = MDRNNDynamicsModel(env)
     elif args.model_arch == 'seq-cnn':
         from models.seq_cnn_dynamics_model import SeqCNNDynamicsModel
         dynamics_model = SeqCNNDynamicsModel(env)
@@ -102,6 +105,9 @@ if __name__ == '__main__':
 
     if args.planner == 'MCTS':
         from model_based.mcts import MCTS
+        planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
+    if args.planner == 'MCTS-UCT':
+        from model_based.mcts_uct import MCTS
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
     elif args.planner == 'CEM':
         from model_based.cem import CEM

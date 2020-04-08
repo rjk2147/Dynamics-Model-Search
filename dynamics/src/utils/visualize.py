@@ -17,6 +17,14 @@ def get_velocity_curve(title, true, pred):
     ax.set_ylabel("velocity")
     ax.set_xlabel("timestep")
     return ax
+
+def get_position_curve(title, true, pred):
+    fig, ax = plt.subplots()
+    ax.plot(true, c="g", label="y")
+    ax.plot(pred, c="r", label="y_hat")
+    ax.set_ylabel("position")
+    ax.set_xlabel("timestep")
+    return ax
     
 def plot_velocity_curve_with_uncertainty(true, pred, error1, error2):
     data = DataFrame()

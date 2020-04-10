@@ -13,6 +13,7 @@ import pyro.poutine as poutine
 # from pyro.distributions.transforms import affine_autoregressive
 
 # from modules import MLP, Decoder, Encoder, Identity, Predict
+from utils.tools import *
 
 class Encoder(nn.Module):
     def __init__(self, input_size=256, z_output_size=32, sigma_output_size=21):
@@ -83,18 +84,31 @@ class BayesianSequenceModel(nn.Module):
                 "scale" :   nn.Parameter(torch.ones((1, self.output_size)).to(device), requires_grad=False)
             }
         }
+         # track priors by nn.Module
+        self.prior_z_loc        = self.priors["z"]["loc"]
+        self.prior_z_scale      = self.priors["z"]["scale"]
+        self.prior_sigma_loc    = self.priors["sigma"]["loc"]
+        self.prior_sigma_scale  = self.priors["sigma"]["scale"]
 
         self.init = {
             "z" :   nn.Parameter(torch.zeros(1, self.z_size).to(device)),
             "h" :   nn.Parameter(torch.zeros(1, self.rnn_hidden_size).to(device)),
             "c" :   nn.Parameter(torch.zeros(1, self.rnn_hidden_size).to(device))
         }
+        # track learnable initial states by nn.Module
+        self.init_z = self.init["z"]
+        self.init_h = self.init["h"]
+        self.init_c = self.init["c"]
 
         self.networks = {
             "encoder"   :   Encoder(input_size=self.rnn_hidden_size, z_output_size=self.z_size, sigma_output_size=self.output_size).to(device),
             "decoder"   :   Decoder(input_size=self.z_size, output_size=self.output_size).to(device),
             "rnn"       :   nn.LSTMCell(self.rnn_input_size, self.rnn_hidden_size).to(device)
         }
+        # track learnable networks by nn.Module
+        self.encoder = self.networks["encoder"]
+        self.decoder = self.networks["decoder"]
+        self.rnn = self.networks["rnn"]
 
         self.guide_cache = {
             "ix"    :   None,
@@ -220,6 +234,7 @@ class BayesianSequenceModel(nn.Module):
         return torch.mean(torch.abs(batch_Y-batch_Y_hat)).item(), batch_Z.data.cpu().numpy(), batch_Y_hat.data.cpu().numpy(), batch_Y.data.cpu().numpy()
         
     def predict(self, X, A, Y, lookahead=5):
+        N = X.shape[0]
         T = X.shape[1]
         Y_hat = []
         O = []
@@ -231,17 +246,84 @@ class BayesianSequenceModel(nn.Module):
                 y0 = Y[:, i+j:i+j+1, :]
                 trace = None
                 if z is None:
-                    trace = poutine.trace(self.guide).get_trace(X=x0, A=a0, Y=y0, batch_size=1)
+                    trace = poutine.trace(self.guide).get_trace(X=x0, A=a0, Y=y0, batch_size=N)
                 else:
-                    trace = poutine.trace(self.guide).get_trace(X=x0, A=a0, Y=y0, batch_size=1, prev_z=z, prev_h=h, prev_c=c)
+                    trace = poutine.trace(self.guide).get_trace(X=x0, A=a0, Y=y0, batch_size=N, prev_z=z, prev_h=h, prev_c=c)
                 z, h, c = torch.from_numpy(self.guide_cache["z_prev"]).to(self.device), torch.from_numpy(self.guide_cache["h_prev"]).to(self.device), torch.from_numpy(self.guide_cache["c_prev"]).to(self.device)
-                y_hat, _, o = poutine.replay(self.model, trace=trace)(X=x0, A=a0, Y=None, batch_size=1)
+                y_hat, _, o = poutine.replay(self.model, trace=trace)(X=x0, A=a0, Y=None, batch_size=N)
                 O.append(o)
                 Y_hat.append(y_hat)
                 x0 = torch.from_numpy(y_hat).to(self.device)
         Y_hat = np.array(Y_hat)
         O = np.array(O)
         return Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1])), O.reshape((O.shape[1], O.shape[0], O.shape[-1]))
+
+    def predict_with_uncertainty(self, X, A, Y=None, lookahead=5, samples=82):
+        '''
+        # Parallelized: DOESN'T WORK FOR SOME REASON?
+        X = X.repeat(samples, 1, 1)
+        A = A.repeat(samples, 1, 1)
+        Y = Y.repeat(samples, 1, 1)
+        Y_hat, O = self.predict(X=X, A=A, Y=Y, lookahead=lookahead)
+        # Y_hat, O = torch.from_numpy(Y_hat), torch.from_numpy(O)
+        Y_hats = []
+        for i in range(Y_hat.shape[0]):
+            # print(Y_hat[i:i+1].shape)
+            Y_hats.append(Y_hat[i:i+1])
+        Y_hats = np.array(Y_hats)
+        v = torch.Tensor(Y_hats)
+        '''
+        Y_hats, Os = [], []
+        # Y_hats_pos, Os_pos = [], []
+        for i in range(samples):
+            Y_hat, O = self.predict(X=X, A=A, Y=Y, lookahead=lookahead)
+            Y_hats.append(Y_hat)
+            Os.append(O)
+            '''
+            Y_hat_pos = compute_position_from_velocity(Y_hat[0, :, 0])
+            Y_hat_pos = Y_hat_pos.reshape((1, Y_hat_pos.shape[0], 1))
+            O_pos = compute_position_from_velocity(O[0, :, 0])
+            O_pos = O_pos.reshape((1, O_pos.shape[0], 1))
+            Y_hats_pos.append(Y_hat_pos)
+            Os_pos.append(O_pos)
+            '''
+
+        Y_hats, Os = np.array(Y_hats), np.array(Os)
+        # Y_hats_pos, Os_pos = np.array(Y_hats_pos), np.array(Os_pos)
+
+        v = torch.Tensor(Y_hats)
+        # v_pos = torch.Tensor(Y_hats_pos)
+
+        # COMPUTE STATS
+        site_stats = {
+            "mean": torch.mean(v, 0),
+            "std": torch.std(v, 0),
+            "5%": v.kthvalue(int(len(v) * 0.05), dim=0)[0],
+            "95%": v.kthvalue(int(len(v) * 0.95), dim=0)[0],
+        }
+
+        Y_hat_mean = site_stats["mean"]
+        Y_hat_std = site_stats["std"]
+        Y_hat_lower = site_stats["5%"]
+        Y_hat_upper = site_stats["95%"]  
+
+        # site_stats = {
+        #     "mean": torch.mean(v_pos, 0),
+        #     "std": torch.std(v_pos, 0),
+        #     "5%": v.kthvalue(int(len(v_pos) * 0.05), dim=0)[0],
+        #     "95%": v.kthvalue(int(len(v_pos) * 0.95), dim=0)[0],
+        # } 
+
+        # Y_hat_mean_pos = site_stats["mean"]
+        # Y_hat_std_pos = site_stats["std"]
+        # Y_hat_lower_pos = site_stats["5%"]
+        # Y_hat_upper_pos = site_stats["95%"]  
+
+
+        return Y_hat_mean.data.cpu().numpy(), Y_hat_std.data.cpu().numpy(), Y_hat_lower.data.cpu().numpy(), Y_hat_upper.data.cpu().numpy()
+        # (Y_hat_mean_pos.data.cpu().numpy(), Y_hat_std_pos.data.cpu().numpy(), Y_hat_lower_pos.data.cpu().numpy(), Y_hat_upper_pos.data.cpu().numpy())
+
+
 
     def save_checkpoint(self, path=None):
         torch.save(self.state_dict(), self.path if path is None else path)

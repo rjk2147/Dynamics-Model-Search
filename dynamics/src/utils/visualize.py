@@ -3,11 +3,34 @@ from pandas import DataFrame
 import math
 from IPython import display
 
-def plot_velocity_curve(true, pred):
+def plot_multimodel_velocity_curve(true, pred, axis=None):
+    data = DataFrame()
+    data["y"] = true
+    for i in range(len(pred)):
+        data["y_hat"+str(i)] = pred[i]
+    data.plot(legend=True)
+    if axis == 'equal':
+        plt.axis('equal')
+    plt.show()
+
+def plot_multimodel_position_curve(true, pred, axis=None):
+    data = DataFrame()
+    data["y"] = true
+    for i in range(len(pred)):
+        data["y_hat"+str(i)] = pred[i]
+    data.plot(legend=True)
+    if axis == 'equal':
+        plt.axis('equal')
+    plt.show()
+
+
+def plot_velocity_curve(true, pred, axis=None):
     data = DataFrame()
     data["y"] = true
     data["y_hat"] = pred
     data.plot(legend=True)
+    if axis == 'equal':
+        plt.axis('equal')
     plt.show()
 
 def get_velocity_curve(title, true, pred):
@@ -18,6 +41,15 @@ def get_velocity_curve(title, true, pred):
     ax.set_xlabel("timestep")
     return ax
 
+def plot_position_curve(true, pred, axis=None):
+    data = DataFrame()
+    data["y"] = true
+    data["y_hat"] = pred
+    data.plot(legend=True)
+    if axis == 'equal':
+        plt.axis('equal')
+    plt.show()
+
 def get_position_curve(title, true, pred):
     fig, ax = plt.subplots()
     ax.plot(true, c="g", label="y")
@@ -25,7 +57,7 @@ def get_position_curve(title, true, pred):
     ax.set_ylabel("position")
     ax.set_xlabel("timestep")
     return ax
-    
+
 def plot_velocity_curve_with_uncertainty(true, pred, error1, error2):
     data = DataFrame()
     data["y"] = true
@@ -35,11 +67,41 @@ def plot_velocity_curve_with_uncertainty(true, pred, error1, error2):
     data.plot(legend=True)
     plt.show()
 
-def plot_velocity_curve_with_uncertainty_shaded(true, pred, error1, error2):
+def plot_velocity_curve_with_uncertainty_shaded(true, pred, error1, error2, axis=None):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 6), sharey=True)
+    ax.plot(true)
     ax.plot(pred)
     ax.fill_between(x=[i for i in range(pred.shape[0])], y1=error1, y2=error2, alpha=0.5)
-    ax.plot(true)
+    if axis == 'equal':
+        plt.axis('equal')
+
+def plot_multimodel_velocity_curve_with_uncertainty_shaded(true, pred, error1, error2, axis=None):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 6), sharey=True)
+    ax.plot(true, label="y")
+    for i in range(len(pred)):
+        ax.plot(pred[i], label="yhat"+str(i))
+        ax.fill_between(x=[i for i in range(true.shape[0])], y1=error1[i], y2=error2[i], alpha=0.5)
+
+    if axis == 'equal':
+        plt.axis('equal')
+
+def plot_position_curve_with_uncertainty_shaded(true, pred, error1, error2, axis=None):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 6), sharey=True)
+    ax.plot(true, label="y")
+    ax.plot(pred, label="yhat")
+    ax.fill_between(x=[i for i in range(pred.shape[0])], y1=error1, y2=error2, alpha=0.5)
+    if axis == 'equal':
+        plt.axis('equal')
+
+def plot_multimodel_position_curve_with_uncertainty_shaded(true, pred, error1, error2, axis=None):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 6), sharey=True)
+    ax.plot(true, label="y")
+    for i in range(len(pred)):
+        ax.plot(pred[i], label="yhat"+str(i))
+        ax.fill_between(x=[i for i in range(true.shape[0])], y1=error1[i], y2=error2[i], alpha=0.5)
+    if axis == 'equal':
+        plt.axis('equal')
+
 
 def compute_link(angle1, angle2, quad, r=1):
     x1, y1 = (r*math.cos(angle1), r*math.sin(angle1))
@@ -56,6 +118,40 @@ def compute_link(angle1, angle2, quad, r=1):
         y1 *= -1
         y2 *= -1
     return (x1, y1), (x2, y2)
+
+def plot_multimodel_links_side_by_side(true, pred):
+    link1 = compute_link(true[0], true[1], quad=1)
+    link2 = compute_link(true[2], true[3], quad=2)
+    link3 = compute_link(true[4], true[5], quad=3)
+    link4 = compute_link(true[6], true[7], quad=4)
+    plt.subplot(1,1+len(pred),1)
+    plt.title("y")
+    plt.plot([0, link1[0][0], link1[1][0]], [0, link1[1][0], link1[1][1]])
+    plt.plot([0, link2[0][0], link2[1][0]], [0, link2[1][0], link2[1][1]])
+    plt.plot([0, link3[0][0], link3[1][0]], [0, link3[1][0], link3[1][1]])
+    plt.plot([0, link4[0][0], link4[1][0]], [0, link4[1][0], link4[1][1]])
+    plt.axis('off')
+    plt.margins(0,0)
+    plt.tight_layout(pad=1)
+
+    for i in range(len(pred)):
+        link1 = compute_link(pred[i][0], pred[i][1], quad=1)
+        link2 = compute_link(pred[i][2], pred[i][3], quad=2)
+        link3 = compute_link(pred[i][4], pred[i][5], quad=3)
+        link4 = compute_link(pred[i][6], pred[i][7], quad=4)
+        plt.subplot(1,1+len(pred),2+i)
+        plt.title("yhat"+str(i))
+        plt.plot([0, link1[0][0], link1[1][0]], [0, link1[1][0], link1[1][1]])
+        plt.plot([0, link2[0][0], link2[1][0]], [0, link2[1][0], link2[1][1]])
+        plt.plot([0, link3[0][0], link3[1][0]], [0, link3[1][0], link3[1][1]])
+        plt.plot([0, link4[0][0], link4[1][0]], [0, link4[1][0], link4[1][1]])
+        plt.axis('off')
+        plt.margins(0,0)
+        plt.tight_layout(pad=1)
+        
+    display.clear_output(wait=True)
+    display.display(plt.gcf()) 
+    plt.clf()
 
 def plot_links_side_by_side(true, pred):
     link1 = compute_link(true[0], true[1], quad=1)
@@ -120,3 +216,8 @@ def compare_states(Y, Y_hat, overlap=False):
             plot_links_overlap(true=Y[i, 5::2], pred=Y_hat[i, 5::2])
         else:
             plot_links_side_by_side(true=Y[i, 5::2], pred=Y_hat[i, 5::2])
+
+def compare_multimodel_states(Y, Y_hats):
+    for i in range(Y.shape[0]):
+        pred = [Y_hats[j][i, 5::2] for j in range(len(Y_hats))]
+        plot_multimodel_links_side_by_side(true=Y[i, 5::2], pred=pred)

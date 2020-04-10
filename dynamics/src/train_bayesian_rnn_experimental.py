@@ -50,6 +50,12 @@ class Trainer:
                     "y-velocity"    :   get_velocity_curve(title="y-velocity", true=train_batch_Y[0, :, 1], pred=train_batch_Y_hat[0, :, 1]),
                     "z-velocity"    :   get_velocity_curve(title="z-velocity", true=train_batch_Y[0, :, 2], pred=train_batch_Y_hat[0, :, 2])
                 }, commit=False)
+                self.wandb.log({
+                    "x-position"    :   get_position_curve(title="x-position", true=compute_position_from_velocity(train_batch_Y[0, :, 0]), pred=compute_position_from_velocity(train_batch_Y_hat[0, :, 0])),
+                    "y-position"    :   get_position_curve(title="y-position", true=compute_position_from_velocity(train_batch_Y[0, :, 1]), pred=compute_position_from_velocity(train_batch_Y_hat[0, :, 1])),
+                    "z-position"    :   get_position_curve(title="z-position", true=compute_position_from_velocity(train_batch_Y[0, :, 2]), pred=compute_position_from_velocity(train_batch_Y_hat[0, :, 2]))
+                }, commit=False)
+        
         
             self.wandb.log({
                 "elbo"          :   elbo_loss / N,
@@ -65,8 +71,8 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     machine = "stronghold"
-    notes = "testing wandb for the first time!"
-    name = "likelihood_std=0.1+batch_standardization"
+    notes = "attempting {(s0,a0)...(sT,aT)} input"
+    name = "likelihood_std=0.01+batch_standardization"
 
     wandb.init(project="bayesian_sequence_modelling", name=machine+"/"+name, tags=[machine], notes=notes, reinit=True)
 
@@ -91,8 +97,8 @@ if __name__ == "__main__":
         "action_size"       :   A_train.shape[-1],
         "z_size"            :   32,
         "hidden_state_size" :   256,
-        "likelihood_std"    :   0.1,
-        "epochs"            :   5000,
+        "likelihood_std"    :   0.01,
+        "epochs"            :   10000,
         "batch_size"        :   1600,
         "learning_rate"     :   1.0e-3,
         "device"            :   device,
@@ -114,9 +120,4 @@ if __name__ == "__main__":
                   train=(torch.from_numpy(X_train[:]).to(device),torch.from_numpy(A_train[:]).to(device),torch.from_numpy(Y_train[:]).to(device)),
                   val=(torch.from_numpy(X_val[:]).to(device),torch.from_numpy(A_val[:]).to(device),torch.from_numpy(Y_val[:]).to(device))
                   )
-
-    X_example = torch.from_numpy(X_train[0:5]).to(device)
-    A_example = torch.from_numpy(A_train[0:5]).to(device)
-    Y_example = torch.from_numpy(Y_train[0:5]).to(device)
-
 

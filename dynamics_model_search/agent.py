@@ -143,7 +143,7 @@ class Agent:
                     new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)
                 if self.with_tree:
                     # TODO: Efficiently pass this h value from the search since it is already calculated
-                    _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), obs[1].to(device)),
+                    _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), [obs[1].to(device)]),
                                                                   action_in=torch.from_numpy(act).unsqueeze(0).unsqueeze(1).to(device),
                                                                   state=True, state_in=True)
                     # _, h = self.planner.dynamics_model.step_parallel(obs, act)

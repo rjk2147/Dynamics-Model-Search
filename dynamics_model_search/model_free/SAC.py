@@ -62,7 +62,6 @@ class DeterministicPolicy(nn.Module):
         self.linear2 = nn.Linear(hidden_dim, hidden_dim)
 
         self.mean = nn.Linear(hidden_dim, num_actions)
-        self.noise = torch.Tensor(num_actions)
 
         self.apply(weights_init_)
 
@@ -78,7 +77,7 @@ class DeterministicPolicy(nn.Module):
 
     def sample(self, state):
         mean = self.forward(state)
-        noise = self.noise.normal_(0., std=0.1)
+        noise = torch.Tensor(mean.shape).normal_(0., std=0.1)
         noise = noise.clamp(-0.25, 0.25)
         action = mean + noise
         return action, torch.tensor(0.), mean
@@ -86,7 +85,6 @@ class DeterministicPolicy(nn.Module):
     def to(self, device):
         # self.action_scale = self.action_scale.to(device)
         # self.action_bias = self.action_bias.to(device)
-        self.noise = self.noise.to(device)
         return super(DeterministicPolicy, self).to(device)
 
 class ReplayMemory:

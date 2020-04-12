@@ -80,7 +80,7 @@ class MCTS(MPC):
             if len(states) == 0:
                 continue
             obs_in = (torch.cat([obs[i][0].unsqueeze(0) for i in range(len(obs))]).unsqueeze(1),
-                   torch.cat([obs[i][1] for i in range(len(obs))]))
+                   [obs[i][1] for i in range(len(obs))])
             acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
             if self.with_CE:
                 acts_in, avg_rs = self.CEM.best_move(obs_in, acts_in)

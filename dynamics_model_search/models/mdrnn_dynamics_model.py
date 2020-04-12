@@ -194,7 +194,7 @@ class MDRNNDynamicsModel(DynamicsModel):
     def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
         self.model.eval()
         if obs_in is not None and state_in:
-            state_in = obs_in[1]
+            state_in = torch.cat(obs_in[1])
             obs_in = obs_in[0]
             # while len(obs_in.shape) < 3:
             # obs_in = obs_in.unsqueeze(1)

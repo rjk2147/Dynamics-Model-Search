@@ -5,9 +5,9 @@ from torch import nn, optim
 import time
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-class SeqModel(nn.Module):
+class RNNModel(nn.Module):
     def __init__(self, state_dim, act_dim, drop_rate=0.5):
-        super(SeqModel, self).__init__()
+        super(RNNModel, self).__init__()
         self.state_dim = state_dim
         self.state_size = sum(state_dim)
         self.act_dim = act_dim
@@ -70,7 +70,7 @@ class SeqModel(nn.Module):
         else:
             return seq_out, seq_h.transpose(0, 1)
 
-class SeqDynamicsModel(DynamicsModel):
+class RNNDynamicsModel(DynamicsModel):
     def __init__(self, env_in, dev=None):
         DynamicsModel.__init__(self, env_in)
         self.lr = 1e-5
@@ -81,7 +81,7 @@ class SeqDynamicsModel(DynamicsModel):
         self.batch_size = 64
         self.max_seq_len = 100
         
-        self.model = SeqModel(self.state_dim, self.act_dim)
+        self.model = RNNModel(self.state_dim, self.act_dim)
         if dev is None:
             self.model.to(device)
             self.device = device

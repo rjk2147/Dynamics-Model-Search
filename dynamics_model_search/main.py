@@ -13,8 +13,8 @@ if __name__ == '__main__':
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
-    parser.add_argument('--planner', type=str, default='MCTS') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='bseq') # type of self-model
+    parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
+    parser.add_argument('--model-arch', type=str, default='seq') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters

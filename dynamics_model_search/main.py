@@ -48,8 +48,8 @@ if __name__ == '__main__':
     if args.env[:4].lower() == 'jump' and 'Bullet' in args.env:
         print('Jumping task chosen')
         env = RealerWalkerWrapper(gym.make(args.env[4:]), rew='jump')
-    elif 'Bullet' in args.env:
-        print('Bullet env chosen')
+    elif args.env[:4].lower() == 'walk' and 'Bullet' in args.env:
+        print('Walking task chosen')
         env = RealerWalkerWrapper(gym.make(args.env))
     elif args.atari:
         from atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch

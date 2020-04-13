@@ -48,7 +48,7 @@ if __name__ == '__main__':
     if args.env[:4].lower() == 'jump' and 'Bullet' in args.env:
         print('Jumping task chosen')
         env = RealerWalkerWrapper(gym.make(args.env[4:]), rew='jump')
-    elif args.env[:4].lower() == 'walk' and 'Bullet' in args.env:
+    elif args.env[:4].lower() == 'walking' and 'Bullet' in args.env:
         print('Walking task chosen')
         env = RealerWalkerWrapper(gym.make(args.env))
     elif args.atari:

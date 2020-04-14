@@ -170,8 +170,9 @@ class Agent:
             ep_r = 0
             ep_exp_r = 0
             ep_len = 0
+            self.planner.replace_count = 0
+            
             while not done:
-                self.planner.replace_count = 0
                 if self.with_tree:
                     act, best_r = self.planner.best_move(obs)
                     act = act.cpu().data.numpy().flatten()

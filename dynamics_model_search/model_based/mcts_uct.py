@@ -61,6 +61,7 @@ class MCTS(MPC):
         self.memory_buffer = torch.zeros([1])
         self.epsilon = 0.1
         self.ep_min_val = float('inf')
+        self.replace_count = 0
         self.clear()
 
     def clear(self):
@@ -128,6 +129,7 @@ class MCTS(MPC):
             min_val, min_ind = diffs.min(dim=0)
             if min_val < self.epsilon:
                 obs[i] = self.memory_buffer[min_ind]
+                self.replace_count += 1
             if min_val < self.ep_min_val:
                 self.ep_min_val = min_val
         return obs

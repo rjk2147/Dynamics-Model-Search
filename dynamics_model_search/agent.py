@@ -53,6 +53,7 @@ class Agent:
         if self.start_time:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
         print('ep_min_val: ' + str(self.ep_min_val))
+        print('repl_count: ' + str(self.planner.replace_count))
         print('--------------------------------------\n')
 
     def logging(self, ep):
@@ -170,6 +171,7 @@ class Agent:
             ep_exp_r = 0
             ep_len = 0
             while not done:
+                self.planner.replace_count = 0
                 if self.with_tree:
                     act, best_r = self.planner.best_move(obs)
                     act = act.cpu().data.numpy().flatten()

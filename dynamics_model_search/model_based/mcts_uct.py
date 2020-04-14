@@ -60,7 +60,7 @@ class MCTS(MPC):
         self.max_tree = 2048
         self.memory_buffer = torch.zeros([1])
         self.epsilon = 0.1
-        self.ep_min_val = 1
+        self.ep_min_val = float('inf')
         self.clear()
 
     def clear(self):

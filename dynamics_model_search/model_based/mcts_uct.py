@@ -119,8 +119,8 @@ class MCTS(MPC):
 
     def replace_obs(self, obs, uncertainty):
         for i in range(obs.shape[0]):
-            temp_obs_norm = torch.norm(obs[i]).expand(self.memory_buffer.shape[0], 1)
-            mem_norm = torch.unsqueeze(torch.norm(self.memory_buffer, dim = 1), dim = 1)
+            temp_obs_norm = torch.norm(obs[i]).expand(self.memory_buffer.shape[0], 1).cuda()
+            mem_norm = torch.unsqueeze(torch.norm(self.memory_buffer, dim = 1), dim = 1).cuda()
             to_div = torch.cat([temp_obs_norm, mem_norm], dim = 1).max(dim = 1)[0]
             
             diffs = torch.norm((self.memory_buffer - obs[i]) / uncertainty[i], dim = 1)/to_div

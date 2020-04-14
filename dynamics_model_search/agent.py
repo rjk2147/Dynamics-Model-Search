@@ -153,7 +153,7 @@ class Agent:
             obs = env.reset()
 
 
-            to_cat = torch.unsqueeze(torch.from_numpy(obs), dim = 0)
+            to_cat = torch.unsqueeze(torch.from_numpy(obs), dim = 0).cuda()
             if len(self.planner.memory_buffer.shape) == 1:
                 self.planner.memory_buffer = to_cat
             else:                
@@ -180,7 +180,7 @@ class Agent:
                     ex_r = 0
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
 
-                self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, torch.unsqueeze(torch.from_numpy(new_obs),dim=0)],dim=0)
+                self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, torch.unsqueeze(torch.from_numpy(new_obs),dim=0).cuda()],dim=0)
 
                 if self.model_rew: # appending reward to obs
                     new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)

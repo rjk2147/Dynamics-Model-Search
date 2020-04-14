@@ -52,7 +52,36 @@ class Agent:
             print('Total Timesteps: '+str(self.steps))
         if self.start_time:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
+        print('ep_min_val: ' + str(self.ep_min_val))
         print('--------------------------------------\n')
+
+    def logging(self, ep):
+            st_dir = './log/2_temp_log_rl.txt'
+            # if os.path.exists(st_dir):
+            with open(st_dir, 'a+') as f:
+                f.write("episode : {} \n".format(ep))
+                if self.ep_lens and len(self.ep_rs) > 0:
+                    f.write('Last Episode Reward: ' + str(self.ep_rs[-1]) + '\n')
+                if self.ep_rs and len(self.ep_rs) > 0:
+                    f.write('Mean Episode Reward: ' + str(np.mean(self.ep_rs)) + '\n')
+                if self.ep_rs and len(self.ep_rs) > 0:
+                    f.write('Stdev Episode Reward: ' + str(np.std((self.ep_rs))) + '\n')
+                if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
+                    f.write('Mean Expected Episode Reward: ' + str(np.mean(self.ex_ep_rs))+ '\n')
+                # if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
+                #     f.write('Expected Episode Reward: ' + str(self.expected_reward) + '\n')
+                if self.ex_ep_rs and len(self.ex_ep_rs) > 0:
+                    f.write('Stdev Expected Episode Reward: ' + str(np.std(self.ex_ep_rs)) + '\n')
+                if self.avg_train_loss is not None and self.u > 0:
+                    f.write('Avg Train Loss: ' + str(self.avg_train_loss / float(self.u)) + '\n')
+                if self.steps:
+                    f.write('Total Timesteps: ' + str(self.steps) + '\n')
+                if self.start_time:
+                    f.write('Total Time: ' + str(round(time.time() - self.start_time, 2)) + '\n')
+                f.write('ep_min_val: ' + str(self.ep_min_val) + '\n')
+                # f.write('num_iter: ' + str(self.num_iter_history) + '\n')
+
+                f.write('\n\n\n')
 
     def rl_update(self, batch_size=256):
         if len(self.rl_learner.replay) > batch_size:
@@ -109,15 +138,27 @@ class Agent:
         self.avg_train_loss = None
         self.steps = 0
         obs_lists = []
+        ep = 0
 
         self.ep_rs = deque(maxlen=100)
         self.ex_ep_rs = deque(maxlen=100)
         self.ep_lens = deque(maxlen=100)
         # self.steps = 0
         self.start_time = time.time()
+        self.ep_min_val = float('inf')
+
         while self.steps < max_timesteps:
             obs_list = []
+            ep += 1
             obs = env.reset()
+
+
+            to_cat = torch.unsqueeze(torch.from_numpy(obs), dim = 0)
+            if len(self.planner.memory_buffer.shape) == 1:
+                self.planner.memory_buffer = to_cat
+            else:                
+                self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, to_cat],dim = 0)
+            
             if self.model_rew: # appending initial reward of 0 to obs
                 obs = np.concatenate([np.zeros(1), obs]).astype(obs.dtype)
             if self.with_tree:
@@ -138,6 +179,9 @@ class Agent:
                     act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     ex_r = 0
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
+
+                self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, torch.unsqueeze(torch.from_numpy(new_obs),dim=0)],dim=0)
+
                 if self.model_rew: # appending reward to obs
                     new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)
                 if self.with_tree:
@@ -150,11 +194,15 @@ class Agent:
                 else:
                     new_obs = (new_obs, None)
 
+
                 # Statistics update
                 self.steps += 1
                 ep_r += r
                 ep_exp_r += ex_r
                 ep_len += 1
+
+                if self.planner.ep_min_val < self.ep_min_val:
+                    self.ep_min_val = self.planner.ep_min_val
 
                 if training:
                     # TODO could try to use state and rerun all obs through the self-model before RL-update
@@ -181,6 +229,7 @@ class Agent:
             self.ep_lens.append(ep_len)
             self.ex_ep_rs.append(ep_exp_r)
             self.print_stats()
+            self.logging(ep)
             self.from_update = 0
             self.u = 0
             if self.avg_train_loss is not None:

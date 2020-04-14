@@ -58,8 +58,9 @@ class MCTS(MPC):
         # self.batch_size = 262144
         self.batch_size = 256
         self.max_tree = 2048
-        # self.memory_buffer = torch.zeros([1])
+        self.memory_buffer = torch.zeros([1])
         self.epsilon = 0.1
+        self.ep_min_val = 1
         self.clear()
 
     def clear(self):
@@ -101,11 +102,8 @@ class MCTS(MPC):
             acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
             tmp_obs, tmp_h, uncertainty = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True,
                                                         state_in=True,certainty=True)
-            if depth == 0 :
-                self.uncertainty_obs = (torch.norm(uncertainty, dim = 1)/uncertainty.shape[1]).detach()
-                self.uncertainty_act = acts_in
-                
-            # tmp_obs = self.replace_obs(tmp_obs, uncertainty)
+
+            tmp_obs = self.replace_obs(tmp_obs, uncertainty)
             new_obs = (tmp_obs, tmp_h)
             rs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])
 
@@ -135,7 +133,8 @@ class MCTS(MPC):
             min_val, min_ind = diffs.min(dim=0)
             if min_val < self.epsilon:
                 obs[i] = self.memory_buffer[min_ind]
-            print('min_val', min_val)
+            if min_val < self.ep_min_val:
+                self.ep_min_val = min_val
         return obs
 
     def best_move(self, obs):

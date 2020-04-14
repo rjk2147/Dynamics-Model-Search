@@ -53,6 +53,7 @@ class Agent:
             print('Total Timesteps: '+str(self.steps))
         if self.start_time:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
+        print('ep_min_val: ' + str(self.ep_min_val))
         print('--------------------------------------\n')
     def logging(self, ep):
             st_dir = './log/2_temp_log_rl.txt'
@@ -77,7 +78,9 @@ class Agent:
                     f.write('Total Timesteps: ' + str(self.steps) + '\n')
                 if self.start_time:
                     f.write('Total Time: ' + str(round(time.time() - self.start_time, 2)) + '\n')
+                f.write('ep_min_val: ' + str(self.ep_min_val) + '\n')
                 f.write('num_iter: ' + str(self.num_iter_history) + '\n')
+
                 f.write('\n\n\n')
 
     def rl_update(self, batch_size=256):
@@ -141,7 +144,7 @@ class Agent:
         self.ep_lens = deque(maxlen=100)
         # self.steps = 0
         self.start_time = time.time()
-
+        self.ep_min_val = float('inf')
         
         while self.steps < max_timesteps:
     
@@ -198,6 +201,9 @@ class Agent:
                 ep_exp_r += ex_r
                 ep_len += 1
 
+                if self.planner.ep_min_val < self.ep_min_val:
+                    self.ep_min_val = self.planner.ep_min_val
+
                 if training:
                     # TODO could try to use state and rerun all obs through the self-model before RL-update
                     ## RL Learner Update
@@ -208,11 +214,7 @@ class Agent:
 
                     ## Self-Model Update
                     if self.with_tree:
-                        ind = (self.planner.uncertainty_act == torch.from_numpy(act)).sum(axis = 2).nonzero()[0][0]
-                        num_iter = int((1/self.planner.uncertainty_obs[ind])//10)
-                        self.num_iter_history.append(num_iter)
-                        for j in range(num_iter):
-                            self.sm_update(obs, act, new_obs, done)
+                        self.sm_update(obs, act, new_obs, done)
                 else:
                     obs_list.append(obs[0])
                 obs = new_obs

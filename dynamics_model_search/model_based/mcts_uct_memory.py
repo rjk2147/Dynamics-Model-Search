@@ -120,7 +120,7 @@ class MCTS(MPC):
 
     def clean_and_input(self, to_cat):
         ind = np.argmin(self.memory_buffer_usage)
-        self.memory_buffer = torch.cat([self.memory_buffer[:ind], self.memory_buffer[:ind]], dim = 0)
+        self.memory_buffer = torch.cat([self.memory_buffer[:ind], self.memory_buffer[ind:]], dim = 0)
         self.memory_buffer_usage = np.concatenate([self.memory_buffer_usage[:ind], self.memory_buffer_usage[ind:]], axis = 0)
 
     def replace_obs(self, obs, uncertainty):
@@ -128,7 +128,6 @@ class MCTS(MPC):
             temp_obs_norm = torch.norm(obs[i]).expand(self.memory_buffer.shape[0], 1).cuda()
             mem_norm = torch.unsqueeze(torch.norm(self.memory_buffer, dim = 1), dim = 1).cuda()
             to_div = torch.cat([temp_obs_norm, mem_norm], dim = 1).max(dim = 1)[0]
-            
             diffs = torch.norm((self.memory_buffer - obs[i]) / uncertainty[i], dim = 1)/to_div
             #normalize
             min_val, min_ind = diffs.min(dim=0)

@@ -25,13 +25,14 @@ class Agent:
         self.planner = planner
 
         self.with_memory = with_memory
+        self.replay_size = replay_size
+        
         if self.model_rew: # nullifying the value function in favor or the model based approach
             self.rl_learner.value = model_rew_value
         self.model.model.train()
 
         replay_size = max(replay_size, batch_size)
         self.model_replay = deque(maxlen=int(replay_size))
-        
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
         self.save_str = 'rl_models/'+datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")

@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # Training Parameters
     parser.add_argument('--steps', type=int, default=1e6) # training steps
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
-    parser.add_argument('--replay-size', type=int, default=2) # SM replay memory size
+    parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
 
     # Algorithm Parameters
     parser.add_argument('--use-state', action='store_true', default=False)

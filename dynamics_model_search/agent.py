@@ -57,6 +57,7 @@ class Agent:
         if self.with_memory:
             print('ep_min_val: ' + str(self.ep_min_val))
             print('repl_count: ' + str(self.planner.replace_count))
+        print('num_iter: ' + str(self.num_iter_history))
         print('--------------------------------------\n')
 
     def logging(self, ep):
@@ -85,6 +86,7 @@ class Agent:
                 if self.with_memory:
                     f.write('ep_min_val: ' + str(self.ep_min_val) + '\n')
                     f.write('repl_count: ' + str(self.planner.replace_count))
+                f.write('num_iter: ' + str(self.num_iter_history) + '\n')
 
                 # f.write('num_iter: ' + str(self.num_iter_history) + '\n')
 
@@ -95,7 +97,7 @@ class Agent:
             self.rl_learner.update(batch_size, self.n_updates)
             self.n_updates += 1
 
-    def sm_update(self, obs, act, new_obs, done):
+    def sm_update(self, obs, act, new_obs, done, num_iter):
         # epsilon = 0
         epsilon = 1e-5
 
@@ -161,6 +163,7 @@ class Agent:
             ep += 1
             obs = env.reset()
 
+            self.num_iter_history = [] 
 
             if self.with_memory:
                 to_cat = torch.unsqueeze(torch.from_numpy(obs), dim = 0).cuda()
@@ -238,7 +241,10 @@ class Agent:
 
                     ## Self-Model Update
                     if self.with_tree:
-                        self.sm_update(obs, act, new_obs, done)
+                        ind = (self.planner.uncertainty_act == torch.from_numpy(act)).sum(axis = 2).nonzero()[0][0]
+                        num_iter = int((1/self.planner.uncertainty_obs[ind])//10)
+                        self.num_iter_history.append(num_iter)
+                        self.sm_update(obs, act, new_obs, done, num_iter)
                 else:
                     obs_list.append(obs[0])
                 obs = new_obs

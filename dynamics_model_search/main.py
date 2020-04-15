@@ -109,10 +109,10 @@ if __name__ == '__main__':
     if args.planner == 'MCTS':
         from model_based.mcts import MCTS
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
-    if args.planner == 'MCTS-UCT':
+    elif args.planner == 'MCTS-UCT':
         from model_based.mcts_uct import MCTS
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
-    if args.planner == 'MCTS-UCT-MEM':
+    elif args.planner == 'MCTS-UCT-MEM':
         from model_based.mcts_uct_memory import MCTS
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
     elif args.planner == 'CEM':

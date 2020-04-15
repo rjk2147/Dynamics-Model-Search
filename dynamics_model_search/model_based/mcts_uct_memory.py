@@ -58,6 +58,11 @@ class MCTS(MPC):
         # self.batch_size = 262144
         self.batch_size = 256
         self.max_tree = 2048
+        self.memory_buffer = torch.zeros([1])
+        self.memory_buffer_usage = np.array([0])
+        self.epsilon = 0.1
+        self.ep_min_val = float('inf')
+        self.replace_count = 0
         self.clear()
 
     def clear(self):
@@ -99,6 +104,8 @@ class MCTS(MPC):
             acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
             tmp_obs, tmp_h, uncertainty = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True,
                                                         state_in=True,certainty=True)
+            tmp_obs = self.replace_obs(tmp_obs, uncertainty)
+
             new_obs = (tmp_obs, tmp_h)
             rs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])
 
@@ -110,6 +117,27 @@ class MCTS(MPC):
                 new_state = self.add(these_new_obs[i], states[i], acts_in[i], rs[i].item(), depth=depths[i]+1)
                 # q.appendleft((new_state, depths[i]+1))
                 heapq.heappush(q, (new_state, depths[i]+1))
+
+    def clean_and_input(self, to_cat):
+        ind = np.argmin(self.memory_buffer_usage)
+        self.memory_buffer = torch.cat([self.memory_buffer[:ind], self.memory_buffer[:ind]], dim = 0)
+        self.memory_buffer_usage = np.concatenate([self.memory_buffer_usage[:ind], self.memory_buffer_usage[ind:]], axis = 0)
+
+    def replace_obs(self, obs, uncertainty):
+        for i in range(obs.shape[0]):
+            temp_obs_norm = torch.norm(obs[i]).expand(self.memory_buffer.shape[0], 1).cuda()
+            mem_norm = torch.unsqueeze(torch.norm(self.memory_buffer, dim = 1), dim = 1).cuda()
+            to_div = torch.cat([temp_obs_norm, mem_norm], dim = 1).max(dim = 1)[0]
+            
+            diffs = torch.norm((self.memory_buffer - obs[i]) / uncertainty[i], dim = 1)/to_div
+            #normalize
+            min_val, min_ind = diffs.min(dim=0)
+            if min_val < self.epsilon:
+                obs[i] = self.memory_buffer[min_ind]
+                self.replace_count += 1
+            if min_val < self.ep_min_val:
+                self.ep_min_val = min_val
+        return obs
 
     def populate(self, obs, depth=0):
         # self.populate_queue.appendleft((obs, depth))

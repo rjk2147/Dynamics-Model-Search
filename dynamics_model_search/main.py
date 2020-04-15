@@ -13,14 +13,14 @@ if __name__ == '__main__':
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
-    parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='rnn') # type of self-model
+    parser.add_argument('--planner', type=str, default='MCTS-UCT-MEM') # model based algorithm
+    parser.add_argument('--model-arch', type=str, default='mdrnn') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters
     parser.add_argument('--steps', type=int, default=1e6) # training steps
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
-    parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
+    parser.add_argument('--replay-size', type=int, default=2) # SM replay memory size
 
     # Algorithm Parameters
     parser.add_argument('--use-state', action='store_true', default=False)
@@ -112,6 +112,9 @@ if __name__ == '__main__':
     if args.planner == 'MCTS-UCT':
         from model_based.mcts_uct import MCTS
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
+    if args.planner == 'MCTS-UCT-MEM':
+        from model_based.mcts_uct_memory import MCTS
+        planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
     elif args.planner == 'CEM':
         from model_based.cem import CEM
         planner = CEM(int(args.depth), dynamics_model, rl_learner, int(args.width))
@@ -120,7 +123,7 @@ if __name__ == '__main__':
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
 
     agent = Agent(dynamics_model, rl_learner, planner, model_rew=args.model_reward, with_tree=not args.no_search,
-                  batch_size=int(args.batch_size), replay_size=int(args.replay_size))
+                  batch_size=int(args.batch_size), replay_size=int(args.replay_size), with_memory = "MEM" in args.planner)
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all

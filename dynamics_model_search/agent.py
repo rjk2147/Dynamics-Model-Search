@@ -13,7 +13,7 @@ def model_rew_value(obs, act, new_obs):
     return new_obs[...,0].detach().cpu().numpy()
 
 class Agent:
-    def __init__(self, dynamics_model, rl, planner, with_tree=True, model_rew=False, batch_size=512, replay_size=1e5):
+    def __init__(self, dynamics_model, rl, planner, with_tree=True, model_rew=False, batch_size=512, replay_size=1e5, with_memory = False):
         self.model_rew = model_rew
         self.act_mul_const = dynamics_model.act_mul_const
         self.from_update = 0
@@ -24,6 +24,7 @@ class Agent:
         self.rl_learner = rl
         self.planner = planner
 
+        self.with_memory = with_memory
         if self.model_rew: # nullifying the value function in favor or the model based approach
             self.rl_learner.value = model_rew_value
         self.model.model.train()
@@ -52,8 +53,9 @@ class Agent:
             print('Total Timesteps: '+str(self.steps))
         if self.start_time:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
-        print('ep_min_val: ' + str(self.ep_min_val))
-        print('repl_count: ' + str(self.planner.replace_count))
+        if self.with_memory:
+            print('ep_min_val: ' + str(self.ep_min_val))
+            print('repl_count: ' + str(self.planner.replace_count))
         print('--------------------------------------\n')
 
     def logging(self, ep):
@@ -79,7 +81,10 @@ class Agent:
                     f.write('Total Timesteps: ' + str(self.steps) + '\n')
                 if self.start_time:
                     f.write('Total Time: ' + str(round(time.time() - self.start_time, 2)) + '\n')
-                f.write('ep_min_val: ' + str(self.ep_min_val) + '\n')
+                if self.with_memory:
+                    f.write('ep_min_val: ' + str(self.ep_min_val) + '\n')
+                    f.write('repl_count: ' + str(self.planner.replace_count))
+
                 # f.write('num_iter: ' + str(self.num_iter_history) + '\n')
 
                 f.write('\n\n\n')
@@ -146,7 +151,9 @@ class Agent:
         self.ep_lens = deque(maxlen=100)
         # self.steps = 0
         self.start_time = time.time()
-        self.ep_min_val = float('inf')
+
+        if self.with_memory:
+            self.ep_min_val = float('inf')
 
         while self.steps < max_timesteps:
             obs_list = []
@@ -154,12 +161,18 @@ class Agent:
             obs = env.reset()
 
 
-            to_cat = torch.unsqueeze(torch.from_numpy(obs), dim = 0).cuda()
-            if len(self.planner.memory_buffer.shape) == 1:
-                self.planner.memory_buffer = to_cat
-            else:                
-                self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, to_cat],dim = 0)
-            
+            if self.with_memory:
+                to_cat = torch.unsqueeze(torch.from_numpy(obs), dim = 0).cuda()
+                if len(self.planner.memory_buffer.shape) == 1:
+                    self.planner.memory_buffer = to_cat
+                    self.planner.memory_buffer_usage = np.array([0])
+                else:
+                    if len(self.planner.memory_buffer_usage) < self.replay_size:
+                        self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, to_cat],dim = 0)
+                        self.planner.memory_buffer_usage = np.concatenate([self.planner.memory_buffer_usage, np.array([0])], axis = 0)
+                    else:
+                        self.planner.clean_and_input(to_cat)
+                
             if self.model_rew: # appending initial reward of 0 to obs
                 obs = np.concatenate([np.zeros(1), obs]).astype(obs.dtype)
             if self.with_tree:
@@ -183,7 +196,13 @@ class Agent:
                     ex_r = 0
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
 
-                self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, torch.unsqueeze(torch.from_numpy(new_obs),dim=0).cuda()],dim=0)
+                if self.with_memory:
+                    to_cat = torch.unsqueeze(torch.from_numpy(new_obs),dim=0).cuda()
+                    if len(self.planner.memory_buffer_usage) < self.replay_size:
+                        self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, to_cat],dim=0)
+                        self.planner.memory_buffer_usage = np.concatenate([self.planner.memory_buffer_usage, np.array([0])], axis = 0)
+                    else:
+                        self.planner.clean_and_input(to_cat)
 
                 if self.model_rew: # appending reward to obs
                     new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)
@@ -203,9 +222,10 @@ class Agent:
                 ep_r += r
                 ep_exp_r += ex_r
                 ep_len += 1
-
-                if self.planner.ep_min_val < self.ep_min_val:
-                    self.ep_min_val = self.planner.ep_min_val
+        
+                if self.with_memory:
+                    if self.planner.ep_min_val < self.ep_min_val:
+                        self.ep_min_val = self.planner.ep_min_val
 
                 if training:
                     # TODO could try to use state and rerun all obs through the self-model before RL-update

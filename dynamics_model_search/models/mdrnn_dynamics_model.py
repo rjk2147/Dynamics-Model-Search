@@ -166,7 +166,7 @@ class MDRNNDynamicsModel(DynamicsModel):
     def to(self, in_device):
         self.model.to(in_device)
 
-    def update(self, data):
+    def update(self, data, num_iter):
         self.model.train()
         self.optimizer.zero_grad()
         Xs = torch.from_numpy(np.array([step[0] for step in data]).astype(np.float32)).to(self.device)

@@ -99,7 +99,8 @@ class MCTS(MPC):
             acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
             tmp_obs, tmp_h, uncertainty = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True,
                                                         state_in=True,certainty=True)
-            if depth == 0 :
+
+            if depth == 0:
                 self.uncertainty_obs = (torch.norm(uncertainty, dim = 1)/uncertainty.shape[1]).detach()
                 self.uncertainty_act = acts_in
 

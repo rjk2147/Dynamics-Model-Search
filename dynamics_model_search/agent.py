@@ -119,7 +119,7 @@ class Agent:
 
             self.model.model.norm_mean = obs_mean
             self.model.model.norm_std = obs_std
-            train_loss = self.model.update(data)
+            train_loss = self.model.update(data, num_iter)
             if self.avg_train_loss is None:
                 self.avg_train_loss = np.zeros(len(train_loss))
             train_loss = np.array(train_loss)
@@ -241,10 +241,11 @@ class Agent:
 
                     ## Self-Model Update
                     if self.with_tree:
-                        ind = (self.planner.uncertainty_act == torch.from_numpy(act)).sum(axis = 2).nonzero()[0][0]
+                        ind = (self.planner.uncertainty_act == torch.from_numpy(act).cuda()).sum(axis = 2).nonzero()[0][0]
                         num_iter = int((1/self.planner.uncertainty_obs[ind])//10)
                         self.num_iter_history.append(num_iter)
-                        self.sm_update(obs, act, new_obs, done, num_iter)
+                        for _ in range(num_iter):
+                            self.sm_update(obs, act, new_obs, done, num_iter)
                 else:
                     obs_list.append(obs[0])
                 obs = new_obs

@@ -163,16 +163,7 @@ class Agent:
 
 
             if self.with_memory:
-                to_cat = torch.unsqueeze(torch.from_numpy(obs), dim = 0).cuda()
-                if len(self.planner.memory_buffer.shape) == 1:
-                    self.planner.memory_buffer = to_cat
-                    self.planner.memory_buffer_usage = np.array([0])
-                else:
-                    if len(self.planner.memory_buffer_usage) < self.replay_size:
-                        self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, to_cat],dim = 0)
-                        self.planner.memory_buffer_usage = np.concatenate([self.planner.memory_buffer_usage, np.array([0])], axis = 0)
-                    else:
-                        self.planner.clean_and_input(to_cat)
+                self.planner.add_to_memory_buffer(obs)
                 
             if self.model_rew: # appending initial reward of 0 to obs
                 obs = np.concatenate([np.zeros(1), obs]).astype(obs.dtype)
@@ -198,12 +189,7 @@ class Agent:
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
 
                 if self.with_memory:
-                    to_cat = torch.unsqueeze(torch.from_numpy(new_obs),dim=0).cuda()
-                    if len(self.planner.memory_buffer_usage) < self.replay_size:
-                        self.planner.memory_buffer = torch.cat([self.planner.memory_buffer, to_cat],dim=0)
-                        self.planner.memory_buffer_usage = np.concatenate([self.planner.memory_buffer_usage, np.array([0])], axis = 0)
-                    else:
-                        self.planner.clean_and_input(to_cat)
+                    self.planner.add_to_memory_buffer(new_obs)
 
                 if self.model_rew: # appending reward to obs
                     new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)

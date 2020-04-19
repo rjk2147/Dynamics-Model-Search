@@ -3,7 +3,7 @@ from collections import deque
 import numpy as np
 
 class ANN:
-    def __init__(self, d, space='l2', max_size=100000, ef=50, M=16, batch_add=-1):
+    def __init__(self, d, space='l2', max_size=1000100, ef=50, M=16, batch_add=-1):
         self.dim = d
         self.space = space
         self.max_size = max_size
@@ -31,8 +31,6 @@ class ANN:
             # self.refresh()
 
     def nearest(self, points):
-        for i in points:
-            self.add(i)
         labels, distances = self.index.knn_query(points, k=1)
         obs = np.array(self.index.get_items(labels))
         return labels, distances, obs

@@ -170,7 +170,8 @@ class MCTS(MPC):
         obs[where] = return_obss[where]
         # np.copyto(obs, return_obss, where = where)
         self.replace_count += np.sum(where)
-        return obs
+        self.ep_min_val = min(diffs.min(), self.ep_min_val)
+        return torch.tensor(obs).cuda()
 
         # for i in range(obs.shape[0]):
         #     temp_obs_norm = torch.norm(obs[i]).expand(self.memory_buffer.shape[0], 1).cuda()

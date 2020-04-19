@@ -18050,3 +18050,2876 @@ ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
 repl_count: 813
 
 
+episode : 1390 
+Last Episode Reward: 27.61993996798992
+Mean Episode Reward: 23.567680368716704
+Stdev Episode Reward: 4.403970323607748
+Mean Expected Episode Reward: 1378.5574721905589
+Stdev Expected Episode Reward: 118.52898253044921
+Avg Train Loss: [-50.19423588   0.06045102]
+Total Timesteps: 139000
+Total Time: 254827.4
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 6269
+
+
+episode : 1391 
+Last Episode Reward: 30.867513821460307
+Mean Episode Reward: 23.63056797619315
+Stdev Episode Reward: 4.4624715981473315
+Mean Expected Episode Reward: 1378.1886260458828
+Stdev Expected Episode Reward: 118.78056496312435
+Avg Train Loss: [-50.40816227   0.05953075]
+Total Timesteps: 139100
+Total Time: 255093.41
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15453
+
+
+episode : 1392 
+Last Episode Reward: 25.921965866349638
+Mean Episode Reward: 23.65487363822142
+Stdev Episode Reward: 4.468262902267791
+Mean Expected Episode Reward: 1376.8894775149226
+Stdev Expected Episode Reward: 118.88455611380994
+Avg Train Loss: [-50.33146286   0.06029773]
+Total Timesteps: 139200
+Total Time: 255359.73
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1055
+
+
+episode : 1393 
+Last Episode Reward: 32.085418296512216
+Mean Episode Reward: 23.741587774552997
+Stdev Episode Reward: 4.546208824511548
+Mean Expected Episode Reward: 1375.4213482949137
+Stdev Expected Episode Reward: 118.69237026045371
+Avg Train Loss: [-50.1795364    0.06008651]
+Total Timesteps: 139300
+Total Time: 255629.26
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 6791
+
+
+episode : 1394 
+Last Episode Reward: 29.9805062757805
+Mean Episode Reward: 23.74053256023641
+Stdev Episode Reward: 4.544748114320422
+Mean Expected Episode Reward: 1375.7237027212977
+Stdev Expected Episode Reward: 118.5516916915749
+Avg Train Loss: [-50.20164375   0.06028469]
+Total Timesteps: 139400
+Total Time: 255897.8
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1883
+
+
+episode : 1395 
+Last Episode Reward: 26.87255606567487
+Mean Episode Reward: 23.72638288897195
+Stdev Episode Reward: 4.532756300943599
+Mean Expected Episode Reward: 1376.6836957070232
+Stdev Expected Episode Reward: 118.01217506017564
+Avg Train Loss: [-50.24027386   0.06052409]
+Total Timesteps: 139500
+Total Time: 256166.67
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 221
+
+
+episode : 1396 
+Last Episode Reward: 23.72400470019784
+Mean Episode Reward: 23.726943792017067
+Stdev Episode Reward: 4.5327525015207275
+Mean Expected Episode Reward: 1377.8471945282818
+Stdev Expected Episode Reward: 117.229870217627
+Avg Train Loss: [-50.28257545   0.06022034]
+Total Timesteps: 139600
+Total Time: 256435.98
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 230
+
+
+episode : 1397 
+Last Episode Reward: 27.0167699316371
+Mean Episode Reward: 23.7391945922463
+Stdev Episode Reward: 4.539966184120899
+Mean Expected Episode Reward: 1377.9093179270626
+Stdev Expected Episode Reward: 117.1801869017028
+Avg Train Loss: [-50.2775211    0.06014127]
+Total Timesteps: 139700
+Total Time: 256705.3
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1932
+
+
+episode : 1398 
+Last Episode Reward: 24.97154321608832
+Mean Episode Reward: 23.73938548892746
+Stdev Episode Reward: 4.5400175963194345
+Mean Expected Episode Reward: 1377.3555999800562
+Stdev Expected Episode Reward: 117.01058875557909
+Avg Train Loss: [-50.13694176   0.06031779]
+Total Timesteps: 139800
+Total Time: 256974.43
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 125
+
+
+episode : 1399 
+Last Episode Reward: 25.680668964923825
+Mean Episode Reward: 23.74287114467656
+Stdev Episode Reward: 4.54137269306445
+Mean Expected Episode Reward: 1379.5698615404963
+Stdev Expected Episode Reward: 117.2013006568559
+Avg Train Loss: [-50.29427444   0.06006606]
+Total Timesteps: 139900
+Total Time: 257243.51
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 130
+
+
+episode : 1400 
+Last Episode Reward: 33.1729335563723
+Mean Episode Reward: 23.805595398800893
+Stdev Episode Reward: 4.627060153266829
+Mean Expected Episode Reward: 1380.2292223736645
+Stdev Expected Episode Reward: 116.74546486848782
+Avg Train Loss: [-50.26946251   0.05987242]
+Total Timesteps: 140000
+Total Time: 257513.06
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 9281
+
+
+episode : 1401 
+Last Episode Reward: 29.22669755120296
+Mean Episode Reward: 23.87462035109357
+Stdev Episode Reward: 4.655841432963173
+Mean Expected Episode Reward: 1380.6481177040935
+Stdev Expected Episode Reward: 116.5970169966093
+Avg Train Loss: [-50.34296009   0.06017585]
+Total Timesteps: 140100
+Total Time: 257782.51
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1537
+
+
+episode : 1402 
+Last Episode Reward: 30.26198197877966
+Mean Episode Reward: 23.903491445964413
+Stdev Episode Reward: 4.686309010717076
+Mean Expected Episode Reward: 1382.3234843075275
+Stdev Expected Episode Reward: 114.42842901072659
+Avg Train Loss: [-50.19046024   0.06038981]
+Total Timesteps: 140200
+Total Time: 258051.72
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 12719
+
+
+episode : 1403 
+Last Episode Reward: 33.740081736817956
+Mean Episode Reward: 23.99452677560805
+Stdev Episode Reward: 4.787004916202475
+Mean Expected Episode Reward: 1383.2947819578649
+Stdev Expected Episode Reward: 113.62645648579615
+Avg Train Loss: [-50.28610405   0.06047525]
+Total Timesteps: 140300
+Total Time: 258321.25
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 13159
+
+
+episode : 1404 
+Last Episode Reward: 24.270051784813404
+Mean Episode Reward: 24.018680728763087
+Stdev Episode Reward: 4.7822381104795335
+Mean Expected Episode Reward: 1384.3721541702748
+Stdev Expected Episode Reward: 113.17205114141363
+Avg Train Loss: [-50.23266899   0.06035183]
+Total Timesteps: 140400
+Total Time: 258590.46
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 181
+
+
+episode : 1405 
+Last Episode Reward: 27.300417670980096
+Mean Episode Reward: 24.056801311956466
+Stdev Episode Reward: 4.793040134654483
+Mean Expected Episode Reward: 1384.6477353346347
+Stdev Expected Episode Reward: 113.02580842104699
+Avg Train Loss: [-50.28394043   0.0602628 ]
+Total Timesteps: 140500
+Total Time: 258859.69
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 4153
+
+
+episode : 1406 
+Last Episode Reward: 25.695336687145755
+Mean Episode Reward: 24.04391850950497
+Stdev Episode Reward: 4.786883459079877
+Mean Expected Episode Reward: 1386.5247962486744
+Stdev Expected Episode Reward: 113.36555602918625
+Avg Train Loss: [-50.27086811   0.06019242]
+Total Timesteps: 140600
+Total Time: 259128.84
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 112
+
+
+episode : 1407 
+Last Episode Reward: 26.61833359207958
+Mean Episode Reward: 24.106213616210248
+Stdev Episode Reward: 4.779440496867415
+Mean Expected Episode Reward: 1389.5854789316654
+Stdev Expected Episode Reward: 112.61309528559356
+Avg Train Loss: [-50.38349953   0.05959309]
+Total Timesteps: 140700
+Total Time: 259397.82
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 159
+
+
+episode : 1408 
+Last Episode Reward: 29.566708696074784
+Mean Episode Reward: 24.182078442999142
+Stdev Episode Reward: 4.8052333786833605
+Mean Expected Episode Reward: 1389.877312451601
+Stdev Expected Episode Reward: 112.32777817475126
+Avg Train Loss: [-50.33288662   0.05980634]
+Total Timesteps: 140800
+Total Time: 259666.87
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1960
+
+
+episode : 1409 
+Last Episode Reward: 33.029102261178195
+Mean Episode Reward: 24.235616034711224
+Stdev Episode Reward: 4.873199244371493
+Mean Expected Episode Reward: 1389.0999217379094
+Stdev Expected Episode Reward: 112.29187659554401
+Avg Train Loss: [-50.4738768    0.06003949]
+Total Timesteps: 140900
+Total Time: 259936.71
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 14779
+
+
+episode : 1410 
+Last Episode Reward: 22.58274401248491
+Mean Episode Reward: 24.180719107220305
+Stdev Episode Reward: 4.860572510416081
+Mean Expected Episode Reward: 1392.002977616787
+Stdev Expected Episode Reward: 110.97814042641247
+Avg Train Loss: [-50.41049484   0.05985944]
+Total Timesteps: 141000
+Total Time: 260206.2
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 374
+
+
+episode : 1411 
+Last Episode Reward: 27.995515609160066
+Mean Episode Reward: 24.262221050801113
+Stdev Episode Reward: 4.855521860727934
+Mean Expected Episode Reward: 1392.9721584057809
+Stdev Expected Episode Reward: 109.58906321264824
+Avg Train Loss: [-50.2311953    0.06018476]
+Total Timesteps: 141100
+Total Time: 260475.43
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 14617
+
+
+episode : 1412 
+Last Episode Reward: 26.63902866357239
+Mean Episode Reward: 24.260227043094588
+Stdev Episode Reward: 4.854504321954319
+Mean Expected Episode Reward: 1393.7154004120828
+Stdev Expected Episode Reward: 108.96515542858617
+Avg Train Loss: [-50.32214905   0.06028989]
+Total Timesteps: 141200
+Total Time: 260744.71
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 193
+
+
+episode : 1413 
+Last Episode Reward: 23.991234932094812
+Mean Episode Reward: 24.258672431713443
+Stdev Episode Reward: 4.854565322435818
+Mean Expected Episode Reward: 1393.954076693058
+Stdev Expected Episode Reward: 108.78295170730433
+Avg Train Loss: [-50.32236206   0.0601528 ]
+Total Timesteps: 141300
+Total Time: 261013.7
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 211
+
+
+episode : 1414 
+Last Episode Reward: 28.955956794321537
+Mean Episode Reward: 24.281499171835843
+Stdev Episode Reward: 4.871203627659465
+Mean Expected Episode Reward: 1394.834289290905
+Stdev Expected Episode Reward: 107.86639900349363
+Avg Train Loss: [-50.34855549   0.06029986]
+Total Timesteps: 141400
+Total Time: 261282.85
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 3602
+
+
+episode : 1415 
+Last Episode Reward: 20.29316886793822
+Mean Episode Reward: 24.233458148903686
+Stdev Episode Reward: 4.886586721729462
+Mean Expected Episode Reward: 1395.4234952139855
+Stdev Expected Episode Reward: 107.19834217223337
+Avg Train Loss: [-50.52686474   0.05992579]
+Total Timesteps: 141500
+Total Time: 261551.92
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 180
+
+
+episode : 1416 
+Last Episode Reward: 26.7717527783243
+Mean Episode Reward: 24.252953084644638
+Stdev Episode Reward: 4.892781649112607
+Mean Expected Episode Reward: 1395.545558822155
+Stdev Expected Episode Reward: 107.26518920090192
+Avg Train Loss: [-50.3691317   0.0600451]
+Total Timesteps: 141600
+Total Time: 261821.16
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 232
+
+
+episode : 1417 
+Last Episode Reward: 28.22638937830925
+Mean Episode Reward: 24.273609854969788
+Stdev Episode Reward: 4.905137314035755
+Mean Expected Episode Reward: 1396.2378848528863
+Stdev Expected Episode Reward: 106.54196420938466
+Avg Train Loss: [-50.4346442    0.06001228]
+Total Timesteps: 141700
+Total Time: 262090.38
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 156
+
+
+episode : 1418 
+Last Episode Reward: 22.702505903609563
+Mean Episode Reward: 24.202503290747067
+Stdev Episode Reward: 4.8757700096036425
+Mean Expected Episode Reward: 1396.484291164875
+Stdev Expected Episode Reward: 106.35166668080663
+Avg Train Loss: [-50.37884811   0.0598803 ]
+Total Timesteps: 141800
+Total Time: 262359.76
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 284
+
+
+episode : 1419 
+Last Episode Reward: 29.56270315987058
+Mean Episode Reward: 24.24436582462886
+Stdev Episode Reward: 4.903561627814584
+Mean Expected Episode Reward: 1395.9226416182519
+Stdev Expected Episode Reward: 106.31957100391395
+Avg Train Loss: [-50.4813673    0.05993001]
+Total Timesteps: 141900
+Total Time: 262629.19
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2865
+
+
+episode : 1420 
+Last Episode Reward: 33.28160636499524
+Mean Episode Reward: 24.316241375266678
+Stdev Episode Reward: 4.982193728190188
+Mean Expected Episode Reward: 1397.8794058680535
+Stdev Expected Episode Reward: 105.392469031344
+Avg Train Loss: [-50.31063885   0.05965973]
+Total Timesteps: 142000
+Total Time: 262898.88
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 4582
+
+
+episode : 1421 
+Last Episode Reward: 25.291059984767344
+Mean Episode Reward: 24.354117574717954
+Stdev Episode Reward: 4.975058184424582
+Mean Expected Episode Reward: 1398.5468339419365
+Stdev Expected Episode Reward: 104.81540946682979
+Avg Train Loss: [-50.35305248   0.06018838]
+Total Timesteps: 142100
+Total Time: 263168.05
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 199
+
+
+episode : 1422 
+Last Episode Reward: 24.5797368667736
+Mean Episode Reward: 24.420486747209967
+Stdev Episode Reward: 4.933179572755203
+Mean Expected Episode Reward: 1399.6741544032097
+Stdev Expected Episode Reward: 104.27789659755156
+Avg Train Loss: [-50.51853703   0.05979033]
+Total Timesteps: 142200
+Total Time: 263437.21
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 263
+
+
+episode : 1423 
+Last Episode Reward: 31.344922182848677
+Mean Episode Reward: 24.56129401993547
+Stdev Episode Reward: 4.92785825095138
+Mean Expected Episode Reward: 1398.0442497992515
+Stdev Expected Episode Reward: 103.03355405938369
+Avg Train Loss: [-50.38401409   0.06009902]
+Total Timesteps: 142300
+Total Time: 263706.43
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2294
+
+
+episode : 1424 
+Last Episode Reward: 32.05676720052725
+Mean Episode Reward: 24.658073383160104
+Stdev Episode Reward: 4.978816166989585
+Mean Expected Episode Reward: 1398.7199591231347
+Stdev Expected Episode Reward: 102.68673041534907
+Avg Train Loss: [-50.27475903   0.06026771]
+Total Timesteps: 142400
+Total Time: 263975.53
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1968
+
+
+episode : 1425 
+Last Episode Reward: 27.17698657559231
+Mean Episode Reward: 24.674505561866123
+Stdev Episode Reward: 4.984387747950913
+Mean Expected Episode Reward: 1397.4381335282326
+Stdev Expected Episode Reward: 103.29256295078216
+Avg Train Loss: [-50.46954227   0.06012314]
+Total Timesteps: 142500
+Total Time: 264244.6
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 10337
+
+
+episode : 1426 
+Last Episode Reward: 32.2708198428154
+Mean Episode Reward: 24.65939225746903
+Stdev Episode Reward: 4.958975780635104
+Mean Expected Episode Reward: 1397.0485403847695
+Stdev Expected Episode Reward: 103.36767832347364
+Avg Train Loss: [-50.2911623    0.06042836]
+Total Timesteps: 142600
+Total Time: 264513.91
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2443
+
+
+episode : 1427 
+Last Episode Reward: 22.735671508824453
+Mean Episode Reward: 24.566164572810543
+Stdev Episode Reward: 4.906352752881898
+Mean Expected Episode Reward: 1397.6844582223891
+Stdev Expected Episode Reward: 103.46565748244116
+Avg Train Loss: [-50.45368412   0.06013526]
+Total Timesteps: 142700
+Total Time: 264783.24
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 189
+
+
+episode : 1428 
+Last Episode Reward: 26.77855456538964
+Mean Episode Reward: 24.602793001108317
+Stdev Episode Reward: 4.90905940628299
+Mean Expected Episode Reward: 1399.1046441984176
+Stdev Expected Episode Reward: 104.54341861488986
+Avg Train Loss: [-50.51996704   0.05950764]
+Total Timesteps: 142800
+Total Time: 265052.41
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1038
+
+
+episode : 1429 
+Last Episode Reward: 27.942750639864244
+Mean Episode Reward: 24.635665167419162
+Stdev Episode Reward: 4.920295624171933
+Mean Expected Episode Reward: 1400.7052683496474
+Stdev Expected Episode Reward: 104.5692152295205
+Avg Train Loss: [-50.40883385   0.05975465]
+Total Timesteps: 142900
+Total Time: 265321.92
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 3464
+
+
+episode : 1430 
+Last Episode Reward: 32.6478960448876
+Mean Episode Reward: 24.6932849894724
+Stdev Episode Reward: 4.979689872956521
+Mean Expected Episode Reward: 1401.7266622543334
+Stdev Expected Episode Reward: 104.47263123908058
+Avg Train Loss: [-50.43026199   0.05997884]
+Total Timesteps: 143000
+Total Time: 265590.81
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2538
+
+
+episode : 1431 
+Last Episode Reward: 30.13094313116744
+Mean Episode Reward: 24.758767460950573
+Stdev Episode Reward: 5.007631222245611
+Mean Expected Episode Reward: 1400.8549863386154
+Stdev Expected Episode Reward: 104.93321040591105
+Avg Train Loss: [-50.40646667   0.06015618]
+Total Timesteps: 143100
+Total Time: 265860.25
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 205
+
+
+episode : 1432 
+Last Episode Reward: 29.641618431080133
+Mean Episode Reward: 24.889536470759435
+Stdev Episode Reward: 4.962486040711831
+Mean Expected Episode Reward: 1398.993109021187
+Stdev Expected Episode Reward: 103.1883527599721
+Avg Train Loss: [-50.52353386   0.05979464]
+Total Timesteps: 143200
+Total Time: 266129.62
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2860
+
+
+episode : 1433 
+Last Episode Reward: 30.83073486905778
+Mean Episode Reward: 24.954161353445038
+Stdev Episode Reward: 4.997234463339569
+Mean Expected Episode Reward: 1397.9979368925094
+Stdev Expected Episode Reward: 102.98373340181381
+Avg Train Loss: [-50.56368195   0.05947333]
+Total Timesteps: 143300
+Total Time: 266399.19
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 958
+
+
+episode : 1434 
+Last Episode Reward: 22.118764904178533
+Mean Episode Reward: 24.909227900270256
+Stdev Episode Reward: 5.00232346536323
+Mean Expected Episode Reward: 1399.353907456398
+Stdev Expected Episode Reward: 103.0727651583886
+Avg Train Loss: [-50.5681031    0.05933313]
+Total Timesteps: 143400
+Total Time: 266668.14
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 195
+
+
+episode : 1435 
+Last Episode Reward: 29.554579715244472
+Mean Episode Reward: 24.9490403709666
+Stdev Episode Reward: 5.023249705421945
+Mean Expected Episode Reward: 1400.2627459144592
+Stdev Expected Episode Reward: 102.72885947967924
+Avg Train Loss: [-50.42043419   0.06012175]
+Total Timesteps: 143500
+Total Time: 266937.86
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1615
+
+
+episode : 1436 
+Last Episode Reward: 28.30194605048746
+Mean Episode Reward: 24.963274003356695
+Stdev Episode Reward: 5.03070804473793
+Mean Expected Episode Reward: 1401.5317136955262
+Stdev Expected Episode Reward: 103.60644929858971
+Avg Train Loss: [-50.44692757   0.06021367]
+Total Timesteps: 143600
+Total Time: 267207.16
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 205
+
+
+episode : 1437 
+Last Episode Reward: 19.155718972266186
+Mean Episode Reward: 24.911339314247947
+Stdev Episode Reward: 5.0634802415156255
+Mean Expected Episode Reward: 1402.7136148643494
+Stdev Expected Episode Reward: 104.41544880623542
+Avg Train Loss: [-50.51617321   0.05972305]
+Total Timesteps: 143700
+Total Time: 267476.45
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 164
+
+
+episode : 1438 
+Last Episode Reward: 25.098686515178997
+Mean Episode Reward: 24.985579421031346
+Stdev Episode Reward: 5.010985788210565
+Mean Expected Episode Reward: 1401.1631992435455
+Stdev Expected Episode Reward: 102.87368560808348
+Avg Train Loss: [-50.44865688   0.06024588]
+Total Timesteps: 143800
+Total Time: 267745.65
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 166
+
+
+episode : 1439 
+Last Episode Reward: 23.29303019719373
+Mean Episode Reward: 25.070177125109407
+Stdev Episode Reward: 4.909253821899368
+Mean Expected Episode Reward: 1400.2595904445648
+Stdev Expected Episode Reward: 101.76060744475927
+Avg Train Loss: [-50.62250801   0.06000258]
+Total Timesteps: 143900
+Total Time: 268014.48
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 140
+
+
+episode : 1440 
+Last Episode Reward: 24.93685033218935
+Mean Episode Reward: 25.06297689283784
+Stdev Episode Reward: 4.90891605935225
+Mean Expected Episode Reward: 1401.8830157279967
+Stdev Expected Episode Reward: 103.211742941062
+Avg Train Loss: [-50.56428844   0.05982249]
+Total Timesteps: 144000
+Total Time: 268283.43
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 241
+
+
+episode : 1441 
+Last Episode Reward: 18.150120952406724
+Mean Episode Reward: 25.0614246276924
+Stdev Episode Reward: 4.911076733893973
+Mean Expected Episode Reward: 1402.0804426956176
+Stdev Expected Episode Reward: 103.60352755994434
+Avg Train Loss: [-50.45696003   0.0598718 ]
+Total Timesteps: 144100
+Total Time: 268552.72
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 242
+
+
+episode : 1442 
+Last Episode Reward: 25.317823543213308
+Mean Episode Reward: 25.066683522560712
+Stdev Episode Reward: 4.9110669087865215
+Mean Expected Episode Reward: 1403.08797996521
+Stdev Expected Episode Reward: 104.38135438145999
+Avg Train Loss: [-50.57208542   0.0599348 ]
+Total Timesteps: 144200
+Total Time: 268821.55
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 152
+
+
+episode : 1443 
+Last Episode Reward: 17.425769577283063
+Mean Episode Reward: 25.07449615815894
+Stdev Episode Reward: 4.898267251306341
+Mean Expected Episode Reward: 1403.2797995376586
+Stdev Expected Episode Reward: 104.70103692670469
+Avg Train Loss: [-50.50119934   0.05998085]
+Total Timesteps: 144300
+Total Time: 269090.39
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 236
+
+
+episode : 1444 
+Last Episode Reward: 23.503746457397938
+Mean Episode Reward: 25.118189615117547
+Stdev Episode Reward: 4.864456615085996
+Mean Expected Episode Reward: 1399.1232520532608
+Stdev Expected Episode Reward: 104.16240365605624
+Avg Train Loss: [-50.54076218   0.05990496]
+Total Timesteps: 144400
+Total Time: 269359.63
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 204
+
+
+episode : 1445 
+Last Episode Reward: 22.73240999999689
+Mean Episode Reward: 25.18601756036263
+Stdev Episode Reward: 4.78274287998825
+Mean Expected Episode Reward: 1400.546590218544
+Stdev Expected Episode Reward: 104.44743877634548
+Avg Train Loss: [-50.5559029    0.06007516]
+Total Timesteps: 144500
+Total Time: 269629.05
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 245
+
+
+episode : 1446 
+Last Episode Reward: 30.22524452023208
+Mean Episode Reward: 25.311621650190606
+Stdev Episode Reward: 4.748379656473077
+Mean Expected Episode Reward: 1399.0784683656693
+Stdev Expected Episode Reward: 103.50049254537534
+Avg Train Loss: [-50.53361027   0.05994002]
+Total Timesteps: 144600
+Total Time: 269898.02
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2452
+
+
+episode : 1447 
+Last Episode Reward: 27.648879074375145
+Mean Episode Reward: 25.406331061393097
+Stdev Episode Reward: 4.699348123022076
+Mean Expected Episode Reward: 1397.899180483818
+Stdev Expected Episode Reward: 101.01351777976653
+Avg Train Loss: [-50.42486237   0.06028766]
+Total Timesteps: 144700
+Total Time: 270167.47
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 164
+
+
+episode : 1448 
+Last Episode Reward: 18.273950769216754
+Mean Episode Reward: 25.45088726106414
+Stdev Episode Reward: 4.609531268215172
+Mean Expected Episode Reward: 1397.9581603860854
+Stdev Expected Episode Reward: 101.12224182925989
+Avg Train Loss: [-50.53763924   0.06018461]
+Total Timesteps: 144800
+Total Time: 270436.65
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 245
+
+
+episode : 1449 
+Last Episode Reward: 19.392465749639086
+Mean Episode Reward: 25.487586412705653
+Stdev Episode Reward: 4.5461050419330915
+Mean Expected Episode Reward: 1400.2614735269547
+Stdev Expected Episode Reward: 103.46087375875156
+Avg Train Loss: [-50.55041576   0.05978663]
+Total Timesteps: 144900
+Total Time: 270705.76
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 143
+
+
+episode : 1450 
+Last Episode Reward: 27.77064688513201
+Mean Episode Reward: 25.589670848779146
+Stdev Episode Reward: 4.481144551680451
+Mean Expected Episode Reward: 1399.5951285982133
+Stdev Expected Episode Reward: 102.30225294795778
+Avg Train Loss: [-50.59025406   0.05971934]
+Total Timesteps: 145000
+Total Time: 270975.3
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 168
+
+
+episode : 1451 
+Last Episode Reward: 19.062762311659753
+Mean Episode Reward: 25.589622296010944
+Stdev Episode Reward: 4.481215242979907
+Mean Expected Episode Reward: 1398.2849332523347
+Stdev Expected Episode Reward: 102.38594027169115
+Avg Train Loss: [-50.52141457   0.06019801]
+Total Timesteps: 145100
+Total Time: 271244.94
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 212
+
+
+episode : 1452 
+Last Episode Reward: 34.6663116523996
+Mean Episode Reward: 25.722651654195957
+Stdev Episode Reward: 4.550697149768917
+Mean Expected Episode Reward: 1398.176235294342
+Stdev Expected Episode Reward: 102.25919193296411
+Avg Train Loss: [-50.51378899   0.06031853]
+Total Timesteps: 145200
+Total Time: 271514.61
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1211
+
+
+episode : 1453 
+Last Episode Reward: 24.721738131716847
+Mean Episode Reward: 25.791158805548196
+Stdev Episode Reward: 4.483044598499851
+Mean Expected Episode Reward: 1396.2585111951828
+Stdev Expected Episode Reward: 101.41825644035998
+Avg Train Loss: [-50.60381855   0.05957551]
+Total Timesteps: 145300
+Total Time: 271784.28
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 206
+
+
+episode : 1454 
+Last Episode Reward: 30.88001987710595
+Mean Episode Reward: 25.82692716196923
+Stdev Episode Reward: 4.5091587195263605
+Mean Expected Episode Reward: 1398.4124481248855
+Stdev Expected Episode Reward: 103.94598372115118
+Avg Train Loss: [-50.47656807   0.06063545]
+Total Timesteps: 145400
+Total Time: 272053.89
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 200
+
+
+episode : 1455 
+Last Episode Reward: 26.16119645530125
+Mean Episode Reward: 25.91065364947995
+Stdev Episode Reward: 4.436266915967545
+Mean Expected Episode Reward: 1401.4542283773421
+Stdev Expected Episode Reward: 105.38535767994662
+Avg Train Loss: [-50.59450985   0.06030218]
+Total Timesteps: 145500
+Total Time: 272323.52
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 280
+
+
+episode : 1456 
+Last Episode Reward: 32.456973392516375
+Mean Episode Reward: 25.952315369667573
+Stdev Episode Reward: 4.477791915739967
+Mean Expected Episode Reward: 1403.4336564779283
+Stdev Expected Episode Reward: 107.47508197498432
+Avg Train Loss: [-50.51270905   0.06030344]
+Total Timesteps: 145600
+Total Time: 272592.99
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 211
+
+
+episode : 1457 
+Last Episode Reward: 16.984596251277253
+Mean Episode Reward: 25.867625637925315
+Stdev Episode Reward: 4.565650060692218
+Mean Expected Episode Reward: 1405.7805127763747
+Stdev Expected Episode Reward: 109.61427365734654
+Avg Train Loss: [-50.56077541   0.06041554]
+Total Timesteps: 145700
+Total Time: 272862.73
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 170
+
+
+episode : 1458 
+Last Episode Reward: 24.923672586068278
+Mean Episode Reward: 25.94528575197424
+Stdev Episode Reward: 4.4821205972895815
+Mean Expected Episode Reward: 1404.1625817871093
+Stdev Expected Episode Reward: 109.06980290746553
+Avg Train Loss: [-50.52499889   0.05981065]
+Total Timesteps: 145800
+Total Time: 273132.35
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 17590
+
+
+episode : 1459 
+Last Episode Reward: 26.683956121094525
+Mean Episode Reward: 25.97879055996987
+Stdev Episode Reward: 4.474988634442009
+Mean Expected Episode Reward: 1405.811346244812
+Stdev Expected Episode Reward: 111.92432613544788
+Avg Train Loss: [-50.45712746   0.06038023]
+Total Timesteps: 145900
+Total Time: 273402.11
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 186
+
+
+episode : 1460 
+Last Episode Reward: 15.13369138049893
+Mean Episode Reward: 25.83226772177915
+Stdev Episode Reward: 4.586422303887764
+Mean Expected Episode Reward: 1406.011026597023
+Stdev Expected Episode Reward: 111.8436842580947
+Avg Train Loss: [-50.43207642   0.06025849]
+Total Timesteps: 146000
+Total Time: 273671.83
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 177
+
+
+episode : 1461 
+Last Episode Reward: 16.964250784454634
+Mean Episode Reward: 25.8070570356519
+Stdev Episode Reward: 4.627981599418853
+Mean Expected Episode Reward: 1407.4372462415695
+Stdev Expected Episode Reward: 114.30496097844782
+Avg Train Loss: [-50.54675499   0.05991331]
+Total Timesteps: 146100
+Total Time: 273941.25
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 207
+
+
+episode : 1462 
+Last Episode Reward: 16.322849052899983
+Mean Episode Reward: 25.77009726875208
+Stdev Episode Reward: 4.688423344345635
+Mean Expected Episode Reward: 1407.8590154886247
+Stdev Expected Episode Reward: 114.99277809565265
+Avg Train Loss: [-50.5960524    0.06016753]
+Total Timesteps: 146200
+Total Time: 274210.68
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 197
+
+
+episode : 1463 
+Last Episode Reward: 17.872707982722204
+Mean Episode Reward: 25.655889805019047
+Stdev Episode Reward: 4.740022915001503
+Mean Expected Episode Reward: 1411.8887938547134
+Stdev Expected Episode Reward: 119.95994126083025
+Avg Train Loss: [-50.58709888   0.0598383 ]
+Total Timesteps: 146300
+Total Time: 274480.58
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 236
+
+
+episode : 1464 
+Last Episode Reward: 27.384137827903032
+Mean Episode Reward: 25.746594562727054
+Stdev Episode Reward: 4.685122753027043
+Mean Expected Episode Reward: 1411.2320311689377
+Stdev Expected Episode Reward: 119.24663580967378
+Avg Train Loss: [-50.50560371   0.06041155]
+Total Timesteps: 146400
+Total Time: 274750.08
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1932
+
+
+episode : 1465 
+Last Episode Reward: 27.15540802059695
+Mean Episode Reward: 25.784535938476708
+Stdev Episode Reward: 4.681013298965589
+Mean Expected Episode Reward: 1412.835497546196
+Stdev Expected Episode Reward: 120.2614592635044
+Avg Train Loss: [-50.56128063   0.06029718]
+Total Timesteps: 146500
+Total Time: 275019.44
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 4263
+
+
+episode : 1466 
+Last Episode Reward: 26.85072566382587
+Mean Episode Reward: 25.872279027395212
+Stdev Episode Reward: 4.617510503495829
+Mean Expected Episode Reward: 1415.0243895959854
+Stdev Expected Episode Reward: 124.4522207305057
+Avg Train Loss: [-50.53034859   0.06001465]
+Total Timesteps: 146600
+Total Time: 275288.6
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 205
+
+
+episode : 1467 
+Last Episode Reward: 20.70297372015193
+Mean Episode Reward: 25.849258083938416
+Stdev Episode Reward: 4.63744341988886
+Mean Expected Episode Reward: 1415.9800990867616
+Stdev Expected Episode Reward: 123.50346986044039
+Avg Train Loss: [-50.57364704   0.05999196]
+Total Timesteps: 146700
+Total Time: 275558.03
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2598
+
+
+episode : 1468 
+Last Episode Reward: 28.71232394967228
+Mean Episode Reward: 25.932888702229405
+Stdev Episode Reward: 4.6128472007968915
+Mean Expected Episode Reward: 1416.043027639389
+Stdev Expected Episode Reward: 123.59048552431803
+Avg Train Loss: [-50.60624218   0.06032329]
+Total Timesteps: 146800
+Total Time: 275827.53
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 4587
+
+
+episode : 1469 
+Last Episode Reward: 35.595613992540166
+Mean Episode Reward: 26.043435287962943
+Stdev Episode Reward: 4.709612146238591
+Mean Expected Episode Reward: 1418.3002725839615
+Stdev Expected Episode Reward: 124.3152326713639
+Avg Train Loss: [-50.5418771    0.06007491]
+Total Timesteps: 146900
+Total Time: 276096.81
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 672
+
+
+episode : 1470 
+Last Episode Reward: 15.116524757366278
+Mean Episode Reward: 25.91473907140405
+Stdev Episode Reward: 4.829090631176307
+Mean Expected Episode Reward: 1420.2360041475297
+Stdev Expected Episode Reward: 126.86545820015479
+Avg Train Loss: [-50.51946415   0.06041299]
+Total Timesteps: 147000
+Total Time: 276366.49
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 310
+
+
+episode : 1471 
+Last Episode Reward: 35.2135271076113
+Mean Episode Reward: 26.089128692059035
+Stdev Episode Reward: 4.846829359640615
+Mean Expected Episode Reward: 1421.2423159074783
+Stdev Expected Episode Reward: 127.71140061447201
+Avg Train Loss: [-50.5603241    0.06015515]
+Total Timesteps: 147100
+Total Time: 276636.24
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2705
+
+
+episode : 1472 
+Last Episode Reward: 32.489706410095096
+Mean Episode Reward: 26.156720462047684
+Stdev Episode Reward: 4.888309954463622
+Mean Expected Episode Reward: 1424.22191467762
+Stdev Expected Episode Reward: 126.73469497681643
+Avg Train Loss: [-50.72464329   0.0596532 ]
+Total Timesteps: 147200
+Total Time: 276905.68
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 6943
+
+
+episode : 1473 
+Last Episode Reward: 28.90947024244815
+Mean Episode Reward: 26.210631008541398
+Stdev Episode Reward: 4.888643743575867
+Mean Expected Episode Reward: 1426.757219800949
+Stdev Expected Episode Reward: 125.47829004128519
+Avg Train Loss: [-50.58668579   0.06000525]
+Total Timesteps: 147300
+Total Time: 277175.03
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 7558
+
+
+episode : 1474 
+Last Episode Reward: 32.09341295319609
+Mean Episode Reward: 26.27940514493706
+Stdev Episode Reward: 4.922426848797737
+Mean Expected Episode Reward: 1429.1409743499755
+Stdev Expected Episode Reward: 125.6273566191454
+Avg Train Loss: [-50.67996704   0.05973324]
+Total Timesteps: 147400
+Total Time: 277444.55
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 29557
+
+
+episode : 1475 
+Last Episode Reward: 31.070801746100187
+Mean Episode Reward: 26.364127137792966
+Stdev Episode Reward: 4.931247306267537
+Mean Expected Episode Reward: 1431.9233291339874
+Stdev Expected Episode Reward: 126.78651352499713
+Avg Train Loss: [-50.58886238   0.06031721]
+Total Timesteps: 147500
+Total Time: 277713.86
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 6443
+
+
+episode : 1476 
+Last Episode Reward: 29.778412833809853
+Mean Episode Reward: 26.3897252960944
+Stdev Episode Reward: 4.942248173704535
+Mean Expected Episode Reward: 1434.9024285507203
+Stdev Expected Episode Reward: 127.38904572306454
+Avg Train Loss: [-50.6716227   0.0597052]
+Total Timesteps: 147600
+Total Time: 277983.0
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2010
+
+
+episode : 1477 
+Last Episode Reward: 28.17269587609917
+Mean Episode Reward: 26.404822154682915
+Stdev Episode Reward: 4.945364707567081
+Mean Expected Episode Reward: 1436.598905582428
+Stdev Expected Episode Reward: 126.98587850285944
+Avg Train Loss: [-50.57471279   0.06018301]
+Total Timesteps: 147700
+Total Time: 278252.68
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 4443
+
+
+episode : 1478 
+Last Episode Reward: 30.053160254843533
+Mean Episode Reward: 26.555167820281202
+Stdev Episode Reward: 4.823968282986436
+Mean Expected Episode Reward: 1438.9917461776733
+Stdev Expected Episode Reward: 127.99262217058087
+Avg Train Loss: [-50.7888282    0.05947985]
+Total Timesteps: 147800
+Total Time: 278522.0
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1616
+
+
+episode : 1479 
+Last Episode Reward: 31.317885536700487
+Mean Episode Reward: 26.593034978018697
+Stdev Episode Reward: 4.846291889286691
+Mean Expected Episode Reward: 1441.701318449974
+Stdev Expected Episode Reward: 129.08014418238605
+Avg Train Loss: [-50.62196365   0.06018123]
+Total Timesteps: 147900
+Total Time: 278790.98
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 5103
+
+
+episode : 1480 
+Last Episode Reward: 32.076161032542586
+Mean Episode Reward: 26.58627995149189
+Stdev Episode Reward: 4.838166913568457
+Mean Expected Episode Reward: 1444.2730447816848
+Stdev Expected Episode Reward: 128.8596385959389
+Avg Train Loss: [-50.69231659   0.06007041]
+Total Timesteps: 148000
+Total Time: 279060.6
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 2313
+
+
+episode : 1481 
+Last Episode Reward: 23.247584265191108
+Mean Episode Reward: 26.55936051331184
+Stdev Episode Reward: 4.849166983767664
+Mean Expected Episode Reward: 1446.0380156087876
+Stdev Expected Episode Reward: 128.128068003999
+Avg Train Loss: [-50.60594357   0.06011688]
+Total Timesteps: 148100
+Total Time: 279330.16
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1215
+
+
+episode : 1482 
+Last Episode Reward: 31.056150597985834
+Mean Episode Reward: 26.596089546319128
+Stdev Episode Reward: 4.869136959557141
+Mean Expected Episode Reward: 1449.8815504169463
+Stdev Expected Episode Reward: 128.56794447797637
+Avg Train Loss: [-50.74231991   0.05974072]
+Total Timesteps: 148200
+Total Time: 279599.88
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15229
+
+
+episode : 1483 
+Last Episode Reward: 31.616392432246357
+Mean Episode Reward: 26.625462288809505
+Stdev Episode Reward: 4.89042700595433
+Mean Expected Episode Reward: 1453.917630867958
+Stdev Expected Episode Reward: 130.0730749713588
+Avg Train Loss: [-50.69721992   0.06011369]
+Total Timesteps: 148300
+Total Time: 279869.46
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 3564
+
+
+episode : 1484 
+Last Episode Reward: 29.765363946557045
+Mean Episode Reward: 26.72630883888618
+Stdev Episode Reward: 4.8499897017618565
+Mean Expected Episode Reward: 1457.8641253185272
+Stdev Expected Episode Reward: 130.2816951321196
+Avg Train Loss: [-50.68098183   0.06002224]
+Total Timesteps: 148400
+Total Time: 280139.12
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 11185
+
+
+episode : 1485 
+Last Episode Reward: 29.22722457908094
+Mean Episode Reward: 26.84795893570452
+Stdev Episode Reward: 4.75775157394829
+Mean Expected Episode Reward: 1460.524752254486
+Stdev Expected Episode Reward: 131.54120476579553
+Avg Train Loss: [-50.57482105   0.06056173]
+Total Timesteps: 148500
+Total Time: 280408.43
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 6233
+
+
+episode : 1486 
+Last Episode Reward: 29.741936632432044
+Mean Episode Reward: 26.894892998411525
+Stdev Episode Reward: 4.762916004962559
+Mean Expected Episode Reward: 1463.9844571208953
+Stdev Expected Episode Reward: 132.37971226021364
+Avg Train Loss: [-50.73952984   0.05996205]
+Total Timesteps: 148600
+Total Time: 280677.97
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 4990
+
+
+episode : 1487 
+Last Episode Reward: 31.926565765868872
+Mean Episode Reward: 26.96965690324709
+Stdev Episode Reward: 4.782592402676175
+Mean Expected Episode Reward: 1467.4412141561509
+Stdev Expected Episode Reward: 131.83272773072102
+Avg Train Loss: [-50.79534847   0.05987272]
+Total Timesteps: 148700
+Total Time: 280947.18
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22220
+
+
+episode : 1488 
+Last Episode Reward: 30.396430412823975
+Mean Episode Reward: 26.984040351903314
+Stdev Episode Reward: 4.79070688820335
+Mean Expected Episode Reward: 1470.513158288002
+Stdev Expected Episode Reward: 132.75486403247314
+Avg Train Loss: [-50.87652557   0.05971398]
+Total Timesteps: 148800
+Total Time: 281216.54
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 9145
+
+
+episode : 1489 
+Last Episode Reward: 31.839379735756665
+Mean Episode Reward: 26.99298931419129
+Stdev Episode Reward: 4.7989253495165665
+Mean Expected Episode Reward: 1474.320522069931
+Stdev Expected Episode Reward: 131.70265141452796
+Avg Train Loss: [-50.84158577   0.05955685]
+Total Timesteps: 148900
+Total Time: 281486.15
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 16030
+
+
+episode : 1490 
+Last Episode Reward: 30.42199663631618
+Mean Episode Reward: 27.021009880874555
+Stdev Episode Reward: 4.8106703897694265
+Mean Expected Episode Reward: 1477.2705629301072
+Stdev Expected Episode Reward: 132.19871622465197
+Avg Train Loss: [-50.77611031   0.05982866]
+Total Timesteps: 149000
+Total Time: 281755.47
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 8411
+
+
+episode : 1491 
+Last Episode Reward: 33.4819933748804
+Mean Episode Reward: 27.047154676408756
+Stdev Episode Reward: 4.838527999311314
+Mean Expected Episode Reward: 1481.1682265663146
+Stdev Expected Episode Reward: 132.04125578142146
+Avg Train Loss: [-50.72801498   0.06021205]
+Total Timesteps: 149100
+Total Time: 282024.98
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 17782
+
+
+episode : 1492 
+Last Episode Reward: 31.121175062377006
+Mean Episode Reward: 27.099146768369028
+Stdev Episode Reward: 4.854066948957664
+Mean Expected Episode Reward: 1484.4372324943542
+Stdev Expected Episode Reward: 131.63751694233767
+Avg Train Loss: [-50.84026398   0.05994032]
+Total Timesteps: 149200
+Total Time: 282294.35
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 8790
+
+
+episode : 1493 
+Last Episode Reward: 33.85006359452382
+Mean Episode Reward: 27.116793221349145
+Stdev Episode Reward: 4.875322993410106
+Mean Expected Episode Reward: 1488.8960701608657
+Stdev Expected Episode Reward: 133.47325964791295
+Avg Train Loss: [-50.75623165   0.05998517]
+Total Timesteps: 149300
+Total Time: 282563.76
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 12888
+
+
+episode : 1494 
+Last Episode Reward: 29.548399342922494
+Mean Episode Reward: 27.112472152020565
+Stdev Episode Reward: 4.872973853526884
+Mean Expected Episode Reward: 1492.5624109935761
+Stdev Expected Episode Reward: 134.24252795610994
+Avg Train Loss: [-50.9366753    0.05993905]
+Total Timesteps: 149400
+Total Time: 282833.08
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 12583
+
+
+episode : 1495 
+Last Episode Reward: 32.05306688277051
+Mean Episode Reward: 27.164277260191522
+Stdev Episode Reward: 4.897622849258028
+Mean Expected Episode Reward: 1496.1916238307954
+Stdev Expected Episode Reward: 135.44860350451987
+Avg Train Loss: [-50.77559578   0.05973654]
+Total Timesteps: 149500
+Total Time: 283102.54
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15826
+
+
+episode : 1496 
+Last Episode Reward: 32.69541328912601
+Mean Episode Reward: 27.253991346080802
+Stdev Episode Reward: 4.915917092588391
+Mean Expected Episode Reward: 1499.5930019187927
+Stdev Expected Episode Reward: 136.1632078069652
+Avg Train Loss: [-50.74702732   0.0603897 ]
+Total Timesteps: 149600
+Total Time: 283371.8
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 12469
+
+
+episode : 1497 
+Last Episode Reward: 31.063366788439453
+Mean Episode Reward: 27.294457314648824
+Stdev Episode Reward: 4.930431425261311
+Mean Expected Episode Reward: 1503.9213479471207
+Stdev Expected Episode Reward: 136.2238961901608
+Avg Train Loss: [-50.76746662   0.0600918 ]
+Total Timesteps: 149700
+Total Time: 283641.09
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 16520
+
+
+episode : 1498 
+Last Episode Reward: 34.08480993285775
+Mean Episode Reward: 27.38558998181652
+Stdev Episode Reward: 4.970712068092704
+Mean Expected Episode Reward: 1507.032870144844
+Stdev Expected Episode Reward: 137.04168586689704
+Avg Train Loss: [-50.96288799   0.0593875 ]
+Total Timesteps: 149800
+Total Time: 283910.62
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21702
+
+
+episode : 1499 
+Last Episode Reward: 29.290831556078047
+Mean Episode Reward: 27.42169160772806
+Stdev Episode Reward: 4.971308382540104
+Mean Expected Episode Reward: 1509.3809897947312
+Stdev Expected Episode Reward: 138.88766248366477
+Avg Train Loss: [-50.81384365   0.06000264]
+Total Timesteps: 149900
+Total Time: 284180.0
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21492
+
+
+episode : 1500 
+Last Episode Reward: 31.648020133608952
+Mean Episode Reward: 27.40644247350043
+Stdev Episode Reward: 4.955958553780198
+Mean Expected Episode Reward: 1513.127469739914
+Stdev Expected Episode Reward: 139.10518403299216
+Avg Train Loss: [-50.8588905    0.06007595]
+Total Timesteps: 150000
+Total Time: 284449.08
+ep_min_val: tensor(0.0134, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20570
+
+
+episode : 1501 
+Last Episode Reward: 33.77175966324285
+Mean Episode Reward: 27.45189309462083
+Stdev Episode Reward: 4.9931451783027665
+Mean Expected Episode Reward: 1516.3844462537766
+Stdev Expected Episode Reward: 139.29541774726746
+Avg Train Loss: [-50.92447533   0.05999887]
+Total Timesteps: 150100
+Total Time: 284718.47
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 17988
+
+
+episode : 1502 
+Last Episode Reward: 27.72893020650372
+Mean Episode Reward: 27.426562576898068
+Stdev Episode Reward: 4.985244089984454
+Mean Expected Episode Reward: 1518.4326053857803
+Stdev Expected Episode Reward: 137.82811646470492
+Avg Train Loss: [-50.88648426   0.06006469]
+Total Timesteps: 150200
+Total Time: 284987.76
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 13983
+
+
+episode : 1503 
+Last Episode Reward: 30.927462313091382
+Mean Episode Reward: 27.3984363826608
+Stdev Episode Reward: 4.957401063231085
+Mean Expected Episode Reward: 1522.7271563911438
+Stdev Expected Episode Reward: 138.8022022316075
+Avg Train Loss: [-50.86294781   0.06008067]
+Total Timesteps: 150300
+Total Time: 285257.1
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15374
+
+
+episode : 1504 
+Last Episode Reward: 35.69036674126983
+Mean Episode Reward: 27.512639532225368
+Stdev Episode Reward: 5.015224434773977
+Mean Expected Episode Reward: 1526.5604772090912
+Stdev Expected Episode Reward: 140.36470407090596
+Avg Train Loss: [-51.00487206   0.05975068]
+Total Timesteps: 150400
+Total Time: 285526.64
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 24573
+
+
+episode : 1505 
+Last Episode Reward: 31.837596613913774
+Mean Episode Reward: 27.558011321654703
+Stdev Episode Reward: 5.033589145756584
+Mean Expected Episode Reward: 1530.0673857164384
+Stdev Expected Episode Reward: 139.9970103295026
+Avg Train Loss: [-50.93693626   0.06031145]
+Total Timesteps: 150500
+Total Time: 285796.17
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 11620
+
+
+episode : 1506 
+Last Episode Reward: 30.596881851553917
+Mean Episode Reward: 27.607026773298784
+Stdev Episode Reward: 5.039074215251557
+Mean Expected Episode Reward: 1531.9007084417344
+Stdev Expected Episode Reward: 140.78848506400865
+Avg Train Loss: [-50.9957103    0.05973302]
+Total Timesteps: 150600
+Total Time: 286065.83
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 11641
+
+
+episode : 1507 
+Last Episode Reward: 29.51428810786456
+Mean Episode Reward: 27.635986318456634
+Stdev Episode Reward: 5.0416298562543
+Mean Expected Episode Reward: 1533.309782910347
+Stdev Expected Episode Reward: 141.2995858544207
+Avg Train Loss: [-51.05310032   0.05964031]
+Total Timesteps: 150700
+Total Time: 286335.45
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 17766
+
+
+episode : 1508 
+Last Episode Reward: 30.363751767436042
+Mean Episode Reward: 27.643956749170247
+Stdev Episode Reward: 5.0453045729827934
+Mean Expected Episode Reward: 1537.4490455961227
+Stdev Expected Episode Reward: 140.29850455578227
+Avg Train Loss: [-50.91497574   0.06041508]
+Total Timesteps: 150800
+Total Time: 286605.03
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15992
+
+
+episode : 1509 
+Last Episode Reward: 30.134543298743665
+Mean Episode Reward: 27.6150111595459
+Stdev Episode Reward: 5.022578289957913
+Mean Expected Episode Reward: 1540.6640020370482
+Stdev Expected Episode Reward: 139.78189663607503
+Avg Train Loss: [-51.06980564   0.05957184]
+Total Timesteps: 150900
+Total Time: 286874.43
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20239
+
+
+episode : 1510 
+Last Episode Reward: 33.667869315017015
+Mean Episode Reward: 27.725862412571225
+Stdev Episode Reward: 5.032607522007643
+Mean Expected Episode Reward: 1543.0899078178406
+Stdev Expected Episode Reward: 140.89862987576237
+Avg Train Loss: [-50.91181454   0.06015383]
+Total Timesteps: 151000
+Total Time: 287144.06
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 18280
+
+
+episode : 1511 
+Last Episode Reward: 32.32725628186017
+Mean Episode Reward: 27.769179819298223
+Stdev Episode Reward: 5.053341785371473
+Mean Expected Episode Reward: 1548.0443840742112
+Stdev Expected Episode Reward: 140.37157958106226
+Avg Train Loss: [-51.02416039   0.05978991]
+Total Timesteps: 151100
+Total Time: 287413.71
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15828
+
+
+episode : 1512 
+Last Episode Reward: 29.38998238564818
+Mean Episode Reward: 27.796689356518982
+Stdev Episode Reward: 5.054602261146393
+Mean Expected Episode Reward: 1552.2719506359101
+Stdev Expected Episode Reward: 140.3714096846647
+Avg Train Loss: [-50.9147081    0.06001627]
+Total Timesteps: 151200
+Total Time: 287682.71
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 9189
+
+
+episode : 1513 
+Last Episode Reward: 33.68459940611501
+Mean Episode Reward: 27.893623001259183
+Stdev Episode Reward: 5.0736050201667515
+Mean Expected Episode Reward: 1557.0804111909865
+Stdev Expected Episode Reward: 140.65891932242232
+Avg Train Loss: [-50.9149374    0.05974237]
+Total Timesteps: 151300
+Total Time: 287952.38
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20926
+
+
+episode : 1514 
+Last Episode Reward: 34.0463081151247
+Mean Episode Reward: 27.944526514467217
+Stdev Episode Reward: 5.109417436775873
+Mean Expected Episode Reward: 1561.2455821561814
+Stdev Expected Episode Reward: 139.9078360524841
+Avg Train Loss: [-50.92591965   0.0607735 ]
+Total Timesteps: 151400
+Total Time: 288221.81
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21148
+
+
+episode : 1515 
+Last Episode Reward: 31.35953355114907
+Mean Episode Reward: 28.055190161299326
+Stdev Episode Reward: 5.062123081549286
+Mean Expected Episode Reward: 1566.6781179952623
+Stdev Expected Episode Reward: 140.30841532296068
+Avg Train Loss: [-50.96513985   0.06014148]
+Total Timesteps: 151500
+Total Time: 288491.18
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15310
+
+
+episode : 1516 
+Last Episode Reward: 29.532293821685016
+Mean Episode Reward: 28.08279557173293
+Stdev Episode Reward: 5.062575853371869
+Mean Expected Episode Reward: 1570.1883682394027
+Stdev Expected Episode Reward: 141.98441230032594
+Avg Train Loss: [-50.97419613   0.05991837]
+Total Timesteps: 151600
+Total Time: 288760.44
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 16494
+
+
+episode : 1517 
+Last Episode Reward: 29.62633558898233
+Mean Episode Reward: 28.096795033839662
+Stdev Episode Reward: 5.0648886712582595
+Mean Expected Episode Reward: 1575.2677224445342
+Stdev Expected Episode Reward: 141.9870214716274
+Avg Train Loss: [-50.8444191    0.06042155]
+Total Timesteps: 151700
+Total Time: 289029.88
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 18471
+
+
+episode : 1518 
+Last Episode Reward: 27.40084097906947
+Mean Episode Reward: 28.14377838459426
+Stdev Episode Reward: 5.0363428979022515
+Mean Expected Episode Reward: 1580.7690043115615
+Stdev Expected Episode Reward: 142.8953645845721
+Avg Train Loss: [-50.95013306   0.06007311]
+Total Timesteps: 151800
+Total Time: 289299.12
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 12465
+
+
+episode : 1519 
+Last Episode Reward: 32.28514615492895
+Mean Episode Reward: 28.171002814544845
+Stdev Episode Reward: 5.051275523130475
+Mean Expected Episode Reward: 1585.69413500309
+Stdev Expected Episode Reward: 144.17259448692116
+Avg Train Loss: [-51.02410912   0.06030554]
+Total Timesteps: 151900
+Total Time: 289568.46
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15879
+
+
+episode : 1520 
+Last Episode Reward: 31.25640949420631
+Mean Episode Reward: 28.150750845836956
+Stdev Episode Reward: 5.034777942037836
+Mean Expected Episode Reward: 1590.0434316158294
+Stdev Expected Episode Reward: 146.39334284964318
+Avg Train Loss: [-51.06543324   0.05981146]
+Total Timesteps: 152000
+Total Time: 289837.8
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20006
+
+
+episode : 1521 
+Last Episode Reward: 29.464346748776734
+Mean Episode Reward: 28.19248371347705
+Stdev Episode Reward: 5.028192947485471
+Mean Expected Episode Reward: 1595.6175266504288
+Stdev Expected Episode Reward: 147.4021493649026
+Avg Train Loss: [-51.05741554   0.05996342]
+Total Timesteps: 152100
+Total Time: 290106.96
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 11371
+
+
+episode : 1522 
+Last Episode Reward: 29.78686290420592
+Mean Episode Reward: 28.244554973851372
+Stdev Episode Reward: 5.017460906996714
+Mean Expected Episode Reward: 1599.7762743330002
+Stdev Expected Episode Reward: 147.8491808617749
+Avg Train Loss: [-50.9205883    0.06040875]
+Total Timesteps: 152200
+Total Time: 290376.27
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 18075
+
+
+episode : 1523 
+Last Episode Reward: 30.639117114711553
+Mean Episode Reward: 28.237496923170003
+Stdev Episode Reward: 5.0135895970171935
+Mean Expected Episode Reward: 1604.876952958107
+Stdev Expected Episode Reward: 149.53713844128762
+Avg Train Loss: [-50.99091297   0.06022443]
+Total Timesteps: 152300
+Total Time: 290645.16
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20708
+
+
+episode : 1524 
+Last Episode Reward: 29.100895540148485
+Mean Episode Reward: 28.207938206566215
+Stdev Episode Reward: 4.9996793143955465
+Mean Expected Episode Reward: 1609.5442471933366
+Stdev Expected Episode Reward: 149.70952390362982
+Avg Train Loss: [-50.97611645   0.06007573]
+Total Timesteps: 152400
+Total Time: 290914.14
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 14061
+
+
+episode : 1525 
+Last Episode Reward: 27.479576287791133
+Mean Episode Reward: 28.2109641036882
+Stdev Episode Reward: 4.999145985959449
+Mean Expected Episode Reward: 1615.2739063501358
+Stdev Expected Episode Reward: 148.14697347882426
+Avg Train Loss: [-51.0792931    0.06021154]
+Total Timesteps: 152500
+Total Time: 291183.31
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 17437
+
+
+episode : 1526 
+Last Episode Reward: 27.655345402657986
+Mean Episode Reward: 28.16480935928663
+Stdev Episode Reward: 4.982729489314848
+Mean Expected Episode Reward: 1620.0916541337967
+Stdev Expected Episode Reward: 147.52929287824188
+Avg Train Loss: [-51.05196476   0.06036493]
+Total Timesteps: 152600
+Total Time: 291452.66
+ep_min_val: tensor(0.0133, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21202
+
+
+episode : 1527 
+Last Episode Reward: 35.396105826832354
+Mean Episode Reward: 28.291413702466706
+Stdev Episode Reward: 5.003970984328139
+Mean Expected Episode Reward: 1624.7343593454361
+Stdev Expected Episode Reward: 149.2444482702347
+Avg Train Loss: [-51.19241467   0.05986892]
+Total Timesteps: 152700
+Total Time: 291722.22
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22870
+
+
+episode : 1528 
+Last Episode Reward: 33.390176489716396
+Mean Episode Reward: 28.357529921709975
+Stdev Episode Reward: 5.027170242738051
+Mean Expected Episode Reward: 1627.4722220182418
+Stdev Expected Episode Reward: 150.32510764481762
+Avg Train Loss: [-51.118526     0.06021822]
+Total Timesteps: 152800
+Total Time: 291991.22
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 28816
+
+
+episode : 1529 
+Last Episode Reward: 32.27806865051389
+Mean Episode Reward: 28.400883101816472
+Stdev Episode Reward: 5.042077644380304
+Mean Expected Episode Reward: 1631.1658946847915
+Stdev Expected Episode Reward: 151.23116442503178
+Avg Train Loss: [-51.10223297   0.06031267]
+Total Timesteps: 152900
+Total Time: 292260.61
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 28522
+
+
+episode : 1530 
+Last Episode Reward: 28.515225308947265
+Mean Episode Reward: 28.35955639445707
+Stdev Episode Reward: 5.0240022519138705
+Mean Expected Episode Reward: 1635.7340765810013
+Stdev Expected Episode Reward: 152.35553924957443
+Avg Train Loss: [-51.0582959    0.06056328]
+Total Timesteps: 153000
+Total Time: 292529.62
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19312
+
+
+episode : 1531 
+Last Episode Reward: 34.31494146503974
+Mean Episode Reward: 28.40139637779579
+Stdev Episode Reward: 5.055901111247046
+Mean Expected Episode Reward: 1641.7448282432556
+Stdev Expected Episode Reward: 150.93582245015276
+Avg Train Loss: [-51.03582222   0.06018889]
+Total Timesteps: 153100
+Total Time: 292798.6
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21222
+
+
+episode : 1532 
+Last Episode Reward: 27.627227096352726
+Mean Episode Reward: 28.381252464448515
+Stdev Episode Reward: 5.054932456800283
+Mean Expected Episode Reward: 1647.024002981186
+Stdev Expected Episode Reward: 151.77032413809565
+Avg Train Loss: [-51.04152664   0.06057752]
+Total Timesteps: 153200
+Total Time: 293067.87
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20408
+
+
+episode : 1533 
+Last Episode Reward: 28.188294808613136
+Mean Episode Reward: 28.35482806384407
+Stdev Episode Reward: 5.048961930925028
+Mean Expected Episode Reward: 1651.7625295639039
+Stdev Expected Episode Reward: 150.43647017145662
+Avg Train Loss: [-50.96335033   0.06087408]
+Total Timesteps: 153300
+Total Time: 293337.29
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 24366
+
+
+episode : 1534 
+Last Episode Reward: 32.73704562429339
+Mean Episode Reward: 28.461010871045218
+Stdev Episode Reward: 5.028309384031854
+Mean Expected Episode Reward: 1656.794432682991
+Stdev Expected Episode Reward: 152.77824484166263
+Avg Train Loss: [-51.02710602   0.06083391]
+Total Timesteps: 153400
+Total Time: 293606.68
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15226
+
+
+episode : 1535 
+Last Episode Reward: 27.41902993666008
+Mean Episode Reward: 28.439655373259374
+Stdev Episode Reward: 5.028154484377275
+Mean Expected Episode Reward: 1661.9902992010116
+Stdev Expected Episode Reward: 153.00639207449035
+Avg Train Loss: [-51.09473297   0.06065523]
+Total Timesteps: 153500
+Total Time: 293875.87
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21540
+
+
+episode : 1536 
+Last Episode Reward: 27.438574188097846
+Mean Episode Reward: 28.43102165463548
+Stdev Episode Reward: 5.029124672791786
+Mean Expected Episode Reward: 1666.178947663307
+Stdev Expected Episode Reward: 155.20910992650056
+Avg Train Loss: [-51.0530505    0.06078346]
+Total Timesteps: 153600
+Total Time: 294145.23
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19620
+
+
+episode : 1537 
+Last Episode Reward: 31.939406294026412
+Mean Episode Reward: 28.55885852785308
+Stdev Episode Reward: 4.953637848855375
+Mean Expected Episode Reward: 1669.4421713495256
+Stdev Expected Episode Reward: 155.79172075940758
+Avg Train Loss: [-51.19540253   0.06088804]
+Total Timesteps: 153700
+Total Time: 294414.58
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21680
+
+
+episode : 1538 
+Last Episode Reward: 32.76236854027957
+Mean Episode Reward: 28.635495348104087
+Stdev Episode Reward: 4.95879237275237
+Mean Expected Episode Reward: 1674.6682217931748
+Stdev Expected Episode Reward: 156.3519603008375
+Avg Train Loss: [-51.20125732   0.06042811]
+Total Timesteps: 153800
+Total Time: 294683.74
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22728
+
+
+episode : 1539 
+Last Episode Reward: 34.25905316055287
+Mean Episode Reward: 28.745155577737677
+Stdev Episode Reward: 4.960687564835788
+Mean Expected Episode Reward: 1679.594845471382
+Stdev Expected Episode Reward: 157.9434981412854
+Avg Train Loss: [-51.13300518   0.06060468]
+Total Timesteps: 153900
+Total Time: 294953.2
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20393
+
+
+episode : 1540 
+Last Episode Reward: 26.37722822325304
+Mean Episode Reward: 28.759559356648314
+Stdev Episode Reward: 4.9516918884556995
+Mean Expected Episode Reward: 1683.0458729696275
+Stdev Expected Episode Reward: 159.3592051092264
+Avg Train Loss: [-51.24507839   0.06036829]
+Total Timesteps: 154000
+Total Time: 295222.12
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19683
+
+
+episode : 1541 
+Last Episode Reward: 28.625913264229894
+Mean Episode Reward: 28.864317279766546
+Stdev Episode Reward: 4.8355821899734215
+Mean Expected Episode Reward: 1684.7945308256149
+Stdev Expected Episode Reward: 159.58479857985932
+Avg Train Loss: [-51.15330891   0.06071591]
+Total Timesteps: 154100
+Total Time: 295491.15
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 28348
+
+
+episode : 1542 
+Last Episode Reward: 29.523754310328513
+Mean Episode Reward: 28.9063765874377
+Stdev Episode Reward: 4.822826818823689
+Mean Expected Episode Reward: 1687.4194239759445
+Stdev Expected Episode Reward: 159.22881882990342
+Avg Train Loss: [-51.18126579   0.06037046]
+Total Timesteps: 154200
+Total Time: 295760.6
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 29925
+
+
+episode : 1543 
+Last Episode Reward: 28.825339407194406
+Mean Episode Reward: 29.020372285736812
+Stdev Episode Reward: 4.682807470114911
+Mean Expected Episode Reward: 1691.448135752678
+Stdev Expected Episode Reward: 161.7143310750197
+Avg Train Loss: [-51.16981583   0.06072489]
+Total Timesteps: 154300
+Total Time: 296029.98
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19268
+
+
+episode : 1544 
+Last Episode Reward: 27.863182679284364
+Mean Episode Reward: 29.063966647955677
+Stdev Episode Reward: 4.651434682579194
+Mean Expected Episode Reward: 1699.0335409355164
+Stdev Expected Episode Reward: 156.51499519164344
+Avg Train Loss: [-51.16770416   0.06031751]
+Total Timesteps: 154400
+Total Time: 296299.28
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 23792
+
+
+episode : 1545 
+Last Episode Reward: 33.821361721493304
+Mean Episode Reward: 29.17485616517064
+Stdev Episode Reward: 4.631305442773833
+Mean Expected Episode Reward: 1704.2885311698913
+Stdev Expected Episode Reward: 158.28374449623468
+Avg Train Loss: [-51.25761307   0.06019392]
+Total Timesteps: 154500
+Total Time: 296568.43
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 26185
+
+
+episode : 1546 
+Last Episode Reward: 26.60810408787802
+Mean Episode Reward: 29.1386847608471
+Stdev Episode Reward: 4.637082136330363
+Mean Expected Episode Reward: 1708.1058137702942
+Stdev Expected Episode Reward: 155.31701079768328
+Avg Train Loss: [-51.30290359   0.06033756]
+Total Timesteps: 154600
+Total Time: 296837.74
+ep_min_val: tensor(0.0125, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 296
+
+
+episode : 1547 
+Last Episode Reward: 33.09273228980601
+Mean Episode Reward: 29.19312329300141
+Stdev Episode Reward: 4.651205961260936
+Mean Expected Episode Reward: 1713.28079454422
+Stdev Expected Episode Reward: 158.71917701585124
+Avg Train Loss: [-51.07917446   0.06050341]
+Total Timesteps: 154700
+Total Time: 297106.97
+ep_min_val: tensor(0.0105, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19110
+
+
+episode : 1548 
+Last Episode Reward: 32.35457838140428
+Mean Episode Reward: 29.333929569123285
+Stdev Episode Reward: 4.530072315470483
+Mean Expected Episode Reward: 1717.4351724052428
+Stdev Expected Episode Reward: 160.78781576952085
+Avg Train Loss: [-51.258078     0.06042166]
+Total Timesteps: 154800
+Total Time: 297376.51
+ep_min_val: tensor(0.0105, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21117
+
+
+episode : 1549 
+Last Episode Reward: 34.83321579359472
+Mean Episode Reward: 29.48833706956284
+Stdev Episode Reward: 4.451045716261022
+Mean Expected Episode Reward: 1721.894979724884
+Stdev Expected Episode Reward: 164.12222787842458
+Avg Train Loss: [-51.39480789   0.06043802]
+Total Timesteps: 154900
+Total Time: 297646.28
+ep_min_val: tensor(0.0105, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 24855
+
+
+episode : 1550 
+Last Episode Reward: 36.58364397427067
+Mean Episode Reward: 29.576467040454226
+Stdev Episode Reward: 4.503106736631869
+Mean Expected Episode Reward: 1726.7487373638153
+Stdev Expected Episode Reward: 166.0002144709259
+Avg Train Loss: [-51.26883709   0.06051352]
+Total Timesteps: 155000
+Total Time: 297915.5
+ep_min_val: tensor(0.0105, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 26390
+
+
+episode : 1551 
+Last Episode Reward: 27.69891929719597
+Mean Episode Reward: 29.66282861030959
+Stdev Episode Reward: 4.38182427132705
+Mean Expected Episode Reward: 1733.9077847051622
+Stdev Expected Episode Reward: 164.02696389864047
+Avg Train Loss: [-51.31298992   0.06062051]
+Total Timesteps: 155100
+Total Time: 298184.63
+ep_min_val: tensor(0.0105, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19552
+
+
+episode : 1552 
+Last Episode Reward: 29.71832834649831
+Mean Episode Reward: 29.613348777250575
+Stdev Episode Reward: 4.352886176733046
+Mean Expected Episode Reward: 1738.825372233391
+Stdev Expected Episode Reward: 164.6739452887758
+Avg Train Loss: [-51.23316982   0.06077827]
+Total Timesteps: 155200
+Total Time: 298453.46
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20694
+
+
+episode : 1553 
+Last Episode Reward: 35.40443067555316
+Mean Episode Reward: 29.720175702688937
+Stdev Episode Reward: 4.362601726498593
+Mean Expected Episode Reward: 1745.5473250198365
+Stdev Expected Episode Reward: 162.20210296642978
+Avg Train Loss: [-51.40763931   0.06053976]
+Total Timesteps: 155300
+Total Time: 298722.64
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20275
+
+
+episode : 1554 
+Last Episode Reward: 29.587841582484543
+Mean Episode Reward: 29.707253919742726
+Stdev Episode Reward: 4.3610606037612465
+Mean Expected Episode Reward: 1749.8206441783905
+Stdev Expected Episode Reward: 164.59548509494374
+Avg Train Loss: [-51.14745941   0.06114916]
+Total Timesteps: 155400
+Total Time: 298992.04
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22461
+
+
+episode : 1555 
+Last Episode Reward: 33.18926070164889
+Mean Episode Reward: 29.777534562206203
+Stdev Episode Reward: 4.3599780616253705
+Mean Expected Episode Reward: 1755.1548777866365
+Stdev Expected Episode Reward: 168.30569461131844
+Avg Train Loss: [-51.23043655   0.06059997]
+Total Timesteps: 155500
+Total Time: 299261.5
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 25305
+
+
+episode : 1556 
+Last Episode Reward: 31.863068560138345
+Mean Episode Reward: 29.77159551388242
+Stdev Episode Reward: 4.356727444042271
+Mean Expected Episode Reward: 1759.9968355846404
+Stdev Expected Episode Reward: 171.11024695384498
+Avg Train Loss: [-51.1943058    0.06078733]
+Total Timesteps: 155600
+Total Time: 299530.43
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 23570
+
+
+episode : 1557 
+Last Episode Reward: 31.305091344285756
+Mean Episode Reward: 29.914800464812505
+Stdev Episode Reward: 4.165214154986536
+Mean Expected Episode Reward: 1763.9445067977906
+Stdev Expected Episode Reward: 172.40431000390757
+Avg Train Loss: [-51.39573757   0.06052857]
+Total Timesteps: 155700
+Total Time: 299799.57
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 26515
+
+
+episode : 1558 
+Last Episode Reward: 28.105650251731277
+Mean Episode Reward: 29.946620241469137
+Stdev Episode Reward: 4.139035289609025
+Mean Expected Episode Reward: 1770.8976651144028
+Stdev Expected Episode Reward: 170.01257079041184
+Avg Train Loss: [-51.35807751   0.0606088 ]
+Total Timesteps: 155800
+Total Time: 300068.79
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 24775
+
+
+episode : 1559 
+Last Episode Reward: 35.58507170435041
+Mean Episode Reward: 30.035631397301696
+Stdev Episode Reward: 4.1635515752942345
+Mean Expected Episode Reward: 1775.2026626348495
+Stdev Expected Episode Reward: 173.04761692127516
+Avg Train Loss: [-51.37505638   0.0605484 ]
+Total Timesteps: 155900
+Total Time: 300337.55
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 23319
+
+
+episode : 1560 
+Last Episode Reward: 32.23841799097136
+Mean Episode Reward: 30.206678663406418
+Stdev Episode Reward: 3.890211957981445
+Mean Expected Episode Reward: 1782.4604053401947
+Stdev Expected Episode Reward: 171.13995126369514
+Avg Train Loss: [-51.16895672   0.06151491]
+Total Timesteps: 156000
+Total Time: 300606.8
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22527
+
+
+episode : 1561 
+Last Episode Reward: 33.835767678916454
+Mean Episode Reward: 30.375393832351037
+Stdev Episode Reward: 3.671970612535234
+Mean Expected Episode Reward: 1786.3701097011567
+Stdev Expected Episode Reward: 173.0537504602071
+Avg Train Loss: [-51.26618877   0.06117162]
+Total Timesteps: 156100
+Total Time: 300875.99
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 27783
+
+
+episode : 1562 
+Last Episode Reward: 29.268722228589468
+Mean Episode Reward: 30.50485256410793
+Stdev Episode Reward: 3.3917717624709405
+Mean Expected Episode Reward: 1791.822195329666
+Stdev Expected Episode Reward: 176.15174057459362
+Avg Train Loss: [-51.34653049   0.06083021]
+Total Timesteps: 156200
+Total Time: 301145.09
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 24444
+
+
+episode : 1563 
+Last Episode Reward: 34.326759062707424
+Mean Episode Reward: 30.669393074907784
+Stdev Episode Reward: 3.166607180341603
+Mean Expected Episode Reward: 1795.689655380249
+Stdev Expected Episode Reward: 179.53942317156887
+Avg Train Loss: [-51.38497715   0.06066019]
+Total Timesteps: 156300
+Total Time: 301413.94
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 23799
+
+
+episode : 1564 
+Last Episode Reward: 28.217900393065065
+Mean Episode Reward: 30.677730700559405
+Stdev Episode Reward: 3.159034767441006
+Mean Expected Episode Reward: 1801.570643453598
+Stdev Expected Episode Reward: 179.6717689265834
+Avg Train Loss: [-51.38947292   0.06049966]
+Total Timesteps: 156400
+Total Time: 301683.34
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 27438
+
+
+episode : 1565 
+Last Episode Reward: 28.865995592437685
+Mean Episode Reward: 30.69483657627781
+Stdev Episode Reward: 3.1445133679663675
+Mean Expected Episode Reward: 1806.3318752574921
+Stdev Expected Episode Reward: 179.72764719433513
+Avg Train Loss: [-51.37531944   0.06089832]
+Total Timesteps: 156500
+Total Time: 301952.42
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 18384
+
+
+episode : 1566 
+Last Episode Reward: 32.066599753219634
+Mean Episode Reward: 30.74699531717175
+Stdev Episode Reward: 3.1235059215777645
+Mean Expected Episode Reward: 1809.6344941902162
+Stdev Expected Episode Reward: 181.82460510672442
+Avg Train Loss: [-51.27286987   0.06086823]
+Total Timesteps: 156600
+Total Time: 302221.46
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 25217
+
+
+episode : 1567 
+Last Episode Reward: 30.100574378389865
+Mean Episode Reward: 30.84097132375413
+Stdev Episode Reward: 2.956824758791961
+Mean Expected Episode Reward: 1817.3023276996612
+Stdev Expected Episode Reward: 177.99455073650972
+Avg Train Loss: [-51.42418159   0.06073553]
+Total Timesteps: 156700
+Total Time: 302490.89
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15641
+
+
+episode : 1568 
+Last Episode Reward: 17.954548477195203
+Mean Episode Reward: 30.73339356902936
+Stdev Episode Reward: 3.2166018128243383
+Mean Expected Episode Reward: 1821.4862405776978
+Stdev Expected Episode Reward: 177.51901051696868
+Avg Train Loss: [-51.40006424   0.0607002 ]
+Total Timesteps: 156800
+Total Time: 302760.1
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 41207
+
+
+episode : 1569 
+Last Episode Reward: 31.341446773149073
+Mean Episode Reward: 30.690851896835447
+Stdev Episode Reward: 3.1799375529896987
+Mean Expected Episode Reward: 1827.3780356407165
+Stdev Expected Episode Reward: 178.84133329335194
+Avg Train Loss: [-51.40030899   0.06092378]
+Total Timesteps: 156900
+Total Time: 303029.18
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19843
+
+
+episode : 1570 
+Last Episode Reward: 30.8974896594882
+Mean Episode Reward: 30.848661545856668
+Stdev Episode Reward: 2.7680190188594067
+Mean Expected Episode Reward: 1830.7697767829895
+Stdev Expected Episode Reward: 179.2585830418962
+Avg Train Loss: [-51.53755093   0.06045917]
+Total Timesteps: 157000
+Total Time: 303298.53
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 23465
+
+
+episode : 1571 
+Last Episode Reward: 29.826761526986957
+Mean Episode Reward: 30.794793890050425
+Stdev Episode Reward: 2.734766872548568
+Mean Expected Episode Reward: 1836.8172426605224
+Stdev Expected Episode Reward: 180.82511168910787
+Avg Train Loss: [-51.32413986   0.06100506]
+Total Timesteps: 157100
+Total Time: 303568.24
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21140
+
+
+episode : 1572 
+Last Episode Reward: 29.995261314616073
+Mean Episode Reward: 30.769849439095633
+Stdev Episode Reward: 2.730566399200248
+Mean Expected Episode Reward: 1840.8943370532988
+Stdev Expected Episode Reward: 178.4421274389003
+Avg Train Loss: [-51.40831371   0.06060428]
+Total Timesteps: 157200
+Total Time: 303837.27
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 1016
+
+
+episode : 1573 
+Last Episode Reward: 29.401659784838557
+Mean Episode Reward: 30.77477133451954
+Stdev Episode Reward: 2.7276506295956997
+Mean Expected Episode Reward: 1847.545232553482
+Stdev Expected Episode Reward: 177.62347182860543
+Avg Train Loss: [-51.42381592   0.06063999]
+Total Timesteps: 157300
+Total Time: 304107.07
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21426
+
+
+episode : 1574 
+Last Episode Reward: 25.7022546348162
+Mean Episode Reward: 30.71085975133574
+Stdev Episode Reward: 2.77054315363818
+Mean Expected Episode Reward: 1853.6400393676759
+Stdev Expected Episode Reward: 177.93667631919882
+Avg Train Loss: [-51.46552784   0.06083315]
+Total Timesteps: 157400
+Total Time: 304376.54
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 16316
+
+
+episode : 1575 
+Last Episode Reward: 32.310069226659834
+Mean Episode Reward: 30.723252426141336
+Stdev Episode Reward: 2.774893676313791
+Mean Expected Episode Reward: 1859.2577470397948
+Stdev Expected Episode Reward: 179.40392014035288
+Avg Train Loss: [-51.48473171   0.06125253]
+Total Timesteps: 157500
+Total Time: 304646.37
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19278
+
+
+episode : 1576 
+Last Episode Reward: 34.10987254045904
+Mean Episode Reward: 30.766567023207827
+Stdev Episode Reward: 2.793550339614784
+Mean Expected Episode Reward: 1865.1714255809784
+Stdev Expected Episode Reward: 180.76804998246303
+Avg Train Loss: [-51.6375877    0.05989982]
+Total Timesteps: 157600
+Total Time: 304915.98
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 18025
+
+
+episode : 1577 
+Last Episode Reward: 26.941727616474964
+Mean Episode Reward: 30.754257340611584
+Stdev Episode Reward: 2.807629651729586
+Mean Expected Episode Reward: 1871.9688773059845
+Stdev Expected Episode Reward: 179.32020383014807
+Avg Train Loss: [-51.43896297   0.06106491]
+Total Timesteps: 157700
+Total Time: 305185.22
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20254
+
+
+episode : 1578 
+Last Episode Reward: 31.90889550000429
+Mean Episode Reward: 30.772814693063193
+Stdev Episode Reward: 2.8090668214721615
+Mean Expected Episode Reward: 1877.5043229579926
+Stdev Expected Episode Reward: 179.72449683145132
+Avg Train Loss: [-51.51703449   0.06078772]
+Total Timesteps: 157800
+Total Time: 305454.75
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20541
+
+
+episode : 1579 
+Last Episode Reward: 31.099063570029102
+Mean Episode Reward: 30.77062647339648
+Stdev Episode Reward: 2.808726576269357
+Mean Expected Episode Reward: 1883.0907665157317
+Stdev Expected Episode Reward: 180.54445600295927
+Avg Train Loss: [-51.57614746   0.06051003]
+Total Timesteps: 157900
+Total Time: 305724.17
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20072
+
+
+episode : 1580 
+Last Episode Reward: 28.148204818018712
+Mean Episode Reward: 30.73134691125124
+Stdev Episode Reward: 2.8176459757702275
+Mean Expected Episode Reward: 1889.5760138511657
+Stdev Expected Episode Reward: 180.4885660765769
+Avg Train Loss: [-51.40513657   0.06107648]
+Total Timesteps: 158000
+Total Time: 305994.07
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22695
+
+
+episode : 1581 
+Last Episode Reward: 30.33576963818632
+Mean Episode Reward: 30.80222876498119
+Stdev Episode Reward: 2.7158060291467736
+Mean Expected Episode Reward: 1896.7397218227386
+Stdev Expected Episode Reward: 178.29911217658616
+Avg Train Loss: [-51.4228503    0.06108826]
+Total Timesteps: 158100
+Total Time: 306263.59
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 24005
+
+
+episode : 1582 
+Last Episode Reward: 26.973366958322003
+Mean Episode Reward: 30.761400928584553
+Stdev Episode Reward: 2.7422422467931797
+Mean Expected Episode Reward: 1901.8278066635132
+Stdev Expected Episode Reward: 178.58271053464765
+Avg Train Loss: [-51.4280579    0.06086664]
+Total Timesteps: 158200
+Total Time: 306532.91
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21400
+
+
+episode : 1583 
+Last Episode Reward: 30.144009605050087
+Mean Episode Reward: 30.746677100312592
+Stdev Episode Reward: 2.7415647657366664
+Mean Expected Episode Reward: 1907.1917521381379
+Stdev Expected Episode Reward: 180.5428433325122
+Avg Train Loss: [-51.42394073   0.06100943]
+Total Timesteps: 158300
+Total Time: 306801.79
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 17957
+
+
+episode : 1584 
+Last Episode Reward: 30.833438025554642
+Mean Episode Reward: 30.757357841102568
+Stdev Episode Reward: 2.739800869776684
+Mean Expected Episode Reward: 1913.252632255554
+Stdev Expected Episode Reward: 182.31069122075073
+Avg Train Loss: [-51.59205582   0.06062215]
+Total Timesteps: 158400
+Total Time: 307071.13
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 14439
+
+
+episode : 1585 
+Last Episode Reward: 33.6993426039262
+Mean Episode Reward: 30.80207902135102
+Stdev Episode Reward: 2.7509359293734326
+Mean Expected Episode Reward: 1919.028967437744
+Stdev Expected Episode Reward: 183.16017864348333
+Avg Train Loss: [-51.56132565   0.06093041]
+Total Timesteps: 158500
+Total Time: 307340.41
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19793
+
+
+episode : 1586 
+Last Episode Reward: 30.95381528045982
+Mean Episode Reward: 30.814197807831295
+Stdev Episode Reward: 2.748907572583584
+Mean Expected Episode Reward: 1924.4491477298736
+Stdev Expected Episode Reward: 183.64757830713089
+Avg Train Loss: [-51.68168701   0.06047747]
+Total Timesteps: 158600
+Total Time: 307609.61
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19687
+
+
+episode : 1587 
+Last Episode Reward: 28.77971212635748
+Mean Episode Reward: 30.78272927143618
+Stdev Episode Reward: 2.7540007750480124
+Mean Expected Episode Reward: 1930.8094109249114
+Stdev Expected Episode Reward: 183.92549043835112
+Avg Train Loss: [-51.62443485   0.0609152 ]
+Total Timesteps: 158700
+Total Time: 307878.6
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 15740
+
+
+episode : 1588 
+Last Episode Reward: 29.31553077325225
+Mean Episode Reward: 30.771920275040465
+Stdev Episode Reward: 2.7576145272338284
+Mean Expected Episode Reward: 1936.4243191719056
+Stdev Expected Episode Reward: 184.21268575777256
+Avg Train Loss: [-51.61264469   0.06112124]
+Total Timesteps: 158800
+Total Time: 308147.86
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19374
+
+
+episode : 1589 
+Last Episode Reward: 26.228119037114084
+Mean Episode Reward: 30.71580766805404
+Stdev Episode Reward: 2.7921955261126192
+Mean Expected Episode Reward: 1942.8923837661744
+Stdev Expected Episode Reward: 184.5630098193947
+Avg Train Loss: [-51.51857895   0.06130157]
+Total Timesteps: 158900
+Total Time: 308416.88
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 14867
+
+
+episode : 1590 
+Last Episode Reward: 30.587354286573827
+Mean Episode Reward: 30.717461244556617
+Stdev Episode Reward: 2.792069998265893
+Mean Expected Episode Reward: 1949.5424781131744
+Stdev Expected Episode Reward: 185.704314488955
+Avg Train Loss: [-51.66940639   0.0604438 ]
+Total Timesteps: 159000
+Total Time: 308686.37
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19625
+
+
+episode : 1591 
+Last Episode Reward: 26.559878698550165
+Mean Episode Reward: 30.648240097793312
+Stdev Episode Reward: 2.8084322771485746
+Mean Expected Episode Reward: 1954.6861769008638
+Stdev Expected Episode Reward: 184.97818798385788
+Avg Train Loss: [-51.60171379   0.06046675]
+Total Timesteps: 159100
+Total Time: 308955.47
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19935
+
+
+episode : 1592 
+Last Episode Reward: 31.492004056461155
+Mean Episode Reward: 30.651948387734155
+Stdev Episode Reward: 2.8092989882331594
+Mean Expected Episode Reward: 1961.5247835063935
+Stdev Expected Episode Reward: 185.48748680401542
+Avg Train Loss: [-51.66536995   0.06117978]
+Total Timesteps: 159200
+Total Time: 309224.31
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22967
+
+
+episode : 1593 
+Last Episode Reward: 32.855276484042406
+Mean Episode Reward: 30.64200051662934
+Stdev Episode Reward: 2.799701588274928
+Mean Expected Episode Reward: 1965.865540819168
+Stdev Expected Episode Reward: 185.8971631864015
+Avg Train Loss: [-51.64492371   0.06076218]
+Total Timesteps: 159300
+Total Time: 309494.4
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19498
+
+
+episode : 1594 
+Last Episode Reward: 27.442552028223872
+Mean Episode Reward: 30.620942043482355
+Stdev Episode Reward: 2.815722037972879
+Mean Expected Episode Reward: 1971.689237728119
+Stdev Expected Episode Reward: 186.66434742839468
+Avg Train Loss: [-51.71119476   0.06053434]
+Total Timesteps: 159400
+Total Time: 309763.6
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21714
+
+
+episode : 1595 
+Last Episode Reward: 32.36652891431004
+Mean Episode Reward: 30.62407666379775
+Stdev Episode Reward: 2.8174885428275696
+Mean Expected Episode Reward: 1977.3963043689728
+Stdev Expected Episode Reward: 187.62375902307272
+Avg Train Loss: [-51.695602    0.0606058]
+Total Timesteps: 159500
+Total Time: 310032.69
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 25163
+
+
+episode : 1596 
+Last Episode Reward: 27.81589532457292
+Mean Episode Reward: 30.57528148415222
+Stdev Episode Reward: 2.823440310966999
+Mean Expected Episode Reward: 1982.9568540668488
+Stdev Expected Episode Reward: 187.45605699071518
+Avg Train Loss: [-51.67906494   0.06113167]
+Total Timesteps: 159600
+Total Time: 310301.87
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 17703
+
+
+episode : 1597 
+Last Episode Reward: 30.797175117768347
+Mean Episode Reward: 30.572619567445507
+Stdev Episode Reward: 2.823104354960449
+Mean Expected Episode Reward: 1988.845081243515
+Stdev Expected Episode Reward: 188.3521027937499
+Avg Train Loss: [-51.76792995   0.06014217]
+Total Timesteps: 159700
+Total Time: 310571.2
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21158
+
+
+episode : 1598 
+Last Episode Reward: 29.232341697032098
+Mean Episode Reward: 30.52409488508725
+Stdev Episode Reward: 2.803956524318617
+Mean Expected Episode Reward: 1994.579476594925
+Stdev Expected Episode Reward: 188.10751229300897
+Avg Train Loss: [-51.66820999   0.06085019]
+Total Timesteps: 159800
+Total Time: 310840.7
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19702
+
+
+episode : 1599 
+Last Episode Reward: 31.825275151524693
+Mean Episode Reward: 30.549439321041717
+Stdev Episode Reward: 2.8041489201370813
+Mean Expected Episode Reward: 2000.0339115524291
+Stdev Expected Episode Reward: 188.38245886928146
+Avg Train Loss: [-51.77262035   0.06066905]
+Total Timesteps: 159900
+Total Time: 311109.59
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21047
+
+
+episode : 1600 
+Last Episode Reward: 31.0171929160133
+Mean Episode Reward: 30.54313104886576
+Stdev Episode Reward: 2.8023794368798085
+Mean Expected Episode Reward: 2005.566924495697
+Stdev Expected Episode Reward: 187.8088072066634
+Avg Train Loss: [-51.76894707   0.06105486]
+Total Timesteps: 160000
+Total Time: 311378.3
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 27032
+
+
+episode : 1601 
+Last Episode Reward: 27.69647735822946
+Mean Episode Reward: 30.482378225815626
+Stdev Episode Reward: 2.7975763703224654
+Mean Expected Episode Reward: 2010.4880467414855
+Stdev Expected Episode Reward: 185.800465698037
+Avg Train Loss: [-51.78785854   0.06085446]
+Total Timesteps: 160100
+Total Time: 311647.04
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 24772
+
+
+episode : 1602 
+Last Episode Reward: 29.95102469669655
+Mean Episode Reward: 30.504599170717555
+Stdev Episode Reward: 2.7844116763102456
+Mean Expected Episode Reward: 2018.5812729263305
+Stdev Expected Episode Reward: 181.86807933328296
+Avg Train Loss: [-51.80716637   0.06047272]
+Total Timesteps: 160200
+Total Time: 311915.62
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22993
+
+
+episode : 1603 
+Last Episode Reward: 28.64291957113892
+Mean Episode Reward: 30.481753743298032
+Stdev Episode Reward: 2.790214480387116
+Mean Expected Episode Reward: 2024.2003543663025
+Stdev Expected Episode Reward: 182.67710198137087
+Avg Train Loss: [-51.91289726   0.06038296]
+Total Timesteps: 160300
+Total Time: 312184.94
+ep_min_val: tensor(0.0103, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 18860
+
+
+episode : 1604 
+Last Episode Reward: 31.238148037577048
+Mean Episode Reward: 30.437231556261104
+Stdev Episode Reward: 2.741849640494745
+Mean Expected Episode Reward: 2030.4453125572204
+Stdev Expected Episode Reward: 184.65364908044128
+Avg Train Loss: [-51.81992393   0.06049313]
+Total Timesteps: 160400
+Total Time: 312454.04
+ep_min_val: tensor(0.0098, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 21764
+
+
+episode : 1605 
+Last Episode Reward: 29.06211026245728
+Mean Episode Reward: 30.409476692746537
+Stdev Episode Reward: 2.7415813833282847
+Mean Expected Episode Reward: 2036.3055438613892
+Stdev Expected Episode Reward: 183.01505958026686
+Avg Train Loss: [-51.82008324   0.06040545]
+Total Timesteps: 160500
+Total Time: 312722.72
+ep_min_val: tensor(0.0098, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 23513
+
+
+episode : 1606 
+Last Episode Reward: 30.19449753756635
+Mean Episode Reward: 30.405452849606665
+Stdev Episode Reward: 2.7415986656574596
+Mean Expected Episode Reward: 2042.6967024803162
+Stdev Expected Episode Reward: 181.72951203153403
+Avg Train Loss: [-51.79318752   0.06062412]
+Total Timesteps: 160600
+Total Time: 312992.03
+ep_min_val: tensor(0.0098, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22211
+
+
+episode : 1607 
+Last Episode Reward: 32.575754879042506
+Mean Episode Reward: 30.436067517318442
+Stdev Episode Reward: 2.7485607776936916
+Mean Expected Episode Reward: 2049.6883275222776
+Stdev Expected Episode Reward: 180.09116641279346
+Avg Train Loss: [-51.89162685   0.06054846]
+Total Timesteps: 160700
+Total Time: 313260.97
+ep_min_val: tensor(0.0098, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 19717
+
+
+episode : 1608 
+Last Episode Reward: 31.54560672081425
+Mean Episode Reward: 30.447886066852224
+Stdev Episode Reward: 2.7507644659852644
+Mean Expected Episode Reward: 2056.1662517642976
+Stdev Expected Episode Reward: 179.34356294343306
+Avg Train Loss: [-51.88033684   0.06063249]
+Total Timesteps: 160800
+Total Time: 313530.21
+ep_min_val: tensor(0.0098, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 14649
+
+
+episode : 1609 
+Last Episode Reward: 30.36714114435017
+Mean Episode Reward: 30.45021204530829
+Stdev Episode Reward: 2.7505968620779853
+Mean Expected Episode Reward: 2062.5917265033722
+Stdev Expected Episode Reward: 177.1517055877037
+Avg Train Loss: [-51.82442913   0.06140335]
+Total Timesteps: 160900
+Total Time: 313798.85
+ep_min_val: tensor(0.0098, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 20280
+
+
+episode : 1610 
+Last Episode Reward: 31.198067843914032
+Mean Episode Reward: 30.42551403059726
+Stdev Episode Reward: 2.7326237951179047
+Mean Expected Episode Reward: 2068.885540819168
+Stdev Expected Episode Reward: 176.32296672082174
+Avg Train Loss: [-51.81925659   0.06033582]
+Total Timesteps: 161000
+Total Time: 314067.68
+ep_min_val: tensor(0.0098, device='cuda:0', grad_fn=<MinBackward0>)
+repl_count: 22765
+
+

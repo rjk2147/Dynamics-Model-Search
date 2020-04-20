@@ -30,6 +30,7 @@ class Encoder(nn.Module):
         self.linear_sigma = nn.Linear(in_features=128, out_features=sigma_output_size * 2)
 
     def forward(self, h):
+        epsilon = 1e-3
         out = self.linear1(h)
         out = torch.relu(out)
         out = self.linear2(out)
@@ -37,14 +38,15 @@ class Encoder(nn.Module):
 
         z = self.linear_z(out)
         z_loc = z[:, :self.z_output_size]
-        z_scale = torch.nn.functional.softplus(z[:, self.z_output_size:])
+        z_scale = torch.exp(1+z[:, self.z_output_size:])
 
         return z_loc, z_scale, 0, 0
 
-        # sigma = self.linear_sigma(out)
-        # sigma_loc = torch.sigmoid(sigma[:, :self.sigma_output_size])
-        # sigma_scale = torch.nn.functional.softplus(sigma[:, self.sigma_output_size:])
-
+        # sigma = torch.exp(1+self.linear_sigma(out))
+        # sigma = torch.clamp(sigma, min=epsilon)
+        # sigma_loc = sigma[:, :self.sigma_output_size]
+        # sigma_scale = sigma[:, self.sigma_output_size:]
+        #
         # return z_loc, z_scale, sigma_loc, sigma_scale
 
 class Decoder(nn.Module):
@@ -69,11 +71,15 @@ class Decoder(nn.Module):
         y = self.linear5(y)
         return y
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class BayesianSequenceModel(nn.Module):
     def __init__(self, state_size=21, action_size=8, z_size=128, hidden_state_size=512, likelihood_std=0.01,
-                 device=None, path=None):
+                 dev=None, path=None):
         super().__init__()
-        self.device = device
+        if dev is None:
+            self.device = device
+        else:
+            self.device = dev
         self.path = path
 
         self.z_size = z_size
@@ -115,6 +121,7 @@ class BayesianSequenceModel(nn.Module):
             "decoder": Decoder(input_size=self.z_size + self.output_size, output_size=self.output_size).to(device),
             "rnn": nn.LSTMCell(self.rnn_input_size, self.rnn_hidden_size).to(device)
         }
+
         # track learnable networks by nn.Module
         self.encoder = self.networks["encoder"]
         self.decoder = self.networks["decoder"]
@@ -180,6 +187,36 @@ class BayesianSequenceModel(nn.Module):
         #         )
         return z, h, c
 
+    # def model(self, X, A, Y, batch_size):
+    #     pyro.module("decoder", self.networks["decoder"])
+    #
+    #     # X_ = torch.cat([X, A], dim=-1).to(self.device)
+    #
+    #     with pyro.plate('data', A.shape[0], device=self.device) as ix:
+    #         batch_X = X[ix]
+    #         batch_A = A[ix]
+    #         batch_Y = Y[ix] if Y is not None else None
+    #
+    #         Y_hat, Z = self.prior(X=batch_X, N=batch_X.shape[0], T=batch_X.shape[1])
+    #         O = []
+    #
+    #         for t in range(X.shape[1]):
+    #             sigma = pyro.sample('sigma_{}'.format(t),
+    #                                 dist.Normal(self.priors["sigma"]["loc"].expand(Y_hat.shape[0], self.output_size),
+    #                                             self.priors["sigma"]["scale"].expand(Y_hat.shape[0], self.output_size))
+    #                                 .to_event(1),
+    #                                 )
+    #             obs = pyro.sample('obs_{}'.format(t),
+    #                               dist.Normal(loc=Y_hat[:, t, :], scale=sigma.to(self.device))
+    #                               .to_event(1),
+    #                               obs=batch_Y[:, t, :] if batch_Y is not None else None
+    #                               )
+    #             O.append(obs)
+    #
+    #         O = torch.stack(O).transpose(0, 1)
+    #
+    #     return Y_hat.data.cpu().numpy(), Z.data.cpu().numpy(), O.data.cpu().numpy()
+
     def model(self, X, A, Y, batch_size):
         pyro.module("decoder", self.networks["decoder"])
 
@@ -196,9 +233,7 @@ class BayesianSequenceModel(nn.Module):
             for t in range(X.shape[1]):
                 obs = pyro.sample('obs_{}'.format(t),
                                   dist.Normal(loc=Y_hat[:, t, :],
-                                              scale=self.likelihood_std * torch.ones(Y_hat[:, t, :].shape[0],
-                                                                                     Y_hat[:, t, :].shape[1]).to(
-                                                  self.device))
+                                              scale=self.likelihood_std * torch.ones_like(Y_hat[:, t, :]))
                                   .to_event(1),
                                   obs=batch_Y[:, t, :] if batch_Y is not None else None
                                   )
@@ -223,6 +258,8 @@ class BayesianSequenceModel(nn.Module):
                         .to_event(1)
                         )
         y = self.networks["decoder"](x, z)
+        if torch.isnan(z).any():
+            print('NaN')
         return y, z
 
     def loss(self, X, A, Y, batch_size):
@@ -278,13 +315,9 @@ class BayesianSequenceModel(nn.Module):
         return torch.mean(v, 0), torch.std(v, 0), Hs
 
     def forward(self, x, a, H=None, y=None):
-        if self.uncertainty:
-            new_obs, sd, new_H = self.predict_with_uncertainty(x, a, H=H)
-            new_obs = new_obs.to(x.device)
-        else:
-            new_obs, O, new_H = self.predict(x, a, H=H)
-            new_obs = torch.from_numpy(new_obs).to(x.device)
-            sd = torch.zeros_like(new_obs)
+        new_obs, O, new_H = self.predict(x, a, H=H)
+        new_obs = torch.from_numpy(new_obs).to(x.device)
+        sd = torch.zeros_like(new_obs).transpose(0,1)
         return new_obs, sd, new_H
 
     def reset(self):
@@ -294,8 +327,6 @@ class BayesianSequenceModel(nn.Module):
             h = h.repeat(self.n_samples, 1).unsqueeze(0)
         return h
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 class BayesianSequenceDynamicsModel(DynamicsModel):
     def __init__(self, env_in, dev=None):
         DynamicsModel.__init__(self, env_in)
@@ -304,7 +335,6 @@ class BayesianSequenceDynamicsModel(DynamicsModel):
         self.val_seq_len = 100
         self.train_seq = 1
         self.look_ahead_per_epoch = 1
-        self.batch_size = 1600
         self.max_seq_len = 100
 
         self.adam = optim.Adam({"lr": self.lr})
@@ -322,22 +352,6 @@ class BayesianSequenceDynamicsModel(DynamicsModel):
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
         self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
         # self.model.eval()
-
-    def reinit(self, state_dim, state_mul_const, act_dim, act_mul_const):
-        self.state_mul_const = state_mul_const
-        self.state_mul_const[self.state_mul_const == np.inf] = 1
-
-        self.act_mul_const = act_mul_const
-        self.act_dim = act_dim
-        self.state_dim = state_dim
-
-        self.model = BayesianSequenceModel(self.state_dim, self.act_dim)
-        self.model.to(self.device)
-        self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
-        self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
-
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
-        self.model.eval()
 
     def save(self, save_str):
         torch.save(self.model.state_dict(), save_str)
@@ -357,14 +371,14 @@ class BayesianSequenceDynamicsModel(DynamicsModel):
 
     def update(self, data):
         self.model.train()
-        self.optimizer.zero_grad()
+
         Xs = torch.from_numpy(np.array([step[0] for step in data]).astype(np.float32)).to(self.device)
         As = torch.from_numpy(np.array([step[1] for step in data]).astype(np.float32)).to(self.device)
         Ys = torch.from_numpy(np.array([step[2] for step in data]).astype(np.float32)).to(self.device)
-        elbo_loss = self.svi.step(X=Xs, A=As, Y=Ys, batch_size=self.batch_size)
-        # train_batch_mae_loss, train_batch_Z, train_batch_Y_hat, train_batch_Y = self.model.loss(X=Xs, A=As, Y=Ys,
-        #                                                                                        batch_size=self.batch_size)
-        return [elbo_loss.item()]
+        elbo_loss = self.svi.step(X=Xs, A=As, Y=Ys, batch_size=Xs.shape[0])
+        train_batch_mae_loss, train_batch_Z, train_batch_Y_hat, train_batch_Y = self.model.loss(X=Xs, A=As, Y=Ys,
+                                                                                               batch_size=self.batch_size)
+        return [elbo_loss, train_batch_mae_loss]
 
     def reset(self, obs_in, h=None):
         self.is_reset = True

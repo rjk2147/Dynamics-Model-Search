@@ -26,7 +26,7 @@ if __name__ == '__main__':
     parser.add_argument('--use-state', action='store_true', default=False)
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--no-search', action='store_true', default=False)
-    parser.add_argument('--width', type=str, default=4) # width of the search tree at every level
+    parser.add_argument('--width', type=str, default=8) # width of the search tree at every level
     parser.add_argument('--depth', type=int, default=5) # depth of the search tree
 
     # Repeatability
@@ -76,6 +76,9 @@ if __name__ == '__main__':
     elif args.model_arch == 'mdrnn':
         from models.mdrnn_dynamics_model import MDRNNDynamicsModel
         dynamics_model = MDRNNDynamicsModel(env)
+    elif args.model_arch == 'vrnn':
+        from models.vrnn_dynamics_model import VRNNDynamicsModel
+        dynamics_model = VRNNDynamicsModel(env)
     elif args.model_arch == 'bseq':
         from models.bayesian_dynamics_model import BayesianSequenceDynamicsModel
         dynamics_model = BayesianSequenceDynamicsModel(env)

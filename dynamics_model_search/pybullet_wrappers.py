@@ -100,7 +100,7 @@ class RealerWalkerWrapper(gym.Env):
     def step_raw(self, action):
         new_obs, r, done, info = self.env.step(action)
         return new_obs, r, done, info
-    def render(self, mode='human'):
+    def render(self, mode='human', close=True):
         return self.env.render(mode)
 
     # def seed(self, s):

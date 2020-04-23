@@ -57,12 +57,14 @@ class RNNModel(nn.Module):
         h = h.transpose(0,1)
 
         seq_out, seq_h = self.pred(obs, act, h)
-        seq_out = self.normalize(seq_out)
-        single_out = seq_out[0]
-        final_out = seq_out[-1]
         if y is not None:
+            seq_out = self.normalize(seq_out)
+            single_out = seq_out[0]
+            final_out = seq_out[-1]
+
             new_obs = y.transpose(0, 1)
             new_obs = self.normalize(new_obs)
+
             single = torch.abs(seq_out[0]-new_obs[0])
             final = torch.abs(seq_out[-1]-new_obs[-1])
             seq_errors = torch.abs(seq_out-new_obs)
@@ -102,7 +104,7 @@ class RNNDynamicsModel(DynamicsModel):
         self.act_dim = act_dim
         self.state_dim = state_dim
 
-        self.model = SeqModel(self.state_dim, self.act_dim)
+        self.model = RNNModel(self.state_dim, self.act_dim)
         self.model.to(self.device)
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
         self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)

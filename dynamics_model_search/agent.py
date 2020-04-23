@@ -71,7 +71,8 @@ class Agent:
         if len(self.model_replay) >= self.batch_size:
             data = random.sample(self.model_replay, self.batch_size)
 
-            obs_dist = np.array([step[0][0] for step in data])
+            # obs_dist = np.array([step[0][0] for step in data], dtype=np.float32)
+            obs_dist = np.array([np.mean(step[0], 0) for step in data], dtype=np.float32) # also normalizes across time
             obs_mean = np.mean(obs_dist, 0)
             obs_std = np.std(obs_dist, 0)
 

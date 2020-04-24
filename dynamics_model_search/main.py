@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='rnn') # type of self-model
+    parser.add_argument('--model-arch', type=str, default='bseq') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters
@@ -75,6 +75,9 @@ if __name__ == '__main__':
         dynamics_model = RNNDynamicsModel(env)
     elif args.model_arch == 'mdrnn':
         from models.mdrnn_dynamics_model import MDRNNDynamicsModel
+        dynamics_model = MDRNNDynamicsModel(env)
+    elif args.model_arch == 'mdn-seq':
+        from models.mdn_seq_dynamics_model import MDRNNDynamicsModel
         dynamics_model = MDRNNDynamicsModel(env)
     elif args.model_arch == 'vrnn':
         from models.vrnn_dynamics_model import VRNNDynamicsModel

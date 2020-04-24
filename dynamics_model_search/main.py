@@ -26,8 +26,10 @@ if __name__ == '__main__':
     parser.add_argument('--use-state', action='store_true', default=False)
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--no-search', action='store_true', default=False)
+
     parser.add_argument('--width', type=str, default=8) # width of the search tree at every level
     parser.add_argument('--depth', type=int, default=5) # depth of the search tree
+    parser.add_argument('--nodes', type=int, default=2048) # depth of the search tree
 
     # Repeatability
     parser.add_argument('--seed', type=int, default=None) # Initial seed

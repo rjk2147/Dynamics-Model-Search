@@ -113,10 +113,10 @@ class VRNN(nn.Module):
             h_t = self.rnn(torch.cat([transform_a_t, transform_z_t], dim=-1), h_t)
             
             kld_loss += self.kld_gaussian(loc_0=encoder_loc_t, scale_0=encoder_scale_t, loc_1=prior_loc_t, scale_1=prior_scale_t)
-            mle_loss += self.mse(true=Y[:, t, :], pred=y_t)
+            mle_loss += self.mae(true=Y[:, t, :], pred=y_t)
 
         loss = kld_loss + mle_loss
-        return loss
+        return kld_loss, mle_loss, loss
     
     def reparameterized_sample(self, loc, scale):
         eps = torch.FloatTensor(scale.size()).normal_().to(self.device)
@@ -131,5 +131,8 @@ class VRNN(nn.Module):
     
     def mse(self, true, pred):
         return torch.mean((true-pred)**2)
+
+    def mae(self, true, pred):
+        return torch.mean(torch.abs(true-pred))
     
 

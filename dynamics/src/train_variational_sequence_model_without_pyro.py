@@ -19,17 +19,58 @@ class Trainer:
 
         # self.wandb.watch(self.vrnn, log="all")     # track network topology
 
+
     def train(self, epochs, batch_size, train, val):
         X, A, Y = train
+        X_train = torch.split(X, batch_size)
+        A_train = torch.split(A, batch_size)
+        Y_train = torch.split(Y, batch_size)
+        print(X.shape)
         X_val, A_val, Y_val = val
+        print(len(X_train))
+        X_val = torch.split(X_val, batch_size)
+        A_val = torch.split(A_val, batch_size)
+        Y_val = torch.split(Y_val, batch_size)
+        print(len(X_val))
         N = X.shape[0]
 
         t0 = time.time()
         for i in range(1, epochs+1):
-            loss = self.vrnn(X=X, A=A, Y=Y)
-            loss.backward()
-            self.optim.step()
-            print(loss)
+            train_kl = 0.0
+            train_mse = 0.0
+            train_loss = 0.0
+            val_kl = 0.0
+            val_mse = 0.0
+            val_loss = 0.0
+            import sys
+            start = time.time()
+            for j in range(len(X_train)):
+                kl, mse, loss = self.vrnn(X=X_train[j], A=A_train[j], Y=Y_train[j])
+                train_kl += kl.item()
+                train_mse += mse.item()
+                train_loss += loss.item()
+                loss.backward()
+                self.optim.step()
+                sys.stdout.write(str( round((100.0*j / (len(X_train)+len(X_val))), 2) )+'% done in '+str(round((time.time()-start), 3))+'s                                        \r')
+            for j in range(len(X_val)):
+                kl, mse, loss = self.vrnn(X=X_val[j], A=A_val[j], Y=Y_val[j])
+                val_kl += kl.item()
+                val_mse += mse.item()
+                val_loss += loss.item()
+                sys.stdout.write(str( round((100.0*(j+len(X_train)) / (len(X_train)+len(X_val))), 2) )+'% done in '+str(round((time.time()-start), 3))+'s                                        \r')
+            train_kl /= len(X_train)
+            train_mse /= len(X_train)
+            train_loss /= len(X_train)
+
+            val_kl /= len(X_train)
+            val_mse /= len(X_val)
+            val_loss /= len(X_val)
+            print('Epoch '+str(i)+'/'+str(epochs+1)+'                                                                                                 ')
+            print('Train: ')
+            print([train_loss, train_kl, train_mse])
+            print('Valid: ')
+            print([val_loss, val_kl, val_mse])
+            print('')
 
 
 if __name__ == "__main__":
@@ -61,8 +102,8 @@ if __name__ == "__main__":
         "z_size"            :   32,
         "hidden_state_size" :   64,
         "epochs"            :   1000,
-        "batch_size"        :   800,
-        "learning_rate"     :   1.0e-3,
+        "batch_size"        :   512,
+        "learning_rate"     :   1.0e-5,
         "device"            :   device,
         "preprocessing"     :   "none"
     }
@@ -78,7 +119,7 @@ if __name__ == "__main__":
 
     trainer.train(epochs=config["epochs"], 
                   batch_size=config["batch_size"], 
-                  train=(torch.from_numpy(X_train[:config["batch_size"]]).to(device),torch.from_numpy(A_train[:config["batch_size"]]).to(device),torch.from_numpy(Y_train[:config["batch_size"]]).to(device)),
-                  val=(torch.from_numpy(X_val[:config["batch_size"]]).to(device),torch.from_numpy(A_val[:config["batch_size"]]).to(device),torch.from_numpy(Y_val[:config["batch_size"]]).to(device))
+                  train=(torch.from_numpy(X_train).to(device),torch.from_numpy(A_train).to(device),torch.from_numpy(Y_train).to(device)),
+                  val=(torch.from_numpy(X_val).to(device),torch.from_numpy(A_val).to(device),torch.from_numpy(Y_val).to(device))
                   )
 

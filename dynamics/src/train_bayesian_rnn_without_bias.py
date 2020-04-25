@@ -8,12 +8,30 @@ import pyro.optim as optim
 import pyro.poutine as poutine
 from pyro.infer import SVI, Trace_ELBO, TraceGraph_ELBO
 
-from bayesian_rnn_experimental import BayesianSequenceModel
+from bayesian_rnn_without_bias import BayesianSequenceModel
 from utils.visualize import *
 import wandb
 import warnings
 from utils.tools import *
 
+def custom_elbo(model, guide, *args, **kwargs):
+    guide_trace = poutine.trace(guide).get_trace(*args, **kwargs)
+    model_trace = poutine.trace(
+        poutine.replay(model, trace=guide_trace)
+    ).get_trace(*args, **kwargs)
+
+    elbo = 0.0
+
+    for site in model_trace.nodes.values():
+        if site["type"] == "sample":
+            elbo = elbo + site["fn"].log_prob(site["value"]).sum()
+    
+    for site in guide_trace.nodes.values():
+        if site["type"] == "sample":
+            elbo = elbo - site["fn"].log_prob(site["value"]).sum()
+
+    return -elbo
+    
 class Trainer:
     def __init__(self, vrnn, learning_rate, device, wandb):
         self.device = device
@@ -22,6 +40,7 @@ class Trainer:
         self.vrnn = vrnn.to(device)
         self.adam = optim.Adam({"lr": learning_rate})
         self.elbo = Trace_ELBO()
+        # self.elbo = custom_elbo
         self.svi = SVI(vrnn.model, vrnn.guide, self.adam, loss=self.elbo)
 
         self.wandb.watch(self.vrnn, log="all")     # track network topology
@@ -67,7 +86,7 @@ class Trainer:
                     "val-y-position"    :   get_position_curve(title="y-position", true=compute_position_from_velocity(val_batch_Y[0, :, 1]), pred=compute_position_from_velocity(val_batch_Y_hat[0, :, 1])),
                     "val-z-position"    :   get_position_curve(title="z-position", true=compute_position_from_velocity(val_batch_Y[0, :, 2]), pred=compute_position_from_velocity(val_batch_Y_hat[0, :, 2]))
                 }, commit=False)
-            
+        
             self.wandb.log({
                 "elbo"          :   elbo_loss / N,
                 "train_mae"     :   train_batch_mae_loss,
@@ -82,8 +101,8 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
 
     machine = "honshu"
-    notes = "testing wandb for the first time!"
-    name = "likelihood_std=0.01+time_standardization+(s,a)->s'"
+    notes = "attempting {a0...aT} input as opposed to {(s0,a0)...(sT,aT)} input, more expressive network"
+    name = "likelihood_std=0.01+no_preprocessing+batch_norms"
 
     wandb.init(project="bayesian_sequence_modelling", name=machine+"/"+name, tags=[machine], notes=notes, reinit=True)
 
@@ -94,9 +113,9 @@ if __name__ == "__main__":
     X_val, A_val, Y_val = np.load(dataset+"/val/states.npy"), np.load(dataset+"/val/actions.npy"), np.load(dataset+"/val/next_states.npy")
     X_test, A_test, Y_test = np.load(dataset+"/test/states.npy"), np.load(dataset+"/test/actions.npy"), np.load(dataset+"/test/next_states.npy")
 
-    X_train, Y_train = standardize_across_time(X_train), standardize_across_time(Y_train) 
-    X_val, Y_val = standardize_across_time(X_val), standardize_across_time(Y_val) 
-    X_test, Y_test = standardize_across_time(X_test), standardize_across_time(Y_test) 
+    # X_train, Y_train = standardize_across_time(X_train), standardize_across_time(Y_train) 
+    # X_val, Y_val = standardize_across_time(X_val), standardize_across_time(Y_val) 
+    # X_test, Y_test = standardize_across_time(X_test), standardize_across_time(Y_test) 
 
     # X_train, Y_train = standardize_across_samples(X_train), standardize_across_samples(Y_train) 
     # X_val, Y_val = standardize_across_samples(X_val), standardize_across_samples(Y_val) 
@@ -106,14 +125,14 @@ if __name__ == "__main__":
         "dataset"           :   dataset,
         "state_size"        :   X_train.shape[-1],
         "action_size"       :   A_train.shape[-1],
-        "z_size"            :   32,
-        "hidden_state_size" :   256,
+        "z_size"            :   128,
+        "hidden_state_size" :   512,
         "likelihood_std"    :   0.01,
-        "epochs"            :   20000,
-        "batch_size"        :   1600,
+        "epochs"            :   50000,
+        "batch_size"        :   800,
         "learning_rate"     :   1.0e-3,
         "device"            :   device,
-        "preprocessing"     :   "standardization across time"
+        "preprocessing"     :   "none"
     }
 
     vrnn = BayesianSequenceModel(state_size=config["state_size"], 
@@ -122,7 +141,7 @@ if __name__ == "__main__":
                                  hidden_state_size=config["hidden_state_size"], 
                                  likelihood_std=config["likelihood_std"],
                                  device=device,
-                                 path=os.path.join(wandb.run.dir, machine+"_"+name+"_bayesian_rnn_time_standardization_model.pth"))
+                                 path=os.path.join(wandb.run.dir, machine+"_"+name+"_bayesian_rnn_model_without_bias_no_preprocessing.pth"))
     # vrnn.load_checkpoint()
     trainer = Trainer(vrnn=vrnn, learning_rate=config["learning_rate"], device=device, wandb=wandb)
 

@@ -2,12 +2,16 @@ import matplotlib.pyplot as plt
 from pandas import DataFrame
 import math
 from IPython import display
+import numpy as np
 
-def plot_velocity_curve(true, pred):
+
+def plot_velocity_curve(true, pred, axis=None):
     data = DataFrame()
     data["y"] = true
     data["y_hat"] = pred
     data.plot(legend=True)
+    if axis == 'equal':
+        plt.axis('equal')
     plt.show()
 
 def get_velocity_curve(title, true, pred):
@@ -17,7 +21,24 @@ def get_velocity_curve(title, true, pred):
     ax.set_ylabel("velocity")
     ax.set_xlabel("timestep")
     return ax
-    
+
+def plot_position_curve(true, pred, axis=None):
+    data = DataFrame()
+    data["y"] = true
+    data["y_hat"] = pred
+    data.plot(legend=True)
+    if axis == 'equal':
+        plt.axis('equal')
+    plt.show()
+
+def get_position_curve(title, true, pred):
+    fig, ax = plt.subplots()
+    ax.plot(true, c="g", label="y")
+    ax.plot(pred, c="r", label="y_hat")
+    ax.set_ylabel("position")
+    ax.set_xlabel("timestep")
+    return ax
+
 def plot_velocity_curve_with_uncertainty(true, pred, error1, error2):
     data = DataFrame()
     data["y"] = true
@@ -27,11 +48,21 @@ def plot_velocity_curve_with_uncertainty(true, pred, error1, error2):
     data.plot(legend=True)
     plt.show()
 
-def plot_velocity_curve_with_uncertainty_shaded(true, pred, error1, error2):
+def plot_velocity_curve_with_uncertainty_shaded(true, pred, error1, error2, axis=None):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 6), sharey=True)
+    ax.plot(true)
     ax.plot(pred)
     ax.fill_between(x=[i for i in range(pred.shape[0])], y1=error1, y2=error2, alpha=0.5)
+    if axis == 'equal':
+        plt.axis('equal')
+
+def plot_position_curve_with_uncertainty_shaded(true, pred, error1, error2, axis=None):
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 6), sharey=True)
     ax.plot(true)
+    ax.plot(pred)
+    ax.fill_between(x=[i for i in range(pred.shape[0])], y1=error1, y2=error2, alpha=0.5)
+    if axis == 'equal':
+        plt.axis('equal')
 
 def compute_link(angle1, angle2, quad, r=1):
     x1, y1 = (r*math.cos(angle1), r*math.sin(angle1))

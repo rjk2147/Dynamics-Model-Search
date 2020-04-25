@@ -317,7 +317,7 @@ class BayesianSequenceModel(nn.Module):
         return torch.mean(v, 0), torch.std(v, 0), Hs
 
     def forward(self, x, a, H=None, y=None):
-        x = (x - self.obs_mean) / self.obs_std
+        x = (x - torch.from_numpy(self.obs_mean).to(x.device)) / torch.from_numpy(self.obs_std).to(x.device)
         new_obs, O, new_H = self.predict(x, a, H=H)
         new_obs = torch.from_numpy(new_obs).to(x.device)
         sd = torch.zeros_like(new_obs).transpose(0,1)

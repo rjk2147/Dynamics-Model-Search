@@ -141,6 +141,9 @@ class MDNSeqModel(nn.Module):
         normals = Normal(means, sds)
         return normals, seq_h
 
+    def normalize(self, x):
+        return (x-torch.from_numpy(self.norm_mean).to(x.device)) / torch.from_numpy(self.norm_std).to(x.device)
+
     def forward(self, x, a, hidden_state=None, y=None):
         if hidden_state is None:
             hidden_state = torch.zeros((a.shape[0],self.z_size+2*self.rnn_hidden_size)).to(a.device)
@@ -155,6 +158,9 @@ class MDNSeqModel(nn.Module):
         if y is not None:
             new_obs = y.transpose(0, 1)
             seq = gaussian_loss(seq_normal, new_obs)
+            # seq_mean = self.normalize(seq_normal.mean)
+            # new_obs_norm = self.normalize(new_obs)
+            # norm_mae = torch.mean(torch.abs(seq_mean-new_obs_norm))
             mae = torch.mean(torch.abs(seq_normal.mean-new_obs))
             if torch.sum(torch.isnan(seq)):
                 print('Seq NaN')

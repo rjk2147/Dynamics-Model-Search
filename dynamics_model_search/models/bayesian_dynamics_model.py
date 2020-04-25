@@ -87,8 +87,8 @@ class BayesianSequenceModel(nn.Module):
         self.output_size = state_size
         self.rnn_input_size = action_size + z_size
         self.rnn_hidden_size = hidden_state_size
-        self.obs_mean = 0
-        self.obs_std = 1
+        self.obs_mean = np.array([0]).astype(np.float32)
+        self.obs_std = np.array([1]).astype(np.float32)
 
         self.priors = {
             "z": {

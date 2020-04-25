@@ -344,7 +344,7 @@ class BayesianSequenceDynamicsModel(DynamicsModel):
         self.adam = optim.Adam({"lr": self.lr})
         self.elbo = Trace_ELBO()
         self.model = BayesianSequenceModel(state_size=sum(self.state_dim), action_size=self.act_dim,
-                                           z_size=32, hidden_state_size=256,likelihood_std=0.01)
+                                           z_size=128, hidden_state_size=512,likelihood_std=0.01)
         self.svi = SVI(self.model.model, self.model.guide, self.adam, loss=self.elbo)
 
         if dev is None:

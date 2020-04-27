@@ -222,7 +222,7 @@ class LatentSeqDynamicsModel(DynamicsModel):
         mae = self.model(Xs, As, None, Ys)
         mae.backward()
         self.optimizer.step()
-        return mae.item()
+        return [mae.item()]
 
     def reset(self, obs_in, h=None):
         # x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(1)

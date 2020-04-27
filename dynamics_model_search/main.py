@@ -79,8 +79,11 @@ if __name__ == '__main__':
         from models.mdrnn_dynamics_model import MDRNNDynamicsModel
         dynamics_model = MDRNNDynamicsModel(env)
     elif args.model_arch == 'mdn-seq':
-        from models.mdn_seq_dynamics_model import MDRNNDynamicsModel
-        dynamics_model = MDRNNDynamicsModel(env)
+        from models.mdn_seq_dynamics_model import MDNSeqDynamicsModel
+        dynamics_model = MDNSeqDynamicsModel(env)
+    elif args.model_arch == 'latent-seq':
+        from models.latent_seq_dynamics_model import LatentSeqDynamicsModel
+        dynamics_model = LatentSeqDynamicsModel(env)
     elif args.model_arch == 'vrnn':
         from models.vrnn_dynamics_model import VRNNDynamicsModel
         dynamics_model = VRNNDynamicsModel(env)

@@ -67,16 +67,13 @@ class Encoder(nn.Module):
         # return z_loc, z_scale, sigma_loc, sigma_scale
 
 class Decoder(nn.Module):
-    def __init__(self, input_size=21 + 128, output_size=21, gaussian=True):
+    def __init__(self, input_size=21 + 128, output_size=21):
         super().__init__()
         self.linear1 = nn.Linear(in_features=input_size, out_features=64)
         self.linear2 = nn.Linear(in_features=64, out_features=64)
         self.linear3 = nn.Linear(in_features=64, out_features=32)
         self.linear4 = nn.Linear(in_features=32, out_features=16)
-        if gaussian:
-            self.linear5 = Gaussian(in_features=16, out_features=output_size)
-        else:
-            self.linear5 = nn.Linear(in_features=16, out_features=output_size)
+        self.linear5 = nn.Linear(in_features=16, out_features=output_size)
 
     def forward(self, x, z):
         y = torch.cat([x, z], dim=-1).to(z.device)
@@ -93,9 +90,9 @@ class Decoder(nn.Module):
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-class MDNSeqModel(nn.Module):
+class SeqModel(nn.Module):
     def __init__(self, state_dim=21, action_size=8, z_size=128, hidden_state_size=512):
-        super(MDNSeqModel, self).__init__()
+        super(SeqModel, self).__init__()
         self.h = None
 
         self.norm_mean = np.array([0]).astype(np.float32)
@@ -121,8 +118,7 @@ class MDNSeqModel(nn.Module):
 
     # seq_len, batch_len, input_size
     def pred(self, a, z, h, c, x=None):
-        means = []
-        sds = []
+        outs = []
         if x is None:
             x = self.x.repeat(a.shape[1], 1).to(a.device)
 
@@ -131,15 +127,12 @@ class MDNSeqModel(nn.Module):
             h, c = self.rnn(rnn_input, (h, c))
             z_loc, z_scale, sigma_loc, sigma_scale = self.encoder(h)
             z = Normal(z_loc, torch.clamp(z_scale, min=1e-20)).sample()
-            normal = self.decoder(x, z) # unsure about this
-            means.append(normal.mean.unsqueeze(0))
-            sds.append(normal.stddev.unsqueeze(0))
+            out = self.decoder(x, z) # unsure about this
+            outs.append(out.unsqueeze(0))
         seq_h = torch.cat([z, h, c], -1)
 
-        means = torch.cat(means)
-        sds = torch.cat(sds)
-        normals = Normal(means, sds)
-        return normals, seq_h
+        outs = torch.cat(outs)
+        return outs, seq_h
 
     def normalize(self, x):
         return (x-torch.from_numpy(self.norm_mean).to(x.device)) / torch.from_numpy(self.norm_std).to(x.device)
@@ -154,27 +147,17 @@ class MDNSeqModel(nn.Module):
         # hidden_state = hidden_state.transpose(0,1)
         z, h, c = hidden_state.split([self.z_size, self.rnn_hidden_size, self.rnn_hidden_size], -1)
 
-        seq_normal, seq_h = self.pred(act, z, h, c, x=obs)
+        seq_out, seq_h = self.pred(act, z, h, c, x=obs)
         if y is not None:
             new_obs = y.transpose(0, 1)
-            seq_mean = self.normalize(seq_normal.mean)
-            seq_std = seq_normal.stddev/torch.from_numpy(self.norm_std).to(x.device)
-            new_obs_norm = self.normalize(new_obs)
-            seq_norm = gaussian_loss(Normal(seq_mean, seq_std), new_obs_norm)
-            mae_norm = torch.mean(torch.abs(seq_mean-new_obs_norm))
-
-            seq = gaussian_loss(seq_normal, new_obs)
-            # mae = torch.mean(torch.abs(seq_normal.mean-new_obs))
-            if torch.sum(torch.isnan(seq)):
-                print('Seq NaN')
-            return torch.mean(seq_norm), mae_norm, torch.mean(seq_normal.stddev)
+            mae = torch.mean(torch.abs(seq_out-new_obs))
+            return mae
         else:
-            seq_out = seq_normal.sample()
-            sd = seq_normal.stddev
+            sd = torch.zeros_like(seq_out)
 
             return seq_out, sd, seq_h
 
-class MDNSeqDynamicsModel(DynamicsModel):
+class LatentSeqDynamicsModel(DynamicsModel):
     def __init__(self, env_in, dev=None):
         DynamicsModel.__init__(self, env_in)
         self.lr = 1e-5
@@ -185,7 +168,7 @@ class MDNSeqDynamicsModel(DynamicsModel):
         self.batch_size = 64
         self.max_seq_len = 100
         
-        self.model = MDNSeqModel(self.state_dim, self.act_dim)
+        self.model = SeqModel(self.state_dim, self.act_dim)
         if dev is None:
             self.model.to(device)
             self.device = device
@@ -206,7 +189,7 @@ class MDNSeqDynamicsModel(DynamicsModel):
         self.act_dim = act_dim
         self.state_dim = state_dim
 
-        self.model = MDNSeqModel(self.state_dim, self.act_dim)
+        self.model = SeqModel(self.state_dim, self.act_dim)
         self.model.to(self.device)
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
         self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
@@ -236,10 +219,10 @@ class MDNSeqDynamicsModel(DynamicsModel):
         Xs = torch.from_numpy(np.array([step[0] for step in data]).astype(np.float32)).to(self.device)
         As = torch.from_numpy(np.array([step[1] for step in data]).astype(np.float32)).to(self.device)
         Ys = torch.from_numpy(np.array([step[2] for step in data]).astype(np.float32)).to(self.device)
-        seq, mae, sd = self.model(Xs, As, None, Ys)
-        seq.backward()
+        mae = self.model(Xs, As, None, Ys)
+        mae.backward()
         self.optimizer.step()
-        return seq.item(), mae.item(), sd.item()
+        return mae.item()
 
     def reset(self, obs_in, h=None):
         # x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(1)

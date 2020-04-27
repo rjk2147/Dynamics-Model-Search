@@ -87,6 +87,8 @@ class BayesianSequenceModel(nn.Module):
         self.output_size = state_size
         self.rnn_input_size = action_size + z_size
         self.rnn_hidden_size = hidden_state_size
+        self.obs_mean = np.array([0]).astype(np.float32)
+        self.obs_std = np.array([1]).astype(np.float32)
 
         self.priors = {
             "z": {
@@ -315,6 +317,7 @@ class BayesianSequenceModel(nn.Module):
         return torch.mean(v, 0), torch.std(v, 0), Hs
 
     def forward(self, x, a, H=None, y=None):
+        x = (x - torch.from_numpy(self.obs_mean).to(x.device)) / torch.from_numpy(self.obs_std).to(x.device)
         new_obs, O, new_H = self.predict(x, a, H=H)
         new_obs = torch.from_numpy(new_obs).to(x.device)
         sd = torch.zeros_like(new_obs).transpose(0,1)
@@ -330,6 +333,7 @@ class BayesianSequenceModel(nn.Module):
 class BayesianSequenceDynamicsModel(DynamicsModel):
     def __init__(self, env_in, dev=None):
         DynamicsModel.__init__(self, env_in)
+        self.replay = []
         self.lr = 1e-3
         self.is_reset = False
         self.val_seq_len = 100
@@ -370,11 +374,33 @@ class BayesianSequenceDynamicsModel(DynamicsModel):
         self.model.to(in_device)
 
     def update(self, data):
+        def standardize_across_time(X):
+            l = X.shape[1]
+            def repeat(X, repeat=100):
+                Y = []
+                for i in range(X.shape[0]):
+                    y = []
+                    for j in range(repeat):
+                        y.append(X[i])
+                    y = np.array(y)
+                    Y.append(y)
+                Y = np.array(Y)
+                return Y
+            mu = np.mean(X, axis=1)
+            sigma = np.std(X, axis=1)
+            mu_repeated = repeat(mu, repeat=l)
+            sigma_repeated = repeat(sigma, repeat=l)
+            return (X - mu_repeated) / sigma_repeated
+
+        n_replay_samples = 10000
+        obs_dist = np.array([np.mean(step[0], 0) for step in list(self.replay)[-n_replay_samples:]], dtype=np.float32)  # also normalizes across time
+        self.model.obs_mean = np.mean(obs_dist, 0)
+        self.model.obs_std = np.std(obs_dist, 0)
         self.model.train()
 
-        Xs = torch.from_numpy(np.array([step[0] for step in data]).astype(np.float32)).to(self.device)
-        As = torch.from_numpy(np.array([step[1] for step in data]).astype(np.float32)).to(self.device)
-        Ys = torch.from_numpy(np.array([step[2] for step in data]).astype(np.float32)).to(self.device)
+        Xs = torch.from_numpy(standardize_across_time(np.array([step[0] for step in data]).astype(np.float32))).to(self.device)
+        As = torch.from_numpy(standardize_across_time(np.array([step[1] for step in data]).astype(np.float32))).to(self.device)
+        Ys = torch.from_numpy(standardize_across_time(np.array([step[2] for step in data]).astype(np.float32))).to(self.device)
         elbo_loss = self.svi.step(X=Xs, A=As, Y=Ys, batch_size=Xs.shape[0])
         train_batch_mae_loss, train_batch_Z, train_batch_Y_hat, train_batch_Y = self.model.loss(X=Xs, A=As, Y=Ys,
                                                                                                batch_size=self.batch_size)

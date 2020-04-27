@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='rnn') # type of self-model
+    parser.add_argument('--model-arch', type=str, default='bseq') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters
@@ -26,8 +26,10 @@ if __name__ == '__main__':
     parser.add_argument('--use-state', action='store_true', default=False)
     parser.add_argument('--model-reward', action='store_true', default=False)
     parser.add_argument('--no-search', action='store_true', default=False)
+
     parser.add_argument('--width', type=str, default=8) # width of the search tree at every level
     parser.add_argument('--depth', type=int, default=5) # depth of the search tree
+    parser.add_argument('--nodes', type=int, default=2048) # depth of the search tree
 
     # Repeatability
     parser.add_argument('--seed', type=int, default=None) # Initial seed
@@ -76,6 +78,9 @@ if __name__ == '__main__':
     elif args.model_arch == 'mdrnn':
         from models.mdrnn_dynamics_model import MDRNNDynamicsModel
         dynamics_model = MDRNNDynamicsModel(env)
+    elif args.model_arch == 'mdn-seq':
+        from models.mdn_seq_dynamics_model import MDRNNDynamicsModel
+        dynamics_model = MDRNNDynamicsModel(env)
     elif args.model_arch == 'vrnn':
         from models.vrnn_dynamics_model import VRNNDynamicsModel
         dynamics_model = VRNNDynamicsModel(env)
@@ -114,7 +119,7 @@ if __name__ == '__main__':
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
     if args.planner == 'MCTS-UCT':
         from model_based.mcts_uct import MCTS
-        planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
+        planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width), nodes=int(args.nodes))
     elif args.planner == 'CEM':
         from model_based.cem import CEM
         planner = CEM(int(args.depth), dynamics_model, rl_learner, int(args.width))

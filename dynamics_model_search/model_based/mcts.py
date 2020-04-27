@@ -42,7 +42,7 @@ else:
     devices = [torch.device('cpu')]
 
 class MCTS(MPC):
-    def __init__(self, lookahead, dynamics_model, agent=None, initial_width=2, cross_entropy=False):
+    def __init__(self, lookahead, dynamics_model, agent=None, initial_width=2, nodes=None, cross_entropy=False):
         MPC.__init__(self, lookahead, dynamics_model, agent)
         self.width = initial_width
         self.populate_queue = deque()

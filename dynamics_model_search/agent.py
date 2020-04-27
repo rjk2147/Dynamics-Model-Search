@@ -29,7 +29,7 @@ class Agent:
         self.model.model.train()
 
         replay_size = max(replay_size, batch_size)
-        self.model_replay = deque(maxlen=int(replay_size))
+        self.model.replay = deque(maxlen=int(replay_size))
         
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
@@ -67,9 +67,9 @@ class Agent:
         self.a_seq.append(act / self.act_mul_const)
         self.y_seq.append(new_obs[0] / self.model.state_mul_const)
         if len(self.x_seq) == self.seq_len:
-            self.model_replay.append((np.array(self.x_seq), np.array(self.a_seq), np.array(self.y_seq)))
-        if len(self.model_replay) >= self.batch_size:
-            data = random.sample(self.model_replay, self.batch_size)
+            self.model.replay.append((np.array(self.x_seq), np.array(self.a_seq), np.array(self.y_seq)))
+        if len(self.model.replay) >= self.batch_size:
+            data = random.sample(self.model.replay, self.batch_size)
 
             # obs_dist = np.array([step[0][0] for step in data], dtype=np.float32)
             obs_dist = np.array([np.mean(step[0], 0) for step in data], dtype=np.float32) # also normalizes across time

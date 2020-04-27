@@ -166,9 +166,12 @@ class MDNSeqModel(nn.Module):
                 print('Seq NaN')
             return torch.mean(seq), mae, torch.mean(seq_normal.stddev)
         else:
-            seq_out = seq_normal.sample()
-            # seq_out = seq_normal.mean
-            sd = seq_normal.stddev
+            # seq_out = seq_normal.sample()
+            # sd = seq_normal.stddev
+
+            seq_out = seq_normal.mean
+            sd = torch.zeros_like(seq_out)
+
             return seq_out, sd, seq_h
 
 class MDRNNDynamicsModel(DynamicsModel):
@@ -234,7 +237,7 @@ class MDRNNDynamicsModel(DynamicsModel):
         As = torch.from_numpy(np.array([step[1] for step in data]).astype(np.float32)).to(self.device)
         Ys = torch.from_numpy(np.array([step[2] for step in data]).astype(np.float32)).to(self.device)
         seq, mae, sd = self.model(Xs, As, None, Ys)
-        seq.backward()
+        mae.backward()
         self.optimizer.step()
         return seq.item(), mae.item(), sd.item()
 

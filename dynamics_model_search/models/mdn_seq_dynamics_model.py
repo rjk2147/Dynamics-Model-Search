@@ -29,7 +29,7 @@ class Gaussian(nn.Module):
 
 def gaussian_loss(normal, y):
     loglik = normal.log_prob(y)
-    loglik = -torch.sum(loglik, dim=-1)
+    loss = -torch.sum(loglik, dim=-1)
     # loss = -torch.logsumexp(loglik, dim=-1)
     if torch.isnan(loss).any():
         print('NaN in loss!')

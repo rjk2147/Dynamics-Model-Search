@@ -150,7 +150,9 @@ class SeqModel(nn.Module):
         seq_out, seq_h = self.pred(act, z, h, c, x=obs)
         if y is not None:
             new_obs = y.transpose(0, 1)
-            mae = torch.mean(torch.abs(seq_out-new_obs))
+            new_obs_norm = self.normalize(new_obs)
+            seq_out = self.normalize(seq_out)
+            mae = torch.mean(torch.abs(seq_out-new_obs_norm))
             return mae
         else:
             sd = torch.zeros_like(seq_out)

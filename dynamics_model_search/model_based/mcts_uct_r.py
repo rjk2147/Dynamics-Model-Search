@@ -110,7 +110,7 @@ class MCTS(MPC):
             tmp_obs, tmp_h, uncertainty = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True,
                                                         state_in=True,certainty=True)
             tmp_obs = tmp_obs[:,:self.env_obs_len]
-            states_rewards = np.expand_dims(tmp_obs[:,-1], axis = 1)
+            states_rewards = tmp_obs[:,-1].unsqueeze(axis = 1).cpu().numpy()
             new_obs = (tmp_obs, tmp_h)
 
             qs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])

@@ -54,7 +54,7 @@ class MDRNNModel(nn.Module):
         self.state_size = sum(state_dim)
         self.act_dim = act_dim
         self.h = None
-
+        self.reward_size = 1
         num_recurrent_layers = 1
 
         self.latent_size = 256
@@ -65,7 +65,7 @@ class MDRNNModel(nn.Module):
         self.rnn = nn.GRU(self.state_size+act_dim, self.latent_size, num_recurrent_layers)
 
         self.layer1 = nn.Linear(self.latent_size, self.latent_size)
-        self.fc_out = MDN(self.latent_size, self.state_size, self.num_gaussians)
+        self.fc_out = MDN(self.latent_size, self.state_size + self.reward_size, self.num_gaussians)
 
     def reset(self):
         return torch.ones((1,1,self.latent_size))
@@ -130,6 +130,7 @@ class MDRNNDynamicsModel(DynamicsModel):
             self.device = dev
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
         self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
+        self.reward_state_mul_const_tensor = torch.Tensor(self.reward_state_mul_const).to(self.device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.model.eval()
@@ -137,6 +138,7 @@ class MDRNNDynamicsModel(DynamicsModel):
     def reinit(self, state_dim, state_mul_const, act_dim, act_mul_const):
         self.state_mul_const = state_mul_const
         self.state_mul_const[self.state_mul_const == np.inf] = 1
+        self.reward_state_mul_const_tensor = torch.Tensor(self.reward_state_mul_const).to(self.device)
 
         self.act_mul_const = act_mul_const
         self.act_dim = act_dim
@@ -219,7 +221,7 @@ class MDRNNDynamicsModel(DynamicsModel):
             state_out = self.h
         self.is_reset = False
 
-        new_obs = new_obs.squeeze(1).detach()*self.state_mul_const_tensor.to(new_obs.device)
+        new_obs = new_obs.squeeze(1).detach()*self.reward_state_mul_const_tensor.to(new_obs.device)
         if not tensor:
             new_obs = new_obs.detach().cpu().numpy()
         if new_obs.shape[0] == 1:

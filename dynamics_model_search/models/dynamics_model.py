@@ -5,6 +5,9 @@ class DynamicsModel:
     def __init__(self, env_in):
         self.state_mul_const = env_in.observation_space.high
         self.state_mul_const[self.state_mul_const == np.inf] = 1
+        reward_normalizer = 1 if env_in.reward_range[1] == np.inf else env_in.reward_range[1]
+        self.reward_state_mul_const = np.append(self.state_mul_const[:], reward_normalizer)
+
 
         # Continuous Action Space
         try:

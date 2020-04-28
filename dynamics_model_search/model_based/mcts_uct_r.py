@@ -8,23 +8,21 @@ import time
 import torch
 
 class State:
-    def __init__(self, obs):
+    def __init__(self, obs, past_rew, q, r, ori_act, gamma = 0.99):
         self.obs = obs
-        self.Q = 0
-        self.acts = []
-        self.rs = []
-        self.future = []
-        self.Qs = []
+        self.total_rew = past_rew + gamma * q
+        self.ori_act = ori_act
+        self.past_rew = past_rew + gamma * r
 
     # for heapsort
     def __lt__(self,other):
         # using greater than instead of less than because heap sort returns lowest value and we want highest Q
-        return (self.Q > other.Q)
+        return (self.total_rew > other.total_rew)
 
-    def connect(self, act, r, new_state):
-        self.rs.append(r)
-        self.acts.append(act)
-        self.future.append(new_state)
+    # def connect(self, act, r, new_state):
+    #     self.rs.append(r)
+    #     self.acts.append(act)
+    #     self.future.append(new_state)
 
     def exit(self):
         return
@@ -59,17 +57,25 @@ class MCTS(MPC):
         self.batch_size = 256
         self.max_tree = 2048
         self.env_obs_len = self.dynamics_model.state_mul_const_tensor.shape[0]
+        # self.leafs = set()
         self.clear()
 
     def clear(self):
         self.state_list = []
         self.populate_queue = []
 
-    def add(self, new_obs, state=None, act=None, r=0, depth=0):
-        new_state = State(new_obs)
-        new_state.Q = r
-        if state is not None:
-            state.connect(act, r, new_state)
+    def add(self, new_obs, q, r, act = None, state=None, depth=0):
+        if state:
+            new_state = State(new_obs, state.past_rew, q, r, act)
+        else:
+            new_state = State(new_obs, 0, q, r, act)
+
+
+
+
+        # new_state.Q = r
+        # if state is not None:
+        #     state.connect(act, r, new_state)
         self.state_list.append((new_state, depth))
         return new_state
 
@@ -100,19 +106,26 @@ class MCTS(MPC):
                    [obs[i][1] for i in range(len(obs))])
             acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
 
+
             tmp_obs, tmp_h, uncertainty = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True,
                                                         state_in=True,certainty=True)
             tmp_obs = tmp_obs[:,:self.env_obs_len]
-            states_rewards = tmp_obs[:,-1]
+            states_rewards = np.expand_dims(tmp_obs[:,-1], axis = 1)
             new_obs = (tmp_obs, tmp_h)
-            rs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])
 
+            qs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])
             # Discounting the reward by the uncertainty
-            rs *= torch.mean(uncertainty, -1).unsqueeze(-1).detach().cpu().numpy()
+            uncertainty_factor = torch.mean(uncertainty, -1).unsqueeze(-1).detach().cpu().numpy()
+            qs *= uncertainty_factor
+            states_rewards *= uncertainty_factor
 
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
             for i in range(len(states)):
-                new_state = self.add(these_new_obs[i], states[i], acts_in[i], rs[i].item(), depth=depths[i]+1)
+                if states[i].ori_act is not None:
+                    new_state = self.add(these_new_obs[i], qs[i].item(), states_rewards[i].item(),  states[i].ori_act, states[i], depth=depths[i]+1)
+                else:
+                    new_state = self.add(these_new_obs[i], qs[i].item(), states_rewards[i].item(),  acts_in[i], states[i], depth=depths[i]+1)
+
                 # q.appendleft((new_state, depths[i]+1))
                 heapq.heappush(q, (new_state, depths[i]+1))
 
@@ -124,18 +137,22 @@ class MCTS(MPC):
     def best_move(self, obs):
         self.clear()
         obs = (torch.from_numpy(obs[0]).to(devices[0]).float(), obs[1].to(devices[0]))
-        root = self.add(obs)
+        root = self.add(obs, 0, 0)
         self.populate(root)
         start = time.time()
-        self.state_list.reverse()
+        # self.state_list.reverse()
         # print(len(self.state_list))
-        for state, depth in self.state_list:
-            state.update_Q()
-        i = np.argmax(root.Qs)
-        best_act = root.acts[i]
-        root.best_act = best_act
-        root.best_r = root.rs[i]
-        return best_act, root.best_r
+        # for state, depth in self.state_list:
+            # state.update_Q()        
+        # i = np.argmax(root.Qs)
+        # best_act = root.acts[i]
+        # root.best_act = best_act
+        # root.best_r = root.rs[i]
+        # return best_act, root.best_r
+        best_leaf, _ = heapq.heappop(self.populate_queue)
+        best_act = best_leaf.ori_act
+        best_r = best_leaf.total_rew
+        return best_act, best_r
 
     def exit(self):
         self.clear()

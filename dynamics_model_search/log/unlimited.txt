@@ -45233,3 +45233,58 @@ ep_min_val: 0.007179492507901218
 repl_count: 2214
 
 
+episode : 1 
+Last Episode Reward: 1.2257486513898996
+Mean Episode Reward: 1.2257486513898996
+Stdev Episode Reward: 0.0
+Mean Expected Episode Reward: 0.039670575289164844
+Stdev Expected Episode Reward: 0.0
+Total Timesteps: 100
+Total Time: 14.22
+
+
+
+episode : 1 
+Last Episode Reward: 1.054236726846284
+Mean Episode Reward: 1.054236726846284
+Stdev Episode Reward: 0.0
+Mean Expected Episode Reward: 82.09687129133769
+Stdev Expected Episode Reward: 0.0
+Total Timesteps: 100
+Total Time: 12.72
+
+
+
+episode : 2 
+Last Episode Reward: -0.8769264899237896
+Mean Episode Reward: 0.08865511846124718
+Stdev Episode Reward: 0.9655816083850368
+Mean Expected Episode Reward: 80.70968313261048
+Stdev Expected Episode Reward: 1.3871881587272057
+Total Timesteps: 200
+Total Time: 25.66
+
+
+
+episode : 3 
+Last Episode Reward: 1.4682451055705315
+Mean Episode Reward: 0.5485184474976753
+Stdev Episode Reward: 1.022014574791323
+Mean Expected Episode Reward: 80.23265706756465
+Stdev Expected Episode Reward: 1.3183202918644414
+Total Timesteps: 300
+Total Time: 41.63
+
+
+
+episode : 4 
+Last Episode Reward: 2.139059824501601
+Mean Episode Reward: 0.9461537917486567
+Stdev Episode Reward: 1.1214842595004202
+Mean Expected Episode Reward: 80.02704327581029
+Stdev Expected Episode Reward: 1.1959545927981412
+Total Timesteps: 400
+Total Time: 61.82
+
+
+

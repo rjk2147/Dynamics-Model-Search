@@ -13,7 +13,7 @@ if __name__ == '__main__':
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
-    parser.add_argument('--planner', type=str, default='MCTS-UCT-MEM') # model based algorithm
+    parser.add_argument('--planner', type=str, default='MCTS-UCT-R') # model based algorithm
     parser.add_argument('--model-arch', type=str, default='mdrnn') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
@@ -114,6 +114,9 @@ if __name__ == '__main__':
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
     elif args.planner == 'MCTS-UCT-MEM':
         from model_based.mcts_uct_memory import MCTS
+        planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
+    elif args.planner == 'MCTS-UCT-R':
+        from model_based.mcts_uct_r import MCTS
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
     elif args.planner == 'CEM':
         from model_based.cem import CEM

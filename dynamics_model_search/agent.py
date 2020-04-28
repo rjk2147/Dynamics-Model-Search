@@ -101,7 +101,7 @@ class Agent:
 
         self.x_seq.append(obs[0] / self.model.state_mul_const)
         self.a_seq.append(act / self.act_mul_const)
-        self.y_seq.append(new_obs[0] / self.model.state_mul_const)
+        self.y_seq.append(new_obs[0] / self.model.reward_state_mul_const)
         if len(self.x_seq) == self.seq_len:
             self.model_replay.append((np.array(self.x_seq), np.array(self.a_seq), np.array(self.y_seq)))
         if len(self.model_replay) >= self.batch_size:
@@ -161,7 +161,6 @@ class Agent:
             ep += 1
             obs = env.reset()
 
-
             if self.with_memory:
                 self.planner.add_to_memory_buffer(obs)
                 
@@ -187,7 +186,7 @@ class Agent:
                     act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     ex_r = 0
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
-
+                new_obs_with_r = np.concatenate([new_obs, [r]])
                 if self.with_memory:
                     self.planner.add_to_memory_buffer(new_obs)
 
@@ -224,7 +223,7 @@ class Agent:
 
                     ## Self-Model Update
                     if self.with_tree:
-                        self.sm_update(obs, act, new_obs, done)
+                        self.sm_update(obs, act, new_obs_with_r, done)
                 else:
                     obs_list.append(obs[0])
                 obs = new_obs

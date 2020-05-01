@@ -172,11 +172,8 @@ class MDNSeqModel(nn.Module):
             mae = torch.abs(seq_normal.mean-new_obs)
             if torch.sum(torch.isnan(seq)):
                 print('Seq NaN')
-<<<<<<< HEAD
-            return torch.mean(seq), torch.mean(mae), torch.mean(seq_normal.stddev)
-=======
+            # return torch.mean(seq), torch.mean(mae), torch.mean(seq_normal.stddev)
             return torch.mean(seq_norm), mae, torch.mean(seq_normal.stddev)
->>>>>>> d05c401186b298f3dd2283f8611ca92c6e36cf2f
         else:
             seq_out = seq_normal.sample()
             sd = seq_normal.stddev

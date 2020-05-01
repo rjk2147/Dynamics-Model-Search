@@ -5,37 +5,6 @@ from torch import nn, optim
 import time, math
 from torch.distributions import Normal, Uniform, OneHotCategorical
 
-class Gaussian(nn.Module):
-    def __init__(self, in_features, out_features):
-        super(Gaussian, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-
-        self.sigma = nn.Linear(in_features, out_features)
-        self.mu = nn.Linear(in_features, out_features)
-
-    def forward(self, x):
-        epsilon = 1e-20
-        mu = self.mu(x)
-        sigma = torch.exp(1 + self.sigma(x))
-        # sigma = torch.ones_like(mu)/100000.0
-
-        # mu = torch.stack(mu.split(self.out_features, dim=-1), -2)
-        # sigma = torch.stack(sigma.split(self.out_features, dim=-1), -2)
-        if torch.isnan(mu).any() or torch.isnan(sigma).any():
-            print('NaN in normal!')
-            print('')
-        return Normal(mu, torch.clamp(sigma, min=epsilon))
-
-def gaussian_loss(normal, y):
-    loglik = normal.log_prob(y)
-    loglik = torch.sum(loglik, dim=-1)
-    loss = -torch.logsumexp(loglik, dim=-1)
-    if torch.isnan(loss).any():
-        print('NaN in loss!')
-        print('')
-    return loss
-
 class Encoder(nn.Module):
     def __init__(self, input_size=512, z_output_size=128, sigma_output_size=21):
         super().__init__()
@@ -108,13 +77,15 @@ class SeqModel(nn.Module):
                            sigma_output_size=self.output_size).to(device)
         self.decoder = Decoder(input_size=self.z_size + self.output_size, output_size=self.output_size).to(device)
         self.rnn = nn.LSTMCell(self.rnn_input_size, self.rnn_hidden_size).to(device)
+        self.init_z = torch.zeros((1,self.z_size+2*self.rnn_hidden_size))
+        # self.init_z = nn.Parameter(torch.Tensor(1,self.z_size+2*self.rnn_hidden_size))
 
     def reset(self, obs):
         if torch.is_tensor(obs):
             self.x = obs.unsqueeze(0) # unsure about this
         else:
             self.x = torch.from_numpy(obs).unsqueeze(0)  # unsure about this
-        return torch.zeros((1,self.z_size+2*self.rnn_hidden_size))
+        return self.init_z
 
     # seq_len, batch_len, input_size
     def pred(self, a, z, h, c, x=None):

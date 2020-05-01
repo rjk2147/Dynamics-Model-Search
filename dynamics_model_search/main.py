@@ -14,7 +14,7 @@ if __name__ == '__main__':
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='mdn-seq') # type of self-model
+    parser.add_argument('--model-arch', type=str, default='mdn-seq-2') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters
@@ -80,6 +80,9 @@ if __name__ == '__main__':
         dynamics_model = MDRNNDynamicsModel(env)
     elif args.model_arch == 'mdn-seq':
         from models.mdn_seq_dynamics_model import MDNSeqDynamicsModel
+        dynamics_model = MDNSeqDynamicsModel(env)
+    elif args.model_arch == 'mdn-seq-2':
+        from models.mdn_seq_2_dynamics_model import MDNSeqDynamicsModel
         dynamics_model = MDNSeqDynamicsModel(env)
     elif args.model_arch == 'latent-seq':
         from models.latent_seq_dynamics_model import LatentSeqDynamicsModel

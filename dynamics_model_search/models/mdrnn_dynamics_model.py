@@ -99,7 +99,9 @@ class MDRNNModel(nn.Module):
             seq = mdn_loss(seq_pi, seq_normal, new_obs)
             if torch.sum(torch.isnan(seq)):
                 print('Seq NaN')
-            return torch.mean(seq), torch.mean(seq_normal.stddev)
+            mean = torch.sum(seq_pi.mean.unsqueeze(-1) * seq_normal.mean, dim=-2)
+            mae = torch.mean(torch.abs(mean - new_obs))
+            return torch.mean(seq), mae, torch.mean(seq_normal.stddev)
         else:
             seq_out = torch.sum(seq_pi.sample().unsqueeze(-1) * seq_normal.sample(), dim=-2)
             # sd = seq_normal.stddev
@@ -172,10 +174,10 @@ class MDRNNDynamicsModel(DynamicsModel):
         Xs = torch.from_numpy(np.array([step[0] for step in data]).astype(np.float32)).to(self.device)
         As = torch.from_numpy(np.array([step[1] for step in data]).astype(np.float32)).to(self.device)
         Ys = torch.from_numpy(np.array([step[2] for step in data]).astype(np.float32)).to(self.device)
-        seq, sd = self.model(Xs, As, None, Ys)
+        seq, mae, sd = self.model(Xs, As, None, Ys)
         seq.backward()
         self.optimizer.step()
-        return seq.item(), sd.item()
+        return seq.item(), mae.item(), sd.item()
 
     def reset(self, obs_in, h=None):
         # x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(1)

@@ -29,7 +29,12 @@ class Gaussian(nn.Module):
 
 def gaussian_loss(normal, y):
     loglik = normal.log_prob(y)
+
+    # Normalized logprob that scales to 0-1
+    # loglik = 0.5*(((mu-x)/std)**2)
+
     loss = -torch.sum(loglik, dim=-1)
+
     # loss = -torch.logsumexp(loglik, dim=-1)
     if torch.isnan(loss).any():
         print('NaN in loss!')
@@ -164,10 +169,10 @@ class MDNSeqModel(nn.Module):
             mae_norm = torch.mean(torch.abs(seq_mean-new_obs_norm))
 
             seq = gaussian_loss(seq_normal, new_obs)
-            mae = torch.mean(torch.abs(seq_normal.mean-new_obs))
+            mae = torch.abs(seq_normal.mean-new_obs)
             if torch.sum(torch.isnan(seq)):
                 print('Seq NaN')
-            return torch.mean(seq), mae, torch.mean(seq_normal.stddev)
+            return torch.mean(seq), torch.mean(mae), torch.mean(seq_normal.stddev)
         else:
             seq_out = seq_normal.sample()
             sd = seq_normal.stddev

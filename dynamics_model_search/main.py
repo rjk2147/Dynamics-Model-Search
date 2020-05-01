@@ -12,8 +12,8 @@ if __name__ == '__main__':
     # Algorithms
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
-    parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
-    parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
+    parser.add_argument('--rl', type=str, default='null') # model free agent algorithm
+    parser.add_argument('--planner', type=str, default='null') # model based algorithm
     parser.add_argument('--model-arch', type=str, default='mdn-seq') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
@@ -21,11 +21,6 @@ if __name__ == '__main__':
     parser.add_argument('--steps', type=int, default=1e6) # training steps
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
     parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
-
-    # Algorithm Parameters
-    parser.add_argument('--use-state', action='store_true', default=False)
-    parser.add_argument('--model-reward', action='store_true', default=False)
-    parser.add_argument('--no-search', action='store_true', default=False)
 
     parser.add_argument('--width', type=str, default=8) # width of the search tree at every level
     parser.add_argument('--depth', type=int, default=5) # depth of the search tree
@@ -42,9 +37,6 @@ if __name__ == '__main__':
           ' --depth '+str(args.depth)+' --steps '+str(args.steps)+' --batch-size '+str(args.batch_size)+\
           ' --replay-size '+str(args.replay_size)+' --model-arch '+str(args.model_arch)
     if args.seed is not None: cmd += ' --seed '+str(args.seed)
-    if args.use_state:      cmd += ' --use-state'
-    if args.model_reward:   cmd += ' --model-reward'
-    if args.no_search:      cmd += ' --no-search'
     print(cmd)
 
     if args.env[:4].lower() == 'jump' and 'Bullet' in args.env:
@@ -96,10 +88,8 @@ if __name__ == '__main__':
     elif args.model_arch == 'seq-cnn':
         from models.seq_cnn_dynamics_model import SeqCNNDynamicsModel
         dynamics_model = SeqCNNDynamicsModel(env)
-
-    if args.model_reward:
-        dynamics_model.reinit(dynamics_model.state_dim+1,np.concatenate([np.ones(1), dynamics_model.state_mul_const]).astype(dynamics_model.state_mul_const.dtype),
-                           dynamics_model.act_dim, dynamics_model.act_mul_const)
+    elif args.model_arch == 'none': # TODO Test to ensures this doesn't break anything
+        dynamics_model = None
 
     if args.rl.upper() == 'TD3':
         from model_free.TD3 import TD3
@@ -129,12 +119,17 @@ if __name__ == '__main__':
     elif args.planner == 'CEM':
         from model_based.cem import CEM
         planner = CEM(int(args.depth), dynamics_model, rl_learner, int(args.width))
+    elif args.planner.lower() == 'null' or args.planner.lower() == 'none':
+        planner = None
     else:
         from model_based.mcts import MCTS
         planner = MCTS(int(args.depth), dynamics_model, rl_learner, int(args.width))
 
-    agent = Agent(dynamics_model, rl_learner, planner, model_rew=args.model_reward, with_tree=not args.no_search,
-                  batch_size=int(args.batch_size), replay_size=int(args.replay_size))
+    if dynamics_model is None and planner is not None:
+        print('Error: Cannot have a null model with a planner')
+        exit(1)
+
+    agent = Agent(dynamics_model, rl_learner, planner, batch_size=int(args.batch_size), replay_size=int(args.replay_size))
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all

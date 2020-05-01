@@ -9,23 +9,16 @@ import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def model_rew_value(obs, act, new_obs):
-    return new_obs[...,0].detach().cpu().numpy()
 
 class Agent:
-    def __init__(self, dynamics_model, rl, planner, with_tree=True, model_rew=False, batch_size=512, replay_size=1e5):
-        self.model_rew = model_rew
+    def __init__(self, dynamics_model, rl, planner, batch_size=512, replay_size=1e5):
         self.act_mul_const = dynamics_model.act_mul_const
         self.from_update = 0
         self.batch_size = batch_size
-        self.with_tree = with_tree
 
         self.model = dynamics_model
         self.rl_learner = rl
         self.planner = planner
-
-        if self.model_rew: # nullifying the value function in favor or the model based approach
-            self.rl_learner.value = model_rew_value
         self.model.model.train()
 
         replay_size = max(replay_size, batch_size)
@@ -119,9 +112,7 @@ class Agent:
         while self.steps < max_timesteps:
             obs_list = []
             obs = env.reset()
-            if self.model_rew: # appending initial reward of 0 to obs
-                obs = np.concatenate([np.zeros(1), obs]).astype(obs.dtype)
-            if self.with_tree:
+            if self.planner is not None:
                 obs = self.planner.dynamics_model.reset(obs, None)
             else:
                 obs = (obs, None)
@@ -130,7 +121,7 @@ class Agent:
             ep_exp_r = 0
             ep_len = 0
             while not done:
-                if self.with_tree:
+                if self.planner is not None:
                     act, best_r = self.planner.best_move(obs)
                     act = act.cpu().data.numpy().flatten()
                     ex_r = best_r
@@ -139,9 +130,8 @@ class Agent:
                     act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     ex_r = 0
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
-                if self.model_rew: # appending reward to obs
-                    new_obs = np.concatenate([np.ones(1)*r, new_obs]).astype(new_obs.dtype)
-                if self.with_tree:
+
+                if self.planner is not None and self.model is not None:
                     # TODO: Efficiently pass this h value from the search since it is already calculated
                     _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), [obs[1].to(device)]),
                                                                   action_in=torch.from_numpy(act).unsqueeze(0).unsqueeze(1).to(device),
@@ -166,7 +156,7 @@ class Agent:
                     self.rl_learner.steps += 1
 
                     ## Self-Model Update
-                    if self.with_tree:
+                    if self.model is not None:
                         self.sm_update(obs, act, new_obs, done)
                 else:
                     obs_list.append(obs[0])
@@ -209,7 +199,7 @@ class Agent:
             ep_len = 0
             while not done:
                 obs_list.append(obs[0])
-                if self.with_tree:
+                if self.planner is not None:
                     act, best_r = self.planner.best_move(obs)
                     act = act.cpu().data.numpy().flatten()
                     ex_r = best_r

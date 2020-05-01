@@ -189,36 +189,6 @@ class BayesianSequenceModel(nn.Module):
         #         )
         return z, h, c
 
-    # def model(self, X, A, Y, batch_size):
-    #     pyro.module("decoder", self.networks["decoder"])
-    #
-    #     # X_ = torch.cat([X, A], dim=-1).to(self.device)
-    #
-    #     with pyro.plate('data', A.shape[0], device=self.device) as ix:
-    #         batch_X = X[ix]
-    #         batch_A = A[ix]
-    #         batch_Y = Y[ix] if Y is not None else None
-    #
-    #         Y_hat, Z = self.prior(X=batch_X, N=batch_X.shape[0], T=batch_X.shape[1])
-    #         O = []
-    #
-    #         for t in range(X.shape[1]):
-    #             sigma = pyro.sample('sigma_{}'.format(t),
-    #                                 dist.Normal(self.priors["sigma"]["loc"].expand(Y_hat.shape[0], self.output_size),
-    #                                             self.priors["sigma"]["scale"].expand(Y_hat.shape[0], self.output_size))
-    #                                 .to_event(1),
-    #                                 )
-    #             obs = pyro.sample('obs_{}'.format(t),
-    #                               dist.Normal(loc=Y_hat[:, t, :], scale=sigma.to(self.device))
-    #                               .to_event(1),
-    #                               obs=batch_Y[:, t, :] if batch_Y is not None else None
-    #                               )
-    #             O.append(obs)
-    #
-    #         O = torch.stack(O).transpose(0, 1)
-    #
-    #     return Y_hat.data.cpu().numpy(), Z.data.cpu().numpy(), O.data.cpu().numpy()
-
     def model(self, X, A, Y, batch_size):
         pyro.module("decoder", self.networks["decoder"])
 
@@ -303,22 +273,49 @@ class BayesianSequenceModel(nn.Module):
         return Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1])), O.reshape(
             (O.shape[1], O.shape[0], O.shape[-1])), new_H
 
-    def predict_with_uncertainty(self, x, A, H=None, Y=None):
-        new_x = x.repeat(self.n_samples, 1, 1)
-        new_A = A.repeat(self.n_samples, 1, 1)
-        new_H = torch.cat(H.split(1,0), 1).squeeze(0)
-        Y_hat, O, tmp_H = self.predict(x=new_x, A=new_A, Y=Y, H=new_H)
-        Y_hat = torch.from_numpy(Y_hat)
-        split_y_hat = Y_hat.chunk(self.n_samples)
-        v = torch.stack(split_y_hat)
+    def predict_with_uncertainty_vectorized(self, x, A, H=None, samples=100):
+        x = x.repeat(samples, 1, 1)
+        A = A.repeat(samples, 1, 1)
 
-        Hs = tmp_H.chunk(self.n_samples)
-        Hs = torch.stack(Hs).transpose(0,1)
-        return torch.mean(v, 0), torch.std(v, 0), Hs
+        N = x.shape[0]
+
+        # Added These lines about H
+        if H is None:
+            z, h, c = None, None, None
+        else:
+            z, h, c = H.split([self.z_size, self.rnn_hidden_size, self.rnn_hidden_size], -1)
+
+        if z is None:
+            trace = poutine.trace(self.guide).get_trace(X=x, A=A, batch_size=N)
+        else:
+            # End Added
+            trace = poutine.trace(self.guide).get_trace(X=x, A=A, batch_size=samples)
+        # Added These lines about H
+        z, h, c = torch.from_numpy(self.guide_cache["z_prev"]).to(self.device), torch.from_numpy(
+            self.guide_cache["h_prev"]).to(self.device), torch.from_numpy(self.guide_cache["c_prev"]).to(
+            self.device)
+        new_H = torch.cat([z, h, c], -1)
+        # End Added
+        Y_hat, _, O = poutine.replay(self.model, trace=trace)(X=x, A=A, Y=Y, batch_size=samples)
+
+        Y_hat, O = Y_hat[:, np.newaxis, :, :], O[:, np.newaxis, :, :]
+        v = torch.Tensor(Y_hat)
+
+        # COMPUTE STATS
+        site_stats = {
+            "mean": torch.mean(v, 0),
+            "std": torch.std(v, 0),
+        }
+
+        Y_hat_mean = site_stats["mean"]
+        Y_hat_std = site_stats["std"]
+
+        return Y_hat_mean, Y_hat_std, new_H
 
     def forward(self, x, a, H=None, y=None):
         x = (x - torch.from_numpy(self.obs_mean).to(x.device)) / torch.from_numpy(self.obs_std).to(x.device)
-        new_obs, O, new_H = self.predict(x, a, H=H)
+        # new_obs, O, new_H = self.predict(x, a, H=H)
+        new_obs, sd, new_H = self.predict_with_uncertainty_vectorized(x, a, H)
         new_obs = torch.from_numpy(new_obs).to(x.device)
         sd = torch.zeros_like(new_obs).transpose(0,1)
         return new_obs, sd, new_H

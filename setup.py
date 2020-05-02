@@ -7,11 +7,4 @@ setup(
    author='Robert Kwiatkowski',
    author_email='robert.kwiatkowski@columbia.edu',
    packages=['dynamics_model_search'],  #same as name
-   install_requires=
-   [
-       'torch', 
-       'gym',
-       'pybullet', 
-       'matplotlib', 
-   ]
 )

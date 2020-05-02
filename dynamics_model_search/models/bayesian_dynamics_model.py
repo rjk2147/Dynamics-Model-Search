@@ -276,8 +276,9 @@ class BayesianSequenceModel(nn.Module):
     def predict_with_uncertainty_vectorized(self, x, A, H=None, samples=100):
         x = x.repeat(samples, 1, 1)
         A = A.repeat(samples, 1, 1)
-
         N = x.shape[0]
+
+        Y = None
 
         # Added These lines about H
         if H is None:
@@ -286,10 +287,10 @@ class BayesianSequenceModel(nn.Module):
             z, h, c = H.split([self.z_size, self.rnn_hidden_size, self.rnn_hidden_size], -1)
 
         if z is None:
-            trace = poutine.trace(self.guide).get_trace(X=x, A=A, batch_size=N)
+            trace = poutine.trace(self.guide).get_trace(X=x, A=A, Y=Y, batch_size=N)
         else:
             # End Added
-            trace = poutine.trace(self.guide).get_trace(X=x, A=A, batch_size=samples)
+            trace = poutine.trace(self.guide).get_trace(X=x, A=A, Y=Y, batch_size=N)
         # Added These lines about H
         z, h, c = torch.from_numpy(self.guide_cache["z_prev"]).to(self.device), torch.from_numpy(
             self.guide_cache["h_prev"]).to(self.device), torch.from_numpy(self.guide_cache["c_prev"]).to(
@@ -298,13 +299,17 @@ class BayesianSequenceModel(nn.Module):
         # End Added
         Y_hat, _, O = poutine.replay(self.model, trace=trace)(X=x, A=A, Y=Y, batch_size=samples)
 
-        Y_hat, O = Y_hat[:, np.newaxis, :, :], O[:, np.newaxis, :, :]
+        # Y_hat, O = Y_hat[:, np.newaxis, :, :], O[:, np.newaxis, :, :]
         v = torch.Tensor(Y_hat)
+        v = torch.cat(torch.chunk(v, samples), 1)
+
+        # print('v')
+        # print(v.shape)
 
         # COMPUTE STATS
         site_stats = {
-            "mean": torch.mean(v, 0),
-            "std": torch.std(v, 0),
+            "mean": torch.mean(v, 1),
+            "std": torch.std(v, 1),
         }
 
         Y_hat_mean = site_stats["mean"]
@@ -314,10 +319,10 @@ class BayesianSequenceModel(nn.Module):
 
     def forward(self, x, a, H=None, y=None):
         x = (x - torch.from_numpy(self.obs_mean).to(x.device)) / torch.from_numpy(self.obs_std).to(x.device)
-        # new_obs, O, new_H = self.predict(x, a, H=H)
+
         new_obs, sd, new_H = self.predict_with_uncertainty_vectorized(x, a, H)
-        new_obs = torch.from_numpy(new_obs).to(x.device)
-        sd = torch.zeros_like(new_obs).transpose(0,1)
+        new_obs = new_obs.to(x.device)
+
         return new_obs, sd, new_H
 
     def reset(self):
@@ -443,7 +448,7 @@ class BayesianSequenceDynamicsModel(DynamicsModel):
             state_out = self.h
         self.is_reset = False
 
-        new_obs = new_obs.squeeze(1).detach() * self.state_mul_const_tensor.to(new_obs.device)
+        new_obs = new_obs.detach() * self.state_mul_const_tensor.to(new_obs.device)
         if not tensor:
             new_obs = new_obs.detach().cpu().numpy()
         if new_obs.shape[0] == 1:

@@ -5,8 +5,6 @@ import numpy as np
 from agent import Agent
 from pybullet_wrappers import RealerWalkerWrapper
 import argparse
-import pyro
-pyro.enable_validation(True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -14,8 +12,8 @@ if __name__ == '__main__':
     # Algorithms
     parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
-    parser.add_argument('--rl', type=str, default='null') # model free agent algorithm
-    parser.add_argument('--planner', type=str, default='null') # model based algorithm
+    parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
+    parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
     parser.add_argument('--model-arch', type=str, default='mdn-seq') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 

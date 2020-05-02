@@ -5,6 +5,8 @@ import numpy as np
 from agent import Agent
 from pybullet_wrappers import RealerWalkerWrapper
 import argparse
+import pyro
+pyro.enable_validation(True)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)

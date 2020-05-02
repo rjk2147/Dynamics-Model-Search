@@ -232,6 +232,7 @@ class BayesianSequenceModel(nn.Module):
         y = self.networks["decoder"](x, z)
         if torch.isnan(z).any():
             print('NaN')
+            exit(1)
         return y, z
 
     def loss(self, X, A, Y, batch_size):
@@ -270,8 +271,9 @@ class BayesianSequenceModel(nn.Module):
         Y_hat = np.array(Y_hat)
         O = np.array(O)
         new_H = torch.cat([z, h, c], -1)
-        return Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1])), O.reshape(
-            (O.shape[1], O.shape[0], O.shape[-1])), new_H
+        return torch.from_numpy(Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1]))).to(x.device), \
+               torch.from_numpy(O.reshape((O.shape[1], O.shape[0], O.shape[-1]))).to(x.device),  \
+               new_H
 
     def predict_with_uncertainty_vectorized(self, x, A, H=None, samples=100):
         x = x.repeat(samples, 1, 1)
@@ -321,7 +323,9 @@ class BayesianSequenceModel(nn.Module):
         x = (x - torch.from_numpy(self.obs_mean).to(x.device)) / torch.from_numpy(self.obs_std).to(x.device)
 
         new_obs, sd, new_H = self.predict_with_uncertainty_vectorized(x, a, H)
-        new_obs = new_obs.to(x.device)
+        #new_obs, O, new_H = self.predict(x, a, H=H)
+        new_obs = new_obs.to(x.device).squeeze(1)
+        #sd = torch.ones_like(new_obs)
 
         return new_obs, sd, new_H
 
@@ -390,6 +394,7 @@ class BayesianSequenceDynamicsModel(DynamicsModel):
                 return Y
             mu = np.mean(X, axis=1)
             sigma = np.std(X, axis=1)
+            sigma[sigma <= 1e-5] = 1 # Forces really small sigmas to 1 as the values are all approximately the same and don't need normalization
             mu_repeated = repeat(mu, repeat=l)
             sigma_repeated = repeat(sigma, repeat=l)
             return (X - mu_repeated) / sigma_repeated

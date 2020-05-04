@@ -18,6 +18,17 @@ def get_velocity_curve(title, true, pred):
     fig, ax = plt.subplots()
     ax.plot(true, c="g", label="y")
     ax.plot(pred, c="r", label="y_hat")
+    ax.plot()
+    ax.set_ylabel("velocity")
+    ax.set_xlabel("timestep")
+    return ax
+
+def get_velocity_curve_std(title, true, pred, std):
+    fig, ax = plt.subplots()
+    ax.plot(true, c="g", label="y")
+    ax.plot(pred, c="r", label="y_hat")
+    ax.plot([pred[t]+std[t] for t in range(len(pred))], c='b', label='y_hat+std')
+    ax.plot([pred[t]-std[t] for t in range(len(pred))], c='y', label='y_hat-std')
     ax.set_ylabel("velocity")
     ax.set_xlabel("timestep")
     return ax

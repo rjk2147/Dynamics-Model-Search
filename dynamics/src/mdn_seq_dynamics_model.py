@@ -180,7 +180,7 @@ class MDNSeqModel(nn.Module):
             # return torch.mean(seq), torch.mean(mae), torch.mean(seq_normal.stddev)
             return torch.mean(seq_norm), torch.mean(mae), torch.mean(seq_normal.stddev)
         else:
-            seq_out = seq_normal.sample()
+            seq_out = seq_normal.mean # changed from sample to mean
             sd = seq_normal.stddev
 
             return seq_out, sd, seq_h
@@ -309,7 +309,7 @@ class Trainer:
             train_seq_loss, train_mae_loss, val_mae_loss = self.train_epoch(train=(X_train, A_train, Y_train), 
                                                                             val=(X_val, A_val, Y_val), 
                                                                             epoch=epoch, batch_size=batch_size)
-    
+            self.save_checkpoint(root+"/../models/mdn_seq_model.pth")
     def save_checkpoint(self, path):
         torch.save({
             'model_state_dict': self.model.state_dict(),
@@ -326,7 +326,7 @@ if __name__ == '__main__':
 
     machine = "honshu"
     notes = "master_mdn_seq_dynamics_model"
-    name = "mdn_seq_dynamics_model"
+    name = "mdn_seq_dynamics_model-mean_plots"
 
     wandb.init(project="bayesian_sequence_modelling", name=machine+"/"+name, tags=[machine], notes=notes, reinit=True)
 
@@ -345,4 +345,4 @@ if __name__ == '__main__':
 
     trainer = Trainer(model=seq_model, device=device, learing_rate=1e-5, wandb=wandb)     
     # trainer.load_checkpoint(path=root+"/../models/mdn_seq_model.pth")
-    trainer.train(train=(X_train, A_train, Y_train), val=(X_val, A_val, Y_val), epochs=1000, batch_size=800, shuffle=True)
+    trainer.train(train=(X_train, A_train, Y_train), val=(X_val, A_val, Y_val), epochs=1000, batch_size=1024, shuffle=True)

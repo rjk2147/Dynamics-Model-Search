@@ -148,7 +148,6 @@ class Agent:
                 ep_len += 1
 
                 if training:
-                    # TODO could try to use state and rerun all obs through the self-model before RL-update
                     ## RL Learner Update
                     self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                     self.from_update += 1
@@ -179,54 +178,3 @@ class Agent:
         self.planner.exit()
         if not training:
             return obs_lists
-
-    def play_old(self, env, num_episodes):
-        self.model.max_seq_len = 10
-        self.seq_len = self.model.max_seq_len
-        self.steps = 0
-        self.start_time = time.time()
-
-        obs_lists = []
-        ep_rs = []
-
-        for i in range(num_episodes):
-            obs_list = []
-            obs = env.reset()
-            obs = self.planner.dynamics_model.reset(obs, None)
-            done = False
-            ep_r = 0
-            ep_exp_r = 0
-            ep_len = 0
-            while not done:
-                obs_list.append(obs[0])
-                if self.planner is not None:
-                    act, best_r = self.planner.best_move(obs)
-                    act = act.cpu().data.numpy().flatten()
-                    ex_r = best_r
-                    self.planner.clear()
-                else:
-                    act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
-                    ex_r = 0
-                new_obs, r, done, info = env.step(act*self.act_mul_const)
-
-                # TODO: Efficiently pass this h value from the search since it is already calculated
-                _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).to(device), obs[1].to(device)),
-                                                              action_in=torch.from_numpy(act).unsqueeze(0).to(device),
-                                                              state=True, state_in=True)
-                new_obs = self.planner.dynamics_model.reset(new_obs, h)
-
-                # Statistics update
-                self.steps += 1
-                ep_r += r
-                ep_exp_r += ex_r
-                ep_len += 1
-
-                obs = new_obs
-            obs_lists.append(obs_list)
-            ep_rs.append(ep_r)
-            print('Episode '+str(len(obs_lists))+' Reward: '+str(ep_r))
-        self.planner.exit()
-        print('---------------------------')
-        print('Mean Episode Reward: '+str(np.mean(ep_rs)))
-        print('Stdev Episode Reward: '+str(np.std(ep_rs)))
-        return obs_lists

@@ -97,7 +97,7 @@ class MCTS(MPC):
             obs_in = (torch.cat([obs[i][0].unsqueeze(0) for i in range(len(obs))]).unsqueeze(1),
                    [obs[i][1] for i in range(len(obs))])
             acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
-            tmp_obs, tmp_h, uncertainty = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True,
+            tmp_obs, tmp_h, uncertainty = self.dynamics_model.step(obs_in=obs_in, action_in=acts_in, state=True,
                                                         state_in=True,certainty=True)
             new_obs = (tmp_obs, tmp_h)
             rs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])

@@ -84,7 +84,7 @@ class MCTS(MPC):
             acts_in = self.agent.act(obs_in[0].squeeze(1)).unsqueeze(1)
             if self.with_CE:
                 acts_in, avg_rs = self.CEM.best_move(obs_in, acts_in)
-            new_obs = self.dynamics_model.step_parallel(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
+            new_obs = self.dynamics_model.step(obs_in=obs_in, action_in=acts_in, state=True, state_in=True)
             rs = self.agent.value(obs_in[0].squeeze(1), acts_in.squeeze(1), new_obs[0])
             these_new_obs = [(new_obs[0][i], new_obs[1][i].unsqueeze(0)) for i in range(len(states))]
             for i in range(len(states)):

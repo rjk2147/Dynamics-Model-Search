@@ -53,7 +53,7 @@ class CEM(MPC):
             R = []
             in_s = X
             for i in range(self.lookahead):
-                out_s = self.dynamics_model.step_parallel(obs_in=in_s, action_in=A[i], state=True, state_in=True)
+                out_s = self.dynamics_model.step(obs_in=in_s, action_in=A[i], state=True, state_in=True)
                 r = self.agent.value(in_s[0], A[i], out_s[0]).flatten()
                 S.append(out_s)
                 R.append(r)

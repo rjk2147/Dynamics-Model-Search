@@ -253,5 +253,5 @@ class LatentSeqDynamicsModel(DynamicsModel):
                 return new_obs, torch.exp(-sd).squeeze(0)
             return new_obs
 
-    def step(self, action_in, obs_in=None, save=True, state=False, state_in=None):
-        return self.step_parallel(action_in, obs_in, save, state, state_in)
+    def step(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
+        return self.step_parallel(action_in, obs_in, save, state, state_in, certainty)

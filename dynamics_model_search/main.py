@@ -82,6 +82,9 @@ if __name__ == '__main__':
     elif args.model_arch == 'bseq':
         from models.bayesian_dynamics_model import BayesianSequenceDynamicsModel
         dynamics_model = BayesianSequenceDynamicsModel(env)
+    elif args.model_arch == 'biased-bseq':
+        from models.biased_bayesian_dynamics_model import BayesianSequenceDynamicsModel
+        dynamics_model = BayesianSequenceDynamicsModel(env)
     elif args.model_arch == 'seq-cnn':
         from models.seq_cnn_dynamics_model import SeqCNNDynamicsModel
         dynamics_model = SeqCNNDynamicsModel(env)

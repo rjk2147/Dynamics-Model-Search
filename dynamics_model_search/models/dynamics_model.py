@@ -2,7 +2,7 @@ import numpy as np
 from collections import deque
 
 class DynamicsModel:
-    def __init__(self, env_in):
+    def __init__(self, env_in, seq_len=100):
         self.state_mul_const = env_in.observation_space.high
         self.state_mul_const[self.state_mul_const == np.inf] = 1
 

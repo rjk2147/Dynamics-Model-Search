@@ -14,12 +14,13 @@ if __name__ == '__main__':
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='mdrnn') # type of self-model
+    parser.add_argument('--model-arch', type=str, default='1dcnn') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters
     parser.add_argument('--steps', type=int, default=1e6) # training steps
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
+    parser.add_argument('--seq-len', type=int, default=10) # SM sequence modeling window size
     parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
 
     parser.add_argument('--width', type=str, default=8) # width of the search tree at every level
@@ -61,35 +62,42 @@ if __name__ == '__main__':
             torch.cuda.manual_seed(args.seed)
         env.seed(args.seed)
 
+    ensemble = False
+    if args.model_arch[:len('ensemble-')] == 'ensemble-':
+        ensemble = True
+        args.model_arch = args.model_arch[len('ensemble-'):]
+
     if args.model_arch == 'precogen':
-        from models.preco_gen_dynamics_model import PreCoGenDynamicsModel
-        dynamics_model = PreCoGenDynamicsModel(env)
+        from models.preco_gen_dynamics_model import PreCoGenDynamicsModel as DyanmicsModel
     elif args.model_arch == 'rnn':
-        from models.rnn_dynamics_model import RNNDynamicsModel
-        dynamics_model = RNNDynamicsModel(env)
+        from models.rnn_dynamics_model import RNNDynamicsModel as DyanmicsModel
     elif args.model_arch == 'mdrnn':
-        from models.mdrnn_dynamics_model import MDRNNDynamicsModel
-        dynamics_model = MDRNNDynamicsModel(env)
+        from models.mdrnn_dynamics_model import MDRNNDynamicsModel as DyanmicsModel
     elif args.model_arch == 'mdn-seq':
-        from models.mdn_seq_dynamics_model import MDNSeqDynamicsModel
-        dynamics_model = MDNSeqDynamicsModel(env)
+        from models.mdn_seq_dynamics_model import MDNSeqDynamicsModel as DyanmicsModel
     elif args.model_arch == 'latent-seq':
-        from models.latent_seq_dynamics_model import LatentSeqDynamicsModel
-        dynamics_model = LatentSeqDynamicsModel(env)
+        from models.latent_seq_dynamics_model import LatentSeqDynamicsModel as DyanmicsModel
     elif args.model_arch == 'vrnn':
-        from models.vrnn_dynamics_model import VRNNDynamicsModel
-        dynamics_model = VRNNDynamicsModel(env)
+        from models.vrnn_dynamics_model import VRNNDynamicsModel as DyanmicsModel
     elif args.model_arch == 'bseq':
-        from models.bayesian_dynamics_model import BayesianSequenceDynamicsModel
-        dynamics_model = BayesianSequenceDynamicsModel(env)
+        from models.bayesian_dynamics_model import BayesianSequenceDynamicsModel as DyanmicsModel
     elif args.model_arch == 'biased-bseq':
-        from models.biased_bayesian_dynamics_model import BayesianSequenceDynamicsModel
-        dynamics_model = BayesianSequenceDynamicsModel(env)
+        from models.biased_bayesian_dynamics_model import BayesianSequenceDynamicsModel as DyanmicsModel
     elif args.model_arch == 'seq-cnn':
-        from models.seq_cnn_dynamics_model import SeqCNNDynamicsModel
-        dynamics_model = SeqCNNDynamicsModel(env)
+        from models.cnn1D_dynamics_model import SeqCNNDynamicsModel as DyanmicsModel
+    elif args.model_arch == '1dcnn':
+        from models.cnn1D_dynamics_model import SeqCNNDynamicsModel as DyanmicsModel
     elif args.model_arch == 'none': # TODO Test to ensures this doesn't break anything
         dynamics_model = None
+
+    if DyanmicsModel is not None:
+        if ensemble:
+            from models.ensemble import Ensemble as Ensemble
+            # from models.ensemble_parallel import ParallelEnsemble as Ensemble
+            dynamics_model = Ensemble(DyanmicsModel, env)
+            args.batch_size = int(args.batch_size)*dynamics_model.ensemble_size
+        else:
+            dynamics_model = DyanmicsModel(env, seq_len=int(args.seq_len))
 
     if args.rl.upper() == 'TD3':
         from model_free.TD3 import TD3
@@ -129,7 +137,8 @@ if __name__ == '__main__':
         print('Error: Cannot have a null model with a planner')
         exit(1)
 
-    agent = Agent(dynamics_model, rl_learner, planner, batch_size=int(args.batch_size), replay_size=int(args.replay_size))
+    agent = Agent(dynamics_model, rl_learner, planner,
+                  batch_size=int(args.batch_size), replay_size=int(args.replay_size), seq_len=int(args.seq_len))
     if args.load_all is not None:
         args.load_model = args.load_all
         args.load_agent = args.load_all

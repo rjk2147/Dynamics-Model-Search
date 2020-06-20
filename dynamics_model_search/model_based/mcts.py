@@ -108,7 +108,7 @@ class MCTS(MPC):
         best_act = root.acts[i]
         root.best_act = best_act
         root.best_r = root.rs[i]
-        return best_act, root.best_r
+        return best_act, root.best_r, self.state_list
 
     def exit(self):
         self.clear()

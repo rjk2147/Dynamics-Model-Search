@@ -94,6 +94,10 @@ class MDRNNModel(nn.Module):
         # new_obs = torch.transpose(y, 0, 1).to(self.layer1._parameters['weight'].device)
 
         seq_pi, seq_normal, seq_h = self.pred(obs, act)
+
+        # Added training to learn the change not the whole state
+        # seq_normal = Normal(seq_normal.loc + obs.unsqueeze(-2).expand_as(seq_normal.loc), seq_normal.scale)
+
         if y is not None:
             new_obs = y.transpose(0, 1)
             seq = mdn_loss(seq_pi, seq_normal, new_obs)

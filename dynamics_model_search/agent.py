@@ -11,12 +11,13 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class Agent:
-    def __init__(self, dynamics_model, rl, planner, batch_size=512, replay_size=1e5):
+    def __init__(self, dynamics_model, rl, planner, batch_size=512, replay_size=1e5, seq_len=10):
         self.act_mul_const = dynamics_model.act_mul_const
         self.from_update = 0
         self.batch_size = batch_size
 
         self.model = dynamics_model
+        self.seq_len = seq_len
         self.rl_learner = rl
         self.planner = planner
         self.model.model.train()
@@ -76,10 +77,11 @@ class Agent:
             self.model.model.norm_mean = obs_mean
             self.model.model.norm_std = obs_std
             train_loss = self.model.update(data)
-            if self.avg_train_loss is None:
-                self.avg_train_loss = np.zeros(len(train_loss))
             train_loss = np.array(train_loss)
-            self.avg_train_loss += np.array(train_loss)
+            if self.avg_train_loss is None:
+                self.avg_train_loss = np.array(train_loss)
+            else:
+                self.avg_train_loss += np.array(train_loss)
             self.u += 1
         if done:
             self.x_seq = deque(maxlen=self.seq_len)
@@ -93,7 +95,7 @@ class Agent:
         return self.run(training=False, env=env, max_timesteps=max_timesteps)
 
     def run(self, training, env, max_timesteps=1e6):
-        self.model.max_seq_len = 10
+        self.model.max_seq_len = self.seq_len
         self.seq_len = self.model.max_seq_len
         self.x_seq = deque(maxlen=self.seq_len)
         self.a_seq = deque(maxlen=self.seq_len)
@@ -122,7 +124,7 @@ class Agent:
             ep_len = 0
             while not done:
                 if self.planner is not None:
-                    act, best_r = self.planner.best_move(obs)
+                    act, best_r, explored = self.planner.best_move(obs)
                     act = act.cpu().data.numpy().flatten()
                     ex_r = best_r
                     self.planner.clear()
@@ -133,7 +135,7 @@ class Agent:
 
                 if self.planner is not None and self.model is not None:
                     # TODO: Efficiently pass this h value from the search since it is already calculated
-                    _, h = self.planner.dynamics_model.step_parallel(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), [obs[1].to(device)]),
+                    _, h = self.planner.dynamics_model.step(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), [obs[1].to(device)]),
                                                                   action_in=torch.from_numpy(act).unsqueeze(0).unsqueeze(1).to(device),
                                                                   state=True, state_in=True)
                     # _, h = self.planner.dynamics_model.step_parallel(obs, act)

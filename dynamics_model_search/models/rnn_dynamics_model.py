@@ -57,6 +57,10 @@ class RNNModel(nn.Module):
         h = h.transpose(0,1)
 
         seq_out, seq_h = self.pred(obs, act, h)
+
+        # Added training to learn the change not the whole state
+        # seq_out = seq_out + obs
+
         if y is not None:
             seq_out = self.normalize(seq_out)
             single_out = seq_out[0]

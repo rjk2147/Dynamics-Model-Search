@@ -385,16 +385,18 @@ class BayesianSequenceModel(nn.Module):
         
         # X_ = torch.cat([X, A], dim=-1).to(self.device)
 
-        with pyro.plate('data', X.shape[0], subsample_size=batch_size, device=self.device) as ix:
+
+        with pyro.plate('data', A.shape[0], subsample_size=batch_size, device=self.device) as ix:
             batch_X = X[ix]   
-            batch_A = A[ix]   
+            batch_A = A[ix] 
+ 
 
             z = self.init["z"].expand(batch_X.shape[0], self.z_size).to(self.device) if prev_z is None else prev_z
             h = self.init["h"].expand(batch_X.shape[0], self.rnn_hidden_size).to(self.device) if prev_h is None else prev_h
             c = self.init["c"].expand(batch_X.shape[0], self.rnn_hidden_size).to(self.device) if prev_c is None else prev_c
 
             Z = []
-            for t in range(batch_X.shape[1]):
+            for t in range(batch_A.shape[1]):
                 z, h, c = self.guide_step(t=t, a=batch_A[:, t, :], prev_z=z, prev_h=h, prev_c=c)
                 Z.append(z)
             Z = torch.stack(Z).transpose(0,1)
@@ -413,6 +415,7 @@ class BayesianSequenceModel(nn.Module):
         h, c = self.networks["rnn"](rnn_input, (prev_h, prev_c))
         z_loc, z_scale, sigma_loc, sigma_scale = self.networks["encoder"](h)   # could also encode(x, h)
 
+        # print(self.t)
         z = pyro.sample("z_{}".format(t),
                         dist.Normal(z_loc, z_scale)
                             .to_event(1) 
@@ -420,7 +423,8 @@ class BayesianSequenceModel(nn.Module):
         # sigma = pyro.sample("sigma_{}".format(t),
         #         dist.Normal(sigma_loc, sigma_scale)
         #             .to_event(1) 
-        #         )       
+        #         )     
+          
         return z, h, c
 
     def model(self, X, A, Y, batch_size):
@@ -433,19 +437,23 @@ class BayesianSequenceModel(nn.Module):
             batch_A = A[ix]
             batch_Y = Y[ix] if Y is not None else None
 
-            Y_hat, Z = self.prior(X=batch_X, N=batch_X.shape[0], T=batch_X.shape[1])    
+            Y_hat, Z = self.prior(X=batch_X, N=batch_X.shape[0], T=batch_A.shape[1])    
             O = []
             
-            for t in range(X.shape[1]):
+            # standardize outputs before computing loss!!!
+            Y_hat_standardized = Y_hat#(Y_hat-Y_hat.mean(dim=0)) / Y_hat.std(dim=0)
+            Y_standardized = batch_Y if Y is not None else None#(batch_Y-batch_Y.mean(dim=0)) / batch_Y.std(dim=0) if Y is not None else None
+            
+            for t in range(A.shape[1]):
                 obs = pyro.sample('obs_{}'.format(t),
-                                dist.Normal(loc=Y_hat[:, t, :], scale=self.likelihood_std*torch.ones(Y_hat[:, t, :].shape[0], Y_hat[:, t, :].shape[1]).to(self.device))
+                                dist.Normal(loc=Y_hat_standardized[:, t, :], scale=self.likelihood_std*torch.ones(Y_hat_standardized[:, t, :].shape[0], Y_hat_standardized[:, t, :].shape[1]).to(self.device))
                                     .to_event(1),
-                            obs=batch_Y[:, t, :] if batch_Y is not None else None
+                            obs=Y_standardized[:, t, :] if Y_standardized is not None else None
                             )
                 O.append(obs)
 
             O = torch.stack(O).transpose(0,1)
-        
+                
         return Y_hat.data.cpu().numpy(), Z.data.cpu().numpy(), O.data.cpu().numpy()
 
     def prior(self, X, N, T):
@@ -465,6 +473,55 @@ class BayesianSequenceModel(nn.Module):
         y = self.networks["decoder"](x, z)
         return y, z
 
+    # EXPERIMENTAL: DON'T USE
+    def forward_custom(self, X, A, Y, batch_size, prev_z=None, prev_h=None, prev_c=None):
+        #------------------ENCODE-------------------
+        batch_X = X[:]   
+        batch_A = A[:] 
+
+        z = self.init["z"].expand(batch_X.shape[0], self.z_size).to(self.device) if prev_z is None else prev_z
+        h = self.init["h"].expand(batch_X.shape[0], self.rnn_hidden_size).to(self.device) if prev_h is None else prev_h
+        c = self.init["c"].expand(batch_X.shape[0], self.rnn_hidden_size).to(self.device) if prev_c is None else prev_c
+
+        Z = []
+        for t in range(batch_A.shape[1]):
+            # guide step
+            a=batch_A[:, t, :]
+            prev_z=z
+            prev_h=h
+            prev_c=c
+            # guide step
+            rnn_input = torch.cat([a, prev_z], dim=-1)
+            h, c = self.networks["rnn"](rnn_input, (prev_h, prev_c))
+            z_loc, z_scale, sigma_loc, sigma_scale = self.networks["encoder"](h)   # could also encode(x, h)
+
+            # print(self.t)
+            z = pyro.sample("z_{}".format(self.t),
+                            dist.Normal(z_loc, z_scale)
+                                # .to_event(1) 
+                            )    
+            Z.append(z)
+        Z = torch.stack(Z).transpose(0,1)
+
+        self.guide_cache = {
+            # "ix"    :   ix.data.cpu().numpy(),
+            "z_prev":   z.data.cpu().numpy(),
+            "h_prev":   h.data.cpu().numpy(),
+            "c_prev":   c.data.cpu().numpy()
+        }
+        #------------------ENCODE-------------------
+        #------------------DECODE-------------------
+        Y = []
+        for t in range(batch_A.shape[1]):
+            # prior step
+            x=X[:, 0, :]
+            # prior step
+            z = Z[:, t, :]
+            y = self.networks["decoder"](x, z)
+            Y.append(y)
+        Y = torch.stack(Y).transpose(0,1)
+        return Y, Z
+    
     def loss(self, X, A, Y, batch_size):
         trace = poutine.trace(self.guide).get_trace(X=X, A=A, Y=Y, batch_size=batch_size)
         batch_Y_hat, batch_Z = poutine.replay(self.prior, trace=trace)(X=X[self.guide_cache["ix"]], N=batch_size, T=X.shape[1])
@@ -495,6 +552,32 @@ class BayesianSequenceModel(nn.Module):
         O = np.array(O)
         return Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1])), O.reshape((O.shape[1], O.shape[0], O.shape[-1]))
 
+    # EXPERIMENTAL: DON'T USE
+    def predict_experimental(self, x, A, Y=None):
+        # X has shape (N, 1, D)
+        # A has shape (N, T, D) for T actions
+        N = x.shape[0]
+        T = A.shape[1]
+        Y_hat = []
+        O = []
+        z, h, c = None, None, None
+        print(N)
+        for t in range(0, T):
+            self.t = t
+            a = A[:, t:t+1, :]
+            y = Y[:, t:t+1, :] if Y is not None else None
+            if z is None:
+                y_hat, _ = self.forward_custom(X=x, A=a, Y=y, batch_size=N)
+            else:
+                y_hat, _ = self.forward_custom(X=x, A=a, Y=y, batch_size=N, prev_z=z, prev_h=h, prev_c=c)
+            z, h, c = torch.from_numpy(self.guide_cache["z_prev"]).to(self.device), torch.from_numpy(self.guide_cache["h_prev"]).to(self.device), torch.from_numpy(self.guide_cache["c_prev"]).to(self.device)
+            # print(z.shape, h.shape, c.shape)
+            
+            Y_hat.append(y_hat.data.cpu().numpy())
+        Y_hat = np.array(Y_hat)
+        # O = np.array(O)
+        return Y_hat.reshape((Y_hat.shape[1], Y_hat.shape[0], Y_hat.shape[-1])), None#O.reshape((O.shape[1], O.shape[0], O.shape[-1]))
+
     def predict(self, x, A, Y=None):
         # X has shape (N, 1, D)
         # A has shape (N, T, D) for T actions
@@ -504,6 +587,7 @@ class BayesianSequenceModel(nn.Module):
         O = []
         z, h, c = None, None, None
         for t in range(0, T):
+            self.t = t
             a = A[:, t:t+1, :]
             y = Y[:, t:t+1, :] if Y is not None else None
             trace = None
@@ -513,6 +597,7 @@ class BayesianSequenceModel(nn.Module):
                 trace = poutine.trace(self.guide).get_trace(X=x, A=a, Y=y, batch_size=N, prev_z=z, prev_h=h, prev_c=c)
             z, h, c = torch.from_numpy(self.guide_cache["z_prev"]).to(self.device), torch.from_numpy(self.guide_cache["h_prev"]).to(self.device), torch.from_numpy(self.guide_cache["c_prev"]).to(self.device)
             y_hat, _, o = poutine.replay(self.model, trace=trace)(X=x, A=a, Y=None, batch_size=N)
+            # y_hat, o = poutine.replay(self.prior, trace=trace)(X=x, N=N, T=1)
             O.append(o)
             Y_hat.append(y_hat)
         Y_hat = np.array(Y_hat)
@@ -544,6 +629,33 @@ class BayesianSequenceModel(nn.Module):
             Os.append(O)
         Y_hats, Os = np.array(Y_hats), np.array(Os)
         v = torch.Tensor(Y_hats)
+
+        # COMPUTE STATS
+        site_stats = {
+            "mean": torch.mean(v, 0),
+            "std": torch.std(v, 0),
+            "5%": v.kthvalue(int(len(v) * 0.05), dim=0)[0],
+            "95%": v.kthvalue(int(len(v) * 0.95), dim=0)[0],
+        }
+
+        Y_hat_mean = site_stats["mean"]
+        Y_hat_std = site_stats["std"]
+        Y_hat_lower = site_stats["5%"]
+        Y_hat_upper = site_stats["95%"]
+        
+        return Y_hat_mean.data.cpu().numpy(), Y_hat_std.data.cpu().numpy(), Y_hat_lower.data.cpu().numpy(), Y_hat_upper.data.cpu().numpy()
+
+    # WORKING
+    def predict_with_uncertainty_vectorized(self, x, A, Y=None, samples=100):
+        x = x.repeat(samples, 1, 1)
+        A = A.repeat(samples, 1, 1)
+        Y = Y.repeat(samples, 1, 1)
+
+        trace = poutine.trace(self.guide).get_trace(X=x, A=A, Y=Y, batch_size=samples)
+        Y_hat, _, O = poutine.replay(self.model, trace=trace)(X=x, A=A, Y=Y, batch_size=samples)
+
+        Y_hat, O = Y_hat[:, np.newaxis, :, :], O[:, np.newaxis, :, :]
+        v = torch.Tensor(Y_hat)
 
         # COMPUTE STATS
         site_stats = {

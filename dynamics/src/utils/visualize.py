@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 from pandas import DataFrame
 import math
 from IPython import display
+import plotly.graph_objects as go
+
 
 def plot_multimodel_velocity_curve(true, pred, axis=None):
     data = DataFrame()
@@ -50,6 +52,36 @@ def plot_position_curve(true, pred, axis=None):
         plt.axis('equal')
     plt.show()
 
+def plot_2D_position_curve(trueX, trueY, predX, predY, axis=None):
+    fig, ax = plt.subplots()
+    ax.plot(trueX, trueY, c="g", label="y")
+    ax.plot(predX, predY, c="r", label="y")
+    ax.set_ylabel("y-position")
+    ax.set_xlabel("x-position")
+  
+    if axis == 'equal':
+        plt.axis('equal')
+    plt.minorticks_on()
+    plt.grid(b=True, which='minor', color='#999999', linestyle='-', alpha=0.5)
+    plt.grid(b=True, which='major', color='#999999', linestyle='-', alpha=0.5)
+
+    plt.show()
+
+def plot_multimodel_2D_position_curve(trueX, trueY, predX, predY, xlabel='x', ylabel='y', axis=None):
+    colors= ["r", "b", "y"]
+    fig, ax = plt.subplots()
+    ax.plot(trueX, trueY, c="g", label="y")
+    for i in range(len(predX)):
+        ax.plot(predX[i], predY[i], c=colors[i], label="yhat"+str(i))
+    ax.set_ylabel(xlabel)
+    ax.set_xlabel(ylabel)
+
+    if axis == 'equal':
+        plt.axis('equal')
+    plt.minorticks_on()
+    plt.grid(b=True, which='minor', color='#999999', linestyle='-', alpha=0.5)
+    plt.grid(b=True, which='major', color='#999999', linestyle='-', alpha=0.5)
+
 def get_position_curve(title, true, pred):
     fig, ax = plt.subplots()
     ax.plot(true, c="g", label="y")
@@ -66,6 +98,61 @@ def plot_velocity_curve_with_uncertainty(true, pred, error1, error2):
     data["+std"] = error2
     data.plot(legend=True)
     plt.show()
+
+def plot_curve_plotly(true, pred):
+    # Create traces
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(y=true,
+                        mode='lines',
+                        name='y'))
+    fig.add_trace(go.Scatter(y=pred,
+                        mode='lines',
+                        name='y_hat'))
+    fig.show()
+
+def plot_curve_with_uncertainty_shaded_plotly(true, pred, error1, error2):
+    # Create traces
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(y=pred,
+                    mode='lines',
+                    name='y_hat'))    
+
+    fig.add_trace(go.Scatter(y=error2,
+                        mode='lines',
+                        name='upper bound'
+                        ))
+
+    fig.add_trace(go.Scatter(y=error1,
+                        mode='lines',
+                        name='lower bound'))
+    
+    fig.add_trace(go.Scatter(y=true,
+                        mode='lines',
+                        name='y'))
+    
+    fig.show()
+
+def plot_xy_curve_with_uncertainty_shaded_plotly(true, pred, error1, error2):
+    # Create traces
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=pred[0], y=pred[1],
+                    mode='lines',
+                    name='y_hat'))    
+
+    fig.add_trace(go.Scatter(x=error2[0], y=error2[1],
+                        mode='lines',
+                        name='upper bound'
+                        ))
+
+    fig.add_trace(go.Scatter(x=error1[0], y=error1[1],
+                        mode='lines',
+                        name='lower bound'))
+    
+    fig.add_trace(go.Scatter(x=true[0], y=true[1],
+                        mode='lines',
+                        name='y'))
+    
+    fig.show()
 
 def plot_velocity_curve_with_uncertainty_shaded(true, pred, error1, error2, axis=None):
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(12, 6), sharey=True)
@@ -221,3 +308,4 @@ def compare_multimodel_states(Y, Y_hats):
     for i in range(Y.shape[0]):
         pred = [Y_hats[j][i, 5::2] for j in range(len(Y_hats))]
         plot_multimodel_links_side_by_side(true=Y[i, 5::2], pred=pred)
+

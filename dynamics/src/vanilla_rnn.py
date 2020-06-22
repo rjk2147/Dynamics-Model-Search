@@ -86,7 +86,6 @@ class SequenceModel(nn.Module):
         return self.loss(self.normalize(y_hat), self.normalize(y))
     
     
-
 class Trainer:
     def __init__(self, model, device, learing_rate=1e-5):
         self.model = model

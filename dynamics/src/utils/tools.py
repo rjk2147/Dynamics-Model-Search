@@ -15,8 +15,8 @@ def repeat(X, repeat=100):
 def standardize_across_time(X):
     mu = np.mean(X, axis=1)
     sigma = np.std(X, axis=1)
-    mu_repeated = repeat(mu, repeat=100)
-    sigma_repeated = repeat(sigma, repeat=100)
+    mu_repeated = repeat(mu, repeat=X.shape[1])
+    sigma_repeated = repeat(sigma, repeat=X.shape[1])
     return (X-mu_repeated)/sigma_repeated
 
 def standardize_across_samples(X, mu=None, sigma=None, params=False):

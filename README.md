@@ -34,7 +34,7 @@ python3 main.py --env PongNoFrameskip-v4 --rl DQN --model-arch seq-cnn --atari
 ~~~~
 To train SAC without DMS just using the pure RL baseline on HalfCheetah:
 ~~~~
-python3 main.py --env HalfCheetahBulletEnv-v0 --rl SAC --planner none--planner none --model-arch none
+python3 main.py --env HalfCheetahBulletEnv-v0 --rl SAC --planner none --model-arch none
 ~~~~
 To train just the dynamics model using the "rnn" model architecture on Humanoid:
 ~~~~

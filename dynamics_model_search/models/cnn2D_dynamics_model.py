@@ -4,120 +4,53 @@ import torch
 from torch import nn, optim
 from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
-
+import torchaudio
 import torch.nn.functional as F
 import time
 from collections import deque
 
-def conv2d_bn_relu(inch,outch,kernel_size,stride=1,padding=0):
-    convlayer = torch.nn.Sequential(
-        torch.nn.Conv2d(inch,outch,kernel_size=kernel_size,stride=stride,padding=padding),
-        torch.nn.BatchNorm2d(outch),
-        torch.nn.ReLU()
-    )
-    return convlayer
-
-def conv2d_bn_sigmoid(inch,outch,kernel_size,stride=1,padding=0):
-    convlayer = torch.nn.Sequential(
-        torch.nn.Conv2d(inch,outch,kernel_size=kernel_size,stride=stride,padding=padding),
-        torch.nn.BatchNorm2d(outch),
-        torch.nn.Sigmoid()
-    )
-    return convlayer
-
-def deconv_sigmoid(inch,outch,kernel_size,stride=1,padding=0):
-    convlayer = torch.nn.Sequential(
-        torch.nn.ConvTranspose2d(inch,outch,kernel_size=kernel_size,stride=stride,padding=padding),
-        torch.nn.Sigmoid()
-    )
-    return convlayer
-
-def deconv_relu(inch,outch,kernel_size,stride=1,padding=0):
-    convlayer = torch.nn.Sequential(
-        torch.nn.ConvTranspose2d(inch,outch,kernel_size=kernel_size,stride=stride,padding=padding),
-        torch.nn.BatchNorm2d(outch),
-        torch.nn.ReLU()
-    )
-    return convlayer
-
-def product(l):
-    p = 1
-    for i in l:
-        p *= i
-    return p
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def conv1d_out_dim(layer):
+    l_out = 0
+    return l_out
+
 class SeqCNNModel(nn.Module):
-    def __init__(self, state_dim, act_dim):
+    def __init__(self, state_dim, act_dim, seq_len=10):
         super(SeqCNNModel, self).__init__()
         self.state_dim = list(state_dim)
-        state_size = product(state_dim)
-        w, h, c = state_dim
+        self.state_size = sum(self.state_dim)
         self.act_dim = act_dim
-        self.h = None
+        self.seq_len = seq_len
 
-        num_recurrent_layers = 1
+        self.fourier = False
+        self.spectrogram = True
+        channels = 1
+        if self.fourier:
+            channels = 2
+        if self.spectrogram:
+            channels = self.state_size+self.act_dim
+            self.spec = torchaudio.transforms.Spectrogram(int(seq_len/2))
+        self.cnn1 = nn.Conv2d(channels, 32, 2)
+        self.cnn2 = nn.Conv2d(32, 64, 2)
+        self.cnn3 = nn.Conv2d(64, 128, 2)
 
-        self.latent_size = 256
-        self.norm_mean = np.array([0]).astype(np.float32)
-        self.norm_std = np.array([1]).astype(np.float32)
-
-        # Encode
-        self.conv1 = conv2d_bn_relu(4, 16, kernel_size=5, stride=2)
-        self.conv2 = conv2d_bn_relu(16, 32, kernel_size=5, stride=2)
-        self.conv3 = conv2d_bn_relu(32, 32, kernel_size=5, stride=2)
-
-        # Number of Linear input connections depends on output of conv2d layers
-        # and therefore the input image size, so compute it.
-        def conv2d_size_out(size, kernel_size = 5, stride = 2):
-            return (size - (kernel_size - 1) - 1) // stride  + 1
-        convw = conv2d_size_out(conv2d_size_out(conv2d_size_out(w)))
-        convh = conv2d_size_out(conv2d_size_out(conv2d_size_out(h)))
-        linear_input_size = convw * convh * 32
-
-        # RNN
-        self.rnn = nn.GRU(linear_input_size+act_dim, self.latent_size, num_recurrent_layers)
-
-        # Decode
-        self.layer1 = nn.Linear(self.latent_size, self.latent_size)
-        self.fc_out = nn.Linear(self.latent_size, state_size)
-
-    def encode(self, x):
-        out = []
-        for i in range(x.shape[0]):
-            # From N, W, H, C to N, C, H, W
-            x_i = x[i].permute(0, 3, 2, 1).to(torch.float)
-            x_i = self.conv1(x_i)
-            x_i = self.conv2(x_i)
-            x_i = self.conv3(x_i)
-            out.append(x_i.view(x_i.size(0), -1).unsqueeze(0))
-        return torch.cat(out)
-
-    def decode_linear(self, x):
-        x = self.layer1(x)
-        x = torch.relu(x)
-        x = F.sigmoid(self.fc_out(x))
-        reshape_tuple = [x.shape[i] for i in range(len(x.shape)-1)]
-        reshape_tuple.extend(self.state_dim)
-        x = x.view(reshape_tuple)
-        return x
-
-    def decode(self, x):
-        return self.decode_linear(x)
-
-    def reset(self):
-        return torch.ones((1,1,self.latent_size))
-
-    def get_device(self):
-        return self.fc_out._parameters['weight'].device
-
-    # seq_len, batch_len, w, h, c
-    def pred(self, x, a, h=None):
-        x_enc = self.encode(x)
-        tmp_in = torch.cat([x_enc, a.to(torch.float)], dim=-1)
-        out_enc, enc_h = self.rnn(tmp_in, h)
-        out_tmp = self.decode(out_enc)
-        return out_tmp, enc_h
+        # Obviously suboptimal but only called once for initialization
+        def get_conv_dim():
+            seq_len = self.seq_len
+            if self.fourier:
+                seq_len = int(self.seq_len/2) + 1
+            if self.spectrogram:
+                tmp = torch.zeros(1, seq_len, self.state_size+self.act_dim)
+                tmp = torch.log(self.spec.forward(tmp.transpose(1, -1)))
+            else:
+                tmp = torch.zeros(1, channels, self.state_size + self.act_dim, seq_len)
+            c1 = self.cnn1(tmp)
+            c2 = self.cnn2(c1)
+            c3 = self.cnn3(c2)
+            d = len(c3.flatten())
+            return d
+        self.mlp1 = nn.Linear(get_conv_dim(), self.state_size)
 
     def normalize(self, x):
         return (x-torch.from_numpy(self.norm_mean).to(x.device)) / torch.from_numpy(self.norm_std).to(x.device)
@@ -125,41 +58,58 @@ class SeqCNNModel(nn.Module):
     def unnormalize(self, x):
         return x*torch.from_numpy(self.norm_std).to(x.device) + torch.from_numpy(self.norm_mean).to(x.device)
 
-    def forward(self, x, a, h=None, y=None):
-        if h is None:
-            h = torch.ones((x.shape[0], 1, self.latent_size)).to(x.device)
-        obs = x.transpose(0, 1)
-        act = a.transpose(0, 1)
-        h = h.transpose(0,1)
+    def reset(self):
+        h = torch.zeros(1, self.state_size+self.act_dim, self.seq_len).to(device)
+        return h
 
-        seq_out, seq_h = self.pred(obs, act, h)
-        # seq_out = self.normalize(seq_out)
-        single_out = seq_out[0]
-        final_out = seq_out[-1]
-        if y is not None:
-            new_obs = y.transpose(0, 1)
-            # new_obs = self.normalize(new_obs)
-            single = torch.abs(seq_out[0]-new_obs[0])
-            final = torch.abs(seq_out[-1]-new_obs[-1])
-            seq_errors = torch.abs(seq_out-new_obs)
-            e = torch.mean(seq_errors, -1)
-            e = torch.mean(e, -1)
-            return torch.mean(single), torch.mean(seq_errors), torch.mean(final), single_out, seq_out, final_out
+    def forward(self, x, a, h=None, y=None):
+        all_input = torch.cat([x,a], -1).transpose(1, 2)
+        input_buffer = all_input.split(1, -1)
+
+        if h is None:
+            buffer = torch.zeros(1, self.state_size, self.seq_len).to(x.device)
         else:
-            return seq_out.to(torch.uint8), seq_h.transpose(0, 1)
+            buffer = h
+        buffer = buffer.split(1, -1)
+        buffer = deque(buffer, maxlen=len(buffer))
+        for input in input_buffer:
+            buffer.append(input)
+        buffer = torch.cat(list(buffer), -1)
+        input_buffer = buffer
+        if self.fourier:
+            input_buffer = torch.rfft(buffer, 2)
+            input_buffer = input_buffer.transpose(1, -1)
+        elif self.spectrogram:
+            input_buffer = self.spec.forward(buffer)
+
+        c1 = torch.relu(self.cnn1(input_buffer))
+        c2 = torch.relu(self.cnn2(c1))
+        c3 = torch.relu(self.cnn3(c2))
+        c3_flat = c3.flatten(1)
+        pred_out = self.mlp1(c3_flat)
+        # pred_out += x.transpose(0,1)[-1]
+        if y is not None:
+            #pred_out = self.normalize(pred_out)
+            new_obs = y.transpose(0, 1)
+
+            #new_obs = self.normalize(new_obs[-1])
+            seq_errors = torch.abs(pred_out-new_obs[-1])
+            return torch.mean(seq_errors)
+        else:
+            return pred_out, buffer
 
 class SeqCNNDynamicsModel(DynamicsModel):
-    def __init__(self, env_in, dev=None, seq_len=100):
+    def __init__(self, env_in, dev=None, seq_len=10):
         DynamicsModel.__init__(self, env_in)
-        self.lr = 1e-5
+        self.lr = 1e-3
         self.is_reset = False
-        self.val_seq_len = seq_len
+        self.val_seq_len = 100
         self.train_seq = 1
         self.look_ahead_per_epoch = 1
         self.batch_size = 64
         self.max_seq_len = seq_len
         
-        self.model = SeqCNNModel(self.state_dim, self.act_dim)
+        self.model = SeqCNNModel(self.state_dim, self.act_dim, self.max_seq_len)
         if dev is None:
             self.model.to(device)
             self.device = device
@@ -230,10 +180,10 @@ class SeqCNNDynamicsModel(DynamicsModel):
         Xs = torch.from_numpy(np.array([step[0] for step in data]).astype(np.float32)).to(self.device)
         As = torch.from_numpy(np.array([step[1] for step in data]).astype(np.float32)).to(self.device)
         Ys = torch.from_numpy(np.array([step[2] for step in data]).astype(np.float32)).to(self.device)
-        single, seq, final, single_out, seq_out, final_out = self.model(Xs, As, None, Ys)
-        seq.backward()
+        loss = self.model(Xs, As, None, Ys)
+        loss.backward()
         self.optimizer.step()
-        return single.item(), seq.item(), final.item()
+        return loss.item()
 
     def train_epoch(self, data):
         import sys, math
@@ -293,7 +243,7 @@ class SeqCNNDynamicsModel(DynamicsModel):
         else:
             return obs_in, h
 
-    def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None):
+    def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
         self.model.eval()
         if obs_in is not None and state_in:
             state_in = torch.cat(obs_in[1])
@@ -329,9 +279,13 @@ class SeqCNNDynamicsModel(DynamicsModel):
         if new_obs.shape[0] == 1:
             new_obs = new_obs.squeeze(0)
         if state:
+            if certainty:
+                return new_obs, state_out.detach(), torch.ones_like(new_obs)
             return new_obs, state_out.detach()
         else:
+            if certainty:
+                return new_obs, torch.ones_like(new_obs)
             return new_obs
 
-    def step(self, action_in, obs_in=None, save=True, state=False, state_in=None):
-        return self.step_parallel(action_in, obs_in, save, state, state_in)
+    def step(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
+        return self.step_parallel(action_in, obs_in, save, state, state_in, certainty)

@@ -117,15 +117,15 @@ class MDRNNModel(nn.Module):
             return seq_out, sd, seq_h.transpose(0, 1)
 
 class MDRNNDynamicsModel(DynamicsModel):
-    def __init__(self, env_in, dev=None):
+    def __init__(self, env_in, dev=None, seq_len=100):
         DynamicsModel.__init__(self, env_in)
         self.lr = 1e-5
         self.is_reset = False
-        self.val_seq_len = 100
+        self.val_seq_len = seq_len
         self.train_seq = 1
         self.look_ahead_per_epoch = 1
         self.batch_size = 64
-        self.max_seq_len = 100
+        self.max_seq_len = seq_len
         
         self.model = MDRNNModel(self.state_dim, self.act_dim)
         if dev is None:

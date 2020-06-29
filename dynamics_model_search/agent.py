@@ -9,10 +9,8 @@ import os
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-
 class Agent:
     def __init__(self, dynamics_model, rl, planner, batch_size=512, replay_size=1e5, seq_len=10):
-        self.act_mul_const = dynamics_model.act_mul_const
         self.from_update = 0
         self.batch_size = batch_size
 
@@ -20,10 +18,14 @@ class Agent:
         self.seq_len = seq_len
         self.rl_learner = rl
         self.planner = planner
-        self.model.model.train()
 
         replay_size = max(replay_size, batch_size)
-        self.model.replay = deque(maxlen=int(replay_size))
+        if dynamics_model is not None:
+            self.act_mul_const = dynamics_model.act_mul_const
+            self.model.model.train()
+            self.model.replay = deque(maxlen=int(replay_size))
+        else:
+            self.act_mul_const = 1.0
         
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
@@ -95,8 +97,9 @@ class Agent:
         return self.run(training=False, env=env, max_timesteps=max_timesteps)
 
     def run(self, training, env, max_timesteps=1e6):
-        self.model.max_seq_len = self.seq_len
-        self.seq_len = self.model.max_seq_len
+        if self.model is not None:
+            self.model.max_seq_len = self.seq_len
+            # self.seq_len = self.model.max_seq_len
         self.x_seq = deque(maxlen=self.seq_len)
         self.a_seq = deque(maxlen=self.seq_len)
         self.y_seq = deque(maxlen=self.seq_len)
@@ -166,7 +169,8 @@ class Agent:
             if training:
                 print('Models saved to '+str(self.save_str))
                 self.rl_learner.save(self.save_str)
-                self.model.save(self.save_str+'_self_model.pt')
+                if self.model is not None:
+                    self.model.save(self.save_str+'_self_model.pt')
             else:
                 obs_lists.append(obs_list)
             self.ep_rs.append(ep_r)

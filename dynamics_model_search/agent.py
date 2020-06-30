@@ -29,7 +29,12 @@ class Agent:
         
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
-        self.save_str = 'rl_models/'+datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
+        self.save_str = 'rl_models/'+datetime.datetime.now().strftime("%Y-%m-%d-%H_%M_%S")
+
+        # Modifed By Yu
+        from torch.utils.tensorboard import SummaryWriter
+        self.writer = SummaryWriter('runs/test')
+        self.ite_num = 0
 
     def print_stats(self):
         if self.ep_lens and len(self.ep_rs) > 0:
@@ -49,6 +54,16 @@ class Agent:
         if self.start_time:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
         print('--------------------------------------\n')
+        # Modifed By Yu
+        self.ite_num += 1
+        if self.ite_num < 10:
+            self.writer.add_scalar('Reward',
+                              self.ep_rs[-1],
+                              self.steps-100)
+        else:
+            self.writer.close()
+
+
 
     def rl_update(self, batch_size=256):
         if len(self.rl_learner.replay) > batch_size:

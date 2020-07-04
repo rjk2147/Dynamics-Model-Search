@@ -7,6 +7,9 @@ import random
 import datetime
 import os
 
+from model_free.DQN import DQN
+from model_free.DDQN import DDQN
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Agent:
@@ -33,8 +36,17 @@ class Agent:
 
         # Modifed By Yu
         from torch.utils.tensorboard import SummaryWriter
-        self.writer = SummaryWriter('runs/test')
-        self.ite_num = 0
+        self.writer1 = SummaryWriter('runs/DQN')
+        self.writer2 = SummaryWriter('runs/DDQN')
+        if isinstance(self.rl_learner, DQN):
+            self.writer = self.writer1
+            print("Logged in runs/DQN.")
+        elif isinstance(self.rl_learner, DDQN):
+            self.writer = self.writer2
+            print("Logged in runs/DDQN.")
+        else:
+            print('error')
+        self.s = 0
 
     def print_stats(self):
         if self.ep_lens and len(self.ep_rs) > 0:
@@ -55,14 +67,14 @@ class Agent:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
         print('--------------------------------------\n')
         # Modifed By Yu
-        self.ite_num += 1
         # os.system("tensorboard --logdir runs/test")
-        if self.ite_num < 100:
-            self.writer.add_scalar('Reward',
-                              self.ep_rs[-1],
-                              self.steps-100)
-        else:
-            self.writer.close()
+        # print(self.rl_learner)
+        self.writer.add_scalar('Reward',
+                          self.ep_rs[-1],
+                          self.steps)
+        if self.ep_rs[-1] > 20:
+            print('Target achived!')
+        # self.writer.close()
 
 
 

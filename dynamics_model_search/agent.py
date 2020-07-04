@@ -56,7 +56,8 @@ class Agent:
         print('--------------------------------------\n')
         # Modifed By Yu
         self.ite_num += 1
-        if self.ite_num < 10:
+        # os.system("tensorboard --logdir runs/test")
+        if self.ite_num < 100:
             self.writer.add_scalar('Reward',
                               self.ep_rs[-1],
                               self.steps-100)

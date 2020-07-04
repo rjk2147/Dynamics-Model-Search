@@ -57,6 +57,9 @@ if __name__ == '__main__':
     else:
         env = gym.make(args.env)
 
+    # modified by yu
+    env.render()
+
     if args.seed is not None:
         torch.manual_seed(args.seed)
         if torch.cuda.is_available():

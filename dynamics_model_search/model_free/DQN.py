@@ -273,15 +273,16 @@ class DQNCNNModel(nn.Module):
             num_actions: number of action-value to output, one-to-one correspondence to action in game.
         """
         super(DQNCNNModel, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=8, stride=4)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
-        self.fc4 = nn.Linear(7 * 7 * 64, 512)
+        self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=(8,1), stride=4)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=(4,1), stride=2)  # 4 default refers to (4*4), different to 4*1
+        self.conv3 = nn.Conv2d(64, 64, kernel_size=(3,1), stride=1)
+        self.fc4 = nn.Linear(1 * 7 * 64, 512)
         self.fc5 = nn.Linear(512, num_actions)
 
     def forward(self, x):
         x = x / 255.0
         # From N, W, H, C to N, C, H, W
+        # print(x.size())
         x = x.permute(0, 3, 2, 1)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
@@ -377,6 +378,7 @@ class DQN:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Initialize target q function and q function
+        # input_arg = frame_history_len
         self.Q = DQNModel(input_arg, self.num_actions).type(dtype).to(self.device)
         self.target_Q = DQNModel(input_arg, self.num_actions).type(dtype).to(self.device)
 
@@ -396,6 +398,7 @@ class DQN:
             state = state.type(dtype).to(self.device)
         else:
             state = torch.from_numpy(state).type(dtype).to(self.device)
+        # print(Variable(state, volatile=True))
         max_act = self.Q(Variable(state, volatile=True)).data.max(1)[1]
         if sample > eps_threshold and self.steps > self.learning_starts:
             return max_act

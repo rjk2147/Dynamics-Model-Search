@@ -46,7 +46,6 @@ class Agent:
             print("Logged in runs/DDQN.")
         else:
             print('error')
-        self.s = 0
 
     def print_stats(self):
         if self.ep_lens and len(self.ep_rs) > 0:

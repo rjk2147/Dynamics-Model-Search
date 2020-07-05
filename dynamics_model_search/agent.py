@@ -215,6 +215,6 @@ class Agent:
             self.u = 0
             if self.avg_train_loss is not None:
                 self.avg_train_loss = None
-        self.planner.exit()
+        # self.planner.exit()
         if not training:
             return obs_lists

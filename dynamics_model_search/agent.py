@@ -161,7 +161,14 @@ class Agent:
                 else:
                     act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     ex_r = 0
-                new_obs, r, done, info = env.step(act*self.act_mul_const)
+                # modified by yu
+                # action.int()
+                action = act*self.act_mul_const
+                if type(action) == int:
+                    pass
+                else:
+                    action = action.astype(int)
+                new_obs, r, done, info = env.step(action)
 
                 if self.planner is not None and self.model is not None:
                     # TODO: Efficiently pass this h value from the search since it is already calculated

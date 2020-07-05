@@ -306,7 +306,7 @@ class DQN:
         exploration=LinearSchedule(1000000, 0.1),
         replay_buffer_size=100000,
         gamma=0.99,
-        lr=0.00015,
+        lr=0.0001,
         alpha = 0.95,
         eps = 0.01,
         learning_starts=10000,

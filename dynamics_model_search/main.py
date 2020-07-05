@@ -58,7 +58,7 @@ if __name__ == '__main__':
         env = gym.make(args.env)
 
     # modified by yu
-    env.render()
+    # env.render()
 
     if args.seed is not None:
         torch.manual_seed(args.seed)

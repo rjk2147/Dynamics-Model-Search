@@ -304,7 +304,7 @@ class DQN:
     def __init__(self,
         env,
         exploration=LinearSchedule(1000000, 0.1),
-        replay_buffer_size=10000,
+        replay_buffer_size=50000,
         gamma=0.99,
         lr=0.00008,
         alpha = 0.90,
@@ -312,7 +312,7 @@ class DQN:
         learning_starts=50000,
         learning_freq=4,
         frame_history_len=4,
-        target_update_freq=10000
+        target_update_freq=50000
         ):
 
         """Run Deep Q-learning algorithm.

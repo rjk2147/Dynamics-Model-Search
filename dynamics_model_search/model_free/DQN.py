@@ -304,7 +304,7 @@ class DQN:
     def __init__(self,
         env,
         exploration=LinearSchedule(1000000, 0.1),
-        replay_buffer_size=80000,
+        replay_buffer_size=90000,
         gamma=0.99,
         lr=0.00008,
         alpha = 0.90,
@@ -413,7 +413,7 @@ class DQN:
         value = self.Q(Variable(state, volatile=True)).data.max(1)[0].unsqueeze(1)
         return value
 
-    def update(self, batch_size=32, num_param_updates=0):
+    def update(self, batch_size=64, num_param_updates=0):
 
         ### Perform experience replay and train the network.
         # Note that this is only done if the replay buffer contains enough samples

@@ -52,7 +52,7 @@ class LinearSchedule(object):
         fraction  = min(float(t) / self.schedule_timesteps, 1.0)
         return self.initial_p + fraction * (self.final_p - self.initial_p)
 
-class PiecewiseSchedule(Schedule):
+class PiecewiseSchedule(object):
     """
     Piecewise schedule.
     :param endpoints: ([(int, int)])

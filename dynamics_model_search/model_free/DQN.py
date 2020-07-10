@@ -52,6 +52,43 @@ class LinearSchedule(object):
         fraction  = min(float(t) / self.schedule_timesteps, 1.0)
         return self.initial_p + fraction * (self.final_p - self.initial_p)
 
+class PiecewiseSchedule(Schedule):
+    """
+    Piecewise schedule.
+    :param endpoints: ([(int, int)])
+        list of pairs `(time, value)` meaning that schedule should output
+        `value` when `t==time`. All the values for time must be sorted in
+        an increasing order. When t is between two times, e.g. `(time_a, value_a)`
+        and `(time_b, value_b)`, such that `time_a <= t < time_b` then value outputs
+        `interpolation(value_a, value_b, alpha)` where alpha is a fraction of
+        time passed between `time_a` and `time_b` for time `t`.
+    :param interpolation: (lambda (float, float, float): float)
+        a function that takes value to the left and to the right of t according
+        to the `endpoints`. Alpha is the fraction of distance from left endpoint to
+        right endpoint that t has covered. See linear_interpolation for example.
+    :param outside_value: (float)
+        if the value is requested outside of all the intervals specified in
+        `endpoints` this value is returned. If None then AssertionError is
+        raised when outside value is requested.
+    """
+
+    def __init__(self, endpoints, interpolation=linear_interpolation, outside_value=None):
+        idxes = [e[0] for e in endpoints]
+        assert idxes == sorted(idxes)
+        self._interpolation = interpolation
+        self._outside_value = outside_value
+        self._endpoints = endpoints
+
+    def value(self, step):
+        for (left_t, left), (right_t, right) in zip(self._endpoints[:-1], self._endpoints[1:]):
+            if left_t <= step < right_t:
+                alpha = float(step - left_t) / (right_t - left_t)
+                return self._interpolation(left, right, alpha)
+
+        # t does not belong to any of the pieces, so doom.
+        assert self._outside_value is not None
+        return self._outside_value
+
 class ReplayBuffer(object):
     def __init__(self, size, frame_history_len):
         """This is a memory efficient implementation of the replay buffer.
@@ -303,13 +340,17 @@ class DQNLinearModel(nn.Module):
 class DQN:
     def __init__(self,
         env,
-        exploration=LinearSchedule(1000000, 0.1),
+        exploration=PiecewiseSchedule([
+            (0,        1.0),
+            (int(1e6), 0.1),
+            (int(1e7), 0.01)
+        ], outside_value=0.01),
         replay_buffer_size=90000,
         gamma=0.99,
-        lr=0.00008,
+        lr=0.0001,
         alpha = 0.90,
         eps = 0.01,
-        learning_starts=50000,
+        learning_starts=10000,
         learning_freq=4,
         frame_history_len=4,
         target_update_freq=10000

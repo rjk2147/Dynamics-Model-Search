@@ -351,17 +351,13 @@ class DQNLinearModel(nn.Module):
 class DQN:
     def __init__(self,
         env,
-        exploration=PiecewiseSchedule([
-            (0,        1.0),
-            (int(1e7), 0.1),
-            (int(1e8), 0.01)
-        ], outside_value=0.01),
+        exploration=LinearSchedule(1e6, 0.01),
         replay_buffer_size=90000,
         gamma=0.99,
         lr=0.00008,
         alpha = 0.90,
         eps = 0.01,
-        learning_starts=50000,
+        learning_starts=10000,
         learning_freq=4,
         frame_history_len=4,
         target_update_freq=10000
@@ -465,7 +461,7 @@ class DQN:
         value = self.Q(Variable(state, volatile=True)).data.max(1)[0].unsqueeze(1)
         return value
 
-    def update(self, batch_size=64, num_param_updates=0):
+    def update(self, batch_size=32, num_param_updates=0):
 
         ### Perform experience replay and train the network.
         # Note that this is only done if the replay buffer contains enough samples

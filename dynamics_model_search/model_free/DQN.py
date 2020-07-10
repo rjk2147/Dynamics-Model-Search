@@ -52,6 +52,17 @@ class LinearSchedule(object):
         fraction  = min(float(t) / self.schedule_timesteps, 1.0)
         return self.initial_p + fraction * (self.final_p - self.initial_p)
 
+def linear_interpolation(left, right, alpha):
+    """
+    Linear interpolation between `left` and `right`.
+    :param left: (float) left boundary
+    :param right: (float) right boundary
+    :param alpha: (float) coeff in [0, 1]
+    :return: (float)
+    """
+
+    return left + alpha * (right - left)
+
 class PiecewiseSchedule(object):
     """
     Piecewise schedule.

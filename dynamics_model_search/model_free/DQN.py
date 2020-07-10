@@ -351,7 +351,11 @@ class DQNLinearModel(nn.Module):
 class DQN:
     def __init__(self,
         env,
-        exploration=LinearSchedule(1e6, 0.01),
+        exploration=PiecewiseSchedule([
+            (0,        1.0),
+            (1e6, 0.1),
+            (2e6, 0.01)
+        ], outside_value=0.01),
         replay_buffer_size=90000,
         gamma=0.99,
         lr=0.00008,
@@ -362,7 +366,7 @@ class DQN:
         frame_history_len=4,
         target_update_freq=10000
         ):
-
+        # LinearSchedule(1e6, 0.1)
         """Run Deep Q-learning algorithm.
 
         You can specify your own convnet using q_func.

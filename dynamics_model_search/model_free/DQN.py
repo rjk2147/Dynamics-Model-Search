@@ -353,15 +353,15 @@ class DQN:
         env,
         exploration=PiecewiseSchedule([
             (0,        1.0),
-            (int(1e6), 0.1),
-            (int(1e7), 0.01)
+            (int(1e7), 0.1),
+            (int(1e8), 0.01)
         ], outside_value=0.01),
         replay_buffer_size=90000,
         gamma=0.99,
-        lr=0.0001,
+        lr=0.00008,
         alpha = 0.90,
         eps = 0.01,
-        learning_starts=10000,
+        learning_starts=50000,
         learning_freq=4,
         frame_history_len=4,
         target_update_freq=10000

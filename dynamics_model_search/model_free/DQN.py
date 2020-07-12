@@ -354,8 +354,8 @@ class DQN:
         exploration=PiecewiseSchedule([
             (0,   1.0),
             (1e6, 0.1),
-            (2e6, 0.01),
-            (8e6, 0.001),
+            (3e6, 0.01),
+            (6e6, 0.001),
         ], outside_value=0.001),
         replay_buffer_size=90000,
         gamma=0.99,

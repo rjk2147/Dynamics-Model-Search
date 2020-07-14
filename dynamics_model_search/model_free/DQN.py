@@ -351,13 +351,7 @@ class DQNLinearModel(nn.Module):
 class DQN:
     def __init__(self,
         env,
-        exploration=PiecewiseSchedule([
-            (0,   1.0),
-            (1e6, 0.1),
-            (2e6, 0.1),
-            (5e6, 0.01),
-            (8e6, 0.005),
-        ], outside_value=0.001),
+        exploration=LinearSchedule(1e6, 0.05),
         replay_buffer_size=90000,
         gamma=0.99,
         lr=0.00008,

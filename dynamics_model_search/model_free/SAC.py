@@ -60,6 +60,7 @@ class DeterministicPolicy(nn.Module):
         super(DeterministicPolicy, self).__init__()
         self.linear1 = nn.Linear(num_inputs, hidden_dim)
         self.linear2 = nn.Linear(hidden_dim, hidden_dim)
+        self.linear3 = nn.Linear(hidden_dim, hidden_dim)
 
         self.mean = nn.Linear(hidden_dim, num_actions)
 
@@ -72,6 +73,7 @@ class DeterministicPolicy(nn.Module):
     def forward(self, state):
         x = F.relu(self.linear1(state))
         x = F.relu(self.linear2(x))
+        x = F.relu(self.linear3(x))
         mean = torch.tanh(self.mean(x)) * self.action_scale + self.action_bias
         return mean
 

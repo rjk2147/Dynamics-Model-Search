@@ -111,7 +111,7 @@ class BayesianSequenceModel(nn.Module):
         self.networks = {
             "encoder": Encoder(input_size=self.rnn_hidden_size, z_output_size=self.z_size,
                                sigma_output_size=self.output_size).to(device),
-            "decoder": Decoder(input_size=self.z_size + self.output_size, output_size=self.output_size).to(device),
+            "decoder": Decoder(input_size=self.z_size, output_size=self.output_size).to(device),
             "rnn": nn.LSTMCell(self.rnn_input_size, self.rnn_hidden_size).to(device)
         }
 
@@ -205,21 +205,21 @@ class BayesianSequenceModel(nn.Module):
 
         return Y_hat.data.cpu().numpy(), Z.data.cpu().numpy(), O.data.cpu().numpy()
 
-    def prior(self, X, N, T):
+    def prior(self, N, T):
         Y, Z = [], []
         for t in range(T):
-            y, z = self.prior_step(x=X[:, 0, :], N=N, t=t)
+            y, z = self.prior_step(N=N, t=t)
             Y.append(y)
             Z.append(z)
         return torch.stack(Y).transpose(0, 1), torch.stack(Z).transpose(0, 1)
 
-    def prior_step(self, x, N, t):
+    def prior_step(self, N, t):
         z = pyro.sample("z_{}".format(t),
                         dist.Normal(self.priors["z"]["loc"].expand(N, self.z_size),
                                     self.priors["z"]["scale"].expand(N, self.z_size))
                         .to_event(1)
                         )
-        y = self.networks["decoder"](x, z)
+        y = self.networks["decoder"](z)
         if torch.isnan(z).any():
             print('NaN')
             exit(1)
@@ -227,8 +227,7 @@ class BayesianSequenceModel(nn.Module):
 
     def loss(self, X, A, Y, batch_size):
         trace = poutine.trace(self.guide).get_trace(X=X, A=A, Y=Y, batch_size=batch_size)
-        batch_Y_hat, batch_Z = poutine.replay(self.prior, trace=trace)(X=X[self.guide_cache["ix"]], N=batch_size,
-                                                                       T=X.shape[1])
+        batch_Y_hat, batch_Z = poutine.replay(self.prior, trace=trace)(N=batch_size, T=X.shape[1])
         batch_Y = Y[self.guide_cache["ix"]]
         return torch.mean(torch.abs(
             batch_Y - batch_Y_hat)).item(), batch_Z.data.cpu().numpy(), batch_Y_hat.data.cpu().numpy(), batch_Y.data.cpu().numpy()
@@ -278,8 +277,6 @@ class BayesianSequenceModel(nn.Module):
     def reset(self):
         h = self.init_z, self.init_h, self.init_c
         h = torch.cat(h, -1)
-        if self.uncertainty:
-            h = h.repeat(self.n_samples, 1).unsqueeze(0)
         return h
 
 class BayesianSequenceDynamicsModel(DynamicsModel):
@@ -413,5 +410,5 @@ class BayesianSequenceDynamicsModel(DynamicsModel):
                 return new_obs, torch.exp(-sd).squeeze(0)
             return new_obs
 
-    def step(self, action_in, obs_in=None, save=True, state=False, state_in=None):
-        return self.step_parallel(action_in, obs_in, save, state, state_in)
+    def step(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
+        return self.step_parallel(action_in, obs_in, save, state, state_in, certainty)

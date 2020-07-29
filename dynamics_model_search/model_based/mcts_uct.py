@@ -1,5 +1,9 @@
-from dynamics_model_search.model_based.mpc import MPC, NullAgent
-from dynamics_model_search.model_based.cem import CEM
+# from dynamics_model_search.model_based.mpc import MPC, NullAgent
+# from dynamics_model_search.model_based.cem import CEM
+
+# Modified by Yu
+from model_based.mpc import MPC, NullAgent
+from model_based.cem import CEM
 
 import numpy as np
 from collections import deque

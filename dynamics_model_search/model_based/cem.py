@@ -1,7 +1,10 @@
 import torch
 import time
-from dynamics_model_search.model_based.mpc import MPC, NullAgent
+# from dynamics_model_search.model_based.mpc import MPC, NullAgent
 import numpy as np
+
+# Modified by Yu
+from model_based.mpc import MPC, NullAgent
 
 if torch.cuda.is_available():
     devices = [torch.device("cuda:"+str(i)) for i in range(0, torch.cuda.device_count())]

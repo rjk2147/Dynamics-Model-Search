@@ -15,6 +15,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.autograd as autograd
 
+from stable_baselines.common import policies
+import tensorflow as tf
+# print(tf.__version__) # 1.15.0
+import tfpyth
+from stable_baselines.common.tf_layers import linear
+
 def get_wrapper_by_name(env, classname):
     currentenv = env
     while True:
@@ -330,7 +336,7 @@ class DQNCNNModel(nn.Module):
     def forward(self, x):
         x = x / 255.0
         # From N, W, H, C to N, C, H, W
-        # print(x.size())
+        # print(x.size()) # torch.Size([1, 1, 84, 84])
         x = x.permute(0, 3, 2, 1)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
@@ -348,7 +354,7 @@ class DQNLinearModel(nn.Module):
         x = F.relu(self.fc4(x))
         return self.fc5(x)
 
-class DQN:
+class DQN():
     def __init__(self,
         env,
         exploration=PiecewiseSchedule([
@@ -417,6 +423,8 @@ class DQN:
         # BUILD MODEL #
         ###############
 
+        self.model = policies.nature_cnn ## Modified by Yu
+
         if len(env.observation_space.shape) == 1:
             # This means we are running on low-dimensional observations (e.g. RAM)
             DQNModel = DQNLinearModel
@@ -446,6 +454,7 @@ class DQN:
         self.num_param_updates = 0
 
     def act(self, state):
+        # print(state)
         sample = random.random()
         eps_threshold = self.exploration.value(self.steps)
         if torch.is_tensor(state):
@@ -454,17 +463,82 @@ class DQN:
             state = torch.from_numpy(state).type(dtype).to(self.device)
         # print(Variable(state, volatile=True))
         max_act = self.Q(Variable(state, volatile=True)).data.max(1)[1]
+        print("max_act:", max_act)
         if sample > eps_threshold and self.steps > self.learning_starts:
             return max_act
         else:
             return torch.randint_like(max_act, self.num_actions)
 
-    def value(self, state, act, next_state):
+    def new_act(self, state):
+        # print(state.shape) # tuple # tf.shape get the num of dims.
+        # print(state)
+        # print(self.num_actions)
+        dim = state.shape[0]
+        sample = random.random()
+        eps_threshold = self.exploration.value(self.steps)
+        if tf.is_tensor(state):
+            pass
+        else:
+            state = tf.convert_to_tensor(state)
+            state = tf.transpose(state, [0, 3, 2, 1])
+        state = tf.cast(state, tf.float32)
+        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+            value = self.model(state)
+            # print(value.shape)
+            # value = linear(value, 'fc1', n_hidden=self.num_actions, init_scale=np.sqrt(2))
+            # value = tf.reshape(value)
+            value = tf.contrib.layers.fully_connected(value, self.num_actions)
+            # value = tf.reshape(value, [dim, -1])
+            value = tf.reshape(value, [-1, self.num_actions])
+            value = tf.nn.softmax(value, dim=1)
+            print(value.shape)
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+                max_act = sess.run(tf.argmax(value, 1))
+                # value = sess.run(value[0])
+                # print(max_act)
+                print(max_act)
+        if sample > eps_threshold and self.steps > self.learning_starts:
+            # print(max_act)
+            return max_act
+        else:
+            # return max_act
+            # print(tf.random_uniform([dim], 0, self.num_actions, dtype=tf.float32))
+            return tf.random_uniform([dim], 0, self.num_actions, dtype=tf.float32)
+
+    # def value(self, state, act, next_state):
+    def value(self, state):
         if torch.is_tensor(state):
             state = state.type(dtype).to(self.device)
         else:
             state = torch.from_numpy(state).type(dtype).to(self.device)
         value = self.Q(Variable(state, volatile=True)).data.max(1)[0].unsqueeze(1)
+        print("value:", value)
+        return value
+
+    def new_value(self, state):
+        if tf.is_tensor(state):
+            pass
+            # state = tf.cast(state, dtype).to(self.device)
+        else:
+            state = tf.convert_to_tensor(state)
+            state = tf.transpose(state, [0, 3, 2, 1])
+            # state = tf.cast(state, dtype).to(self.device)
+        # scaled_images = tfpyth.tensorflow_from_torch(lambda a: a, Variable(state, volatile=True), tf.float32)
+        state = tf.cast(state, tf.float32)
+        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+            value = self.model(state)
+            # value = tf.reduce_max(tf.nn.softmax(value), 1)
+            value = tf.contrib.layers.fully_connected(value, self.num_actions)
+            # value = tf.reshape(value, [dim, -1])
+            value = tf.reshape(value, [-1, self.num_actions])
+            value = tf.nn.softmax(value, dim=1)
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+                var_out = sess.run(value).max(1) ## array
+        # print("new_value:", np.max(var_out[0]))
+        # print(var_out.shape)
+        print("new_value:", var_out)
         return value
 
     def update(self, batch_size=32, num_param_updates=0):

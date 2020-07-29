@@ -1,3 +1,7 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
 def linear_interpolation(left, right, alpha):
     """
     Linear interpolation between `left` and `right`.
@@ -47,17 +51,41 @@ class PiecewiseSchedule(object):
         return self._outside_value
 
 
-def data_write(file_path, datas):
-    f = xlwt.Workbook()
-    sheet1 = f.add_sheet(u'sheet1', cell_overwrite_ok=True)  # 创建sheet
-
-    # 将数据写入第 i 行，第 j 列
-    i = 0
-    for data in datas:
-        for j in range(len(data)):
-            sheet1.write(i, j, data[j])
-        i = i + 1
-
-    f.save(file_path)
-
 if __name__ == '__main__':
+
+    exploration1 = PiecewiseSchedule([
+        (0, 1.0),
+        (1e6, 0.1),
+        (2e6, 0.1),
+        (5e6, 0.01),
+        (8e6, 0.005)
+    ], outside_value=0.005)
+
+    exploration2 = PiecewiseSchedule([
+        (0, 1.0),
+        (1e6, 0.1),
+        (2e6, 0.01),
+        (8e6, 0.001)
+    ], outside_value=0.001)
+
+    steps = np.arange(0, 1e7, 100).astype(int).tolist()
+    list1 = list(map(exploration1.value, steps))
+    list2 = list(map(exploration2.value, steps))
+
+    df = pd.DataFrame(
+        {"steps": steps,
+         "e1_0.005": list1,
+         "e2_0.001": list2
+         }
+    )
+    df.plot(x='steps', y='e1_0.005', color='r')
+    df.plot(x='steps', y='e2_0.001', color='g')
+    plt.show()
+
+    # df.to_excel("epsilon_data.xlsx", index=False)
+
+
+
+
+
+

@@ -9,6 +9,7 @@ import os
 
 from model_free.DQN import DQN
 from model_free.DDQN import DDQN
+import tensorflow as tf
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -65,15 +66,15 @@ class Agent:
         if self.start_time:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
         print('--------------------------------------\n')
-        # Modifed By Yu
-        # os.system("tensorboard --logdir runs/test")
-        # print(self.rl_learner)
-        self.writer.add_scalar('Reward',
-                          self.ep_rs[-1],
-                          self.steps)
-        if self.ep_rs[-1] > 20:
-            print('Target achived!')
-        # self.writer.close()
+        # # Modifed By Yu
+        # # os.system("tensorboard --logdir runs/test")
+        # # print(self.rl_learner)
+        # self.writer.add_scalar('Reward',
+        #                   self.ep_rs[-1],
+        #                   self.steps)
+        # if self.ep_rs[-1] > 20:
+        #     print('Target achived!')
+        # # self.writer.close()
 
 
 
@@ -161,6 +162,18 @@ class Agent:
                 else:
                     act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     ex_r = 0
+                    # modified by yu
+                    self.rl_learner.value(np.expand_dims(obs[0], 0))
+                    # input should be a batch of states
+                    # print("1", np.expand_dims(obs[0], 0))
+                    self.batch_size = 32
+                    if self.rl_learner.replay.can_sample(self.batch_size):
+                        data = self.rl_learner.replay.sample(self.batch_size)
+                        act_test  = self.rl_learner.new_act(data[0])
+                        # print("data", data[0])
+                        # print(data[0].shape) #(512, 1, 84, 84)
+                        # batch = zip(*data)
+                        # self.rl_learner.new_value(data[0])
                 # modified by yu
                 # action.int()
                 action = act*self.act_mul_const

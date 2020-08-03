@@ -362,7 +362,7 @@ def cnn_model(scaled_images, **kwargs):
     :param kwargs: (dict) Extra keywords parameters for the convolutional layers of the CNN
     :return: (TensorFlow Tensor) The CNN output layer
     """
-    scaled_images = scaled_images / 255.0
+    scaled_images = tf.cast(scaled_images, tf.float32) / 255.0 
     scaled_images = tf.transpose(scaled_images, [0, 3, 2, 1])
     layer_out = nature_cnn(scaled_images)
     action_scores = tf_layers.fully_connected(layer_out, num_outputs=kwargs["num_actions"], activation_fn=None)
@@ -393,7 +393,7 @@ class DQN():
         lr=0.00008,
         alpha = 0.90,
         eps = 0.01,
-        learning_starts=10000,
+        learning_starts=1,#10000
         learning_freq=4,
         frame_history_len=4,
         target_update_freq=10000
@@ -495,8 +495,8 @@ class DQN():
             state = torch.from_numpy(state).type(dtype).to(self.device)
         # print(Variable(state, volatile=True))
         max_act = self.Q(Variable(state, volatile=True)).data.max(1)[1]
-        print(self.Q(Variable(state, volatile=True)).data)
-        print("max_act:", max_act)
+        # print(self.Q(Variable(state, volatile=True)).data)
+        # print("max_act:", max_act)
         if sample > eps_threshold and self.steps > self.learning_starts:
             return max_act
         else:
@@ -528,7 +528,7 @@ class DQN():
         else:
             state = torch.from_numpy(state).type(dtype).to(self.device)
         value = self.Q(Variable(state, volatile=True)).data.max(1)[0].unsqueeze(1)
-        print("value:", value)
+        # print("value:", value)
         return value
 
     def new_value(self, state):
@@ -574,7 +574,7 @@ class DQN():
             # Compute current Q value, q_func takes only state and output value for every state-action pair
             # We choose Q based on action taken.
             current_Q_values = self.Q(obs_batch).gather(1, act_batch.unsqueeze(1)).squeeze(1)
-            print(current_Q_values)
+            print("current_Q_values", current_Q_values)
             # Compute next Q value based on which action gives max Q values
             # Detach variable from the current graph since we don't want gradients for next Q to propagated
             next_max_q = self.target_Q(next_obs_batch).detach().max(1)[0]
@@ -623,11 +623,17 @@ class DQN():
 
             # Compute current Q value, q_func takes only state and output value for every state-action pair
             # We choose Q based on action taken.
-            current_Q_values = self.Q(obs_batch).gather(1, act_batch.unsqueeze(1)).squeeze(1)
+            act_batch = self.sess.run(act_batch)
+            obs_batch = self.sess.run(obs_batch)
+            init = tf.compat.v1.global_variables_initializer()
+            self.sess.run(init)
+            current_Q_values = self.sess.run(self.model, feed_dict={self.x: obs_batch})[act_batch]#tf also have gather
+            print("current_Q_values", current_Q_values)
             # Compute next Q value based on which action gives max Q values
             # Detach variable from the current graph since we don't want gradients for next Q to propagated
             next_max_q = self.target_Q(next_obs_batch).detach().max(1)[0]
             next_Q_values = not_done_mask * next_max_q
+
             # Compute the target of the current Q values
             target_Q_values = rew_batch + (self.gamma * next_Q_values)
             # Compute Bellman error

@@ -80,7 +80,7 @@ class Agent:
 
     def rl_update(self, batch_size=256):
         if len(self.rl_learner.replay) > batch_size:
-            self.rl_learner.update(batch_size, self.n_updates)
+            self.rl_learner.new_update(batch_size, self.n_updates) ### modified by Yu. test new
             self.n_updates += 1
 
     def sm_update(self, obs, act, new_obs, done):
@@ -167,6 +167,7 @@ class Agent:
                     # input should be a batch of states
                     # print("1", np.expand_dims(obs[0], 0))
                     self.batch_size = 32
+                    self.rl_update(batch_size=32)
                     # if self.rl_learner.replay.can_sample(self.batch_size):
                     #     data = self.rl_learner.replay.sample(self.batch_size)
                     #     act_test = self.rl_learner.new_act(data[0])

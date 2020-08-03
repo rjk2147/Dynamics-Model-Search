@@ -362,7 +362,7 @@ def cnn_model(scaled_images, **kwargs):
     :param kwargs: (dict) Extra keywords parameters for the convolutional layers of the CNN
     :return: (TensorFlow Tensor) The CNN output layer
     """
-    scaled_images = tf.cast(scaled_images, tf.float32) / 255.0 
+    scaled_images = tf.cast(scaled_images, tf.float32) / 255.0
     scaled_images = tf.transpose(scaled_images, [0, 3, 2, 1])
     layer_out = nature_cnn(scaled_images)
     action_scores = tf_layers.fully_connected(layer_out, num_outputs=kwargs["num_actions"], activation_fn=None)
@@ -477,14 +477,16 @@ class DQN():
 
         # Modified by Yu
         self.x = tf.placeholder(tf.float32, [None, 1, 84, 84])
+        self.target_x = tf.stop_gradient(tf.placeholder(tf.float32, [None, 1, 84, 84]))
         self.sess = tf.Session()
         with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
             with tf.variable_scope("action_value"):
                 if len(env.observation_space.shape) == 1:
                     self.model = linear_model(self.x, num_actions=self.num_actions)
+                    self.target_model = linear_model(self.target_x, num_actions=self.num_actions)
                 else:
                     self.model = cnn_model(self.x, num_actions=self.num_actions)
-        self.target_model = self.model
+                    self.target_model = cnn_model(self.target_x, num_actions=self.num_actions)
     def act(self, state):
         # print(state.shape)
         sample = random.random()
@@ -578,6 +580,7 @@ class DQN():
             # Compute next Q value based on which action gives max Q values
             # Detach variable from the current graph since we don't want gradients for next Q to propagated
             next_max_q = self.target_Q(next_obs_batch).detach().max(1)[0]
+            print("next_max_q", next_max_q)
             next_Q_values = not_done_mask * next_max_q
             # Compute the target of the current Q values
             target_Q_values = rew_batch + (self.gamma * next_Q_values)
@@ -625,13 +628,15 @@ class DQN():
             # We choose Q based on action taken.
             act_batch = self.sess.run(act_batch)
             obs_batch = self.sess.run(obs_batch)
+            next_obs_batch = self.sess.run(next_obs_batch)
             init = tf.compat.v1.global_variables_initializer()
             self.sess.run(init)
-            current_Q_values = self.sess.run(self.model, feed_dict={self.x: obs_batch})[act_batch]#tf also have gather
+            current_Q_values = self.sess.run(self.model, feed_dict={self.x: obs_batch})[act_batch]#.squeeze() not work for multi dim.#tf also have gather
             print("current_Q_values", current_Q_values)
             # Compute next Q value based on which action gives max Q values
             # Detach variable from the current graph since we don't want gradients for next Q to propagated
-            next_max_q = self.target_Q(next_obs_batch).detach().max(1)[0]
+            next_max_q = self.sess.run(self.target_model, feed_dict={self.target_x: next_obs_batch}).max(1) #.detach().max(1)[0]
+            print("next_max_q", next_max_q)
             next_Q_values = not_done_mask * next_max_q
 
             # Compute the target of the current Q values

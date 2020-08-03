@@ -167,9 +167,9 @@ class Agent:
                     # input should be a batch of states
                     # print("1", np.expand_dims(obs[0], 0))
                     self.batch_size = 32
-                    if self.rl_learner.replay.can_sample(self.batch_size):
-                        data = self.rl_learner.replay.sample(self.batch_size)
-                        act_test = self.rl_learner.new_act(data[0])
+                    # if self.rl_learner.replay.can_sample(self.batch_size):
+                    #     data = self.rl_learner.replay.sample(self.batch_size)
+                    #     act_test = self.rl_learner.new_act(data[0])
                         # print("data", data[0])
                         # print(data[0].shape) #(512, 1, 84, 84)
                         # batch = zip(*data)

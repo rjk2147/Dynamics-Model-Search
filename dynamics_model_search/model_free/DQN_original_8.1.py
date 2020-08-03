@@ -15,12 +15,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.autograd as autograd
 
-from stable_baselines.common.policies import nature_cnn
+from stable_baselines.common import policies
 import tensorflow as tf
 # print(tf.__version__) # 1.15.0
 import tfpyth
 from stable_baselines.common.tf_layers import linear
-import tensorflow.contrib.layers as tf_layers
 
 def get_wrapper_by_name(env, classname):
     currentenv = env
@@ -355,27 +354,16 @@ class DQNLinearModel(nn.Module):
         x = F.relu(self.fc4(x))
         return self.fc5(x)
 
-def cnn_model(scaled_images, **kwargs):
-    """
-    CNN from Nature paper.
-    :param scaled_images: (TensorFlow Tensor) Image input placeholder
-    :param kwargs: (dict) Extra keywords parameters for the convolutional layers of the CNN
-    :return: (TensorFlow Tensor) The CNN output layer
-    """
-    scaled_images = scaled_images / 255.0
-    scaled_images = tf.transpose(scaled_images, [0, 3, 2, 1])
-    layer_out = nature_cnn(scaled_images)
-    action_scores = tf_layers.fully_connected(layer_out, num_outputs=kwargs["num_actions"], activation_fn=None)
-    return action_scores
+class DQNCNNModel():
+    def __init__(self, scaled_images, num_actions=18):
+        scaled_images = tf.transpose(scaled_images, [0, 3, 2, 1])
+        scaled_images = tf.cast(scaled_images, tf.float32)
+        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+            value = policies.nature_cnn(scaled_images)
+            value = tf.contrib.layers.fully_connected(value, num_actions)
+            value = tf.reshape(value, [-1, num_actions])
+            value = tf.nn.softmax(value, dim=1)
 
-def linear_model(scaled_images, **kwargs):
-    extracted_features = tf.layers.flatten(scaled_images)
-    action_out = extracted_features
-    action_out = tf_layers.fully_connected(action_out, num_outputs=512, activation_fn=None)
-    action_out = tf.nn.relu(action_out)
-    # action_scores = tf_layers.fully_connected(action_out, num_outputs=self.n_actions, activation_fn=None)
-    action_scores = tf_layers.fully_connected(action_out, num_outputs=kwargs["num_actions"], activation_fn=None)
-    return action_scores
 
 
 class DQN():
@@ -447,6 +435,11 @@ class DQN():
         # BUILD MODEL #
         ###############
 
+        # Modified by Yu
+        init = tf.global_variables_initializer()
+        self.sess = tf.Session()
+        self.sess.run(init)
+
         if len(env.observation_space.shape) == 1:
             # This means we are running on low-dimensional observations (e.g. RAM)
             DQNModel = DQNLinearModel
@@ -475,18 +468,8 @@ class DQN():
         self.steps = 0
         self.num_param_updates = 0
 
-        # Modified by Yu
-        self.x = tf.placeholder(tf.float32, [None, 1, 84, 84])
-        self.sess = tf.Session()
-        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
-            with tf.variable_scope("action_value"):
-                if len(env.observation_space.shape) == 1:
-                    self.model = linear_model(self.x, num_actions=self.num_actions)
-                else:
-                    self.model = cnn_model(self.x, num_actions=self.num_actions)
-        self.target_model = self.model
     def act(self, state):
-        # print(state.shape)
+        # print(state)
         sample = random.random()
         eps_threshold = self.exploration.value(self.steps)
         if torch.is_tensor(state):
@@ -495,7 +478,6 @@ class DQN():
             state = torch.from_numpy(state).type(dtype).to(self.device)
         # print(Variable(state, volatile=True))
         max_act = self.Q(Variable(state, volatile=True)).data.max(1)[1]
-        print(self.Q(Variable(state, volatile=True)).data)
         print("max_act:", max_act)
         if sample > eps_threshold and self.steps > self.learning_starts:
             return max_act
@@ -503,23 +485,41 @@ class DQN():
             return torch.randint_like(max_act, self.num_actions)
 
     def new_act(self, state):
+        # print(state.shape) # tuple # tf.shape get the num of dims.
+        # print(state)
+        # print(self.num_actions)
+        dim = state.shape[0]
         sample = random.random()
         eps_threshold = self.exploration.value(self.steps)
-        q_out = self.new_value(state)
-        max_act = tf.argmax(self.q_values, 1)
-        # init = tf.compat.v1.global_variables_initializer()
-        # self.sess.run(init)
-        max_act = self.sess.run(max_act) # max_act is still a tensor without assignment.
-        print("new_act:", max_act)
-        # print(self.sess.run(self.policy_proba))
+        if tf.is_tensor(state):
+            pass
+        else:
+            state = tf.convert_to_tensor(state)
+        state = tf.transpose(state, [0, 3, 2, 1])
+        state = tf.cast(state, tf.float32)
+        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+            value = self.model(state)
+            # print(value.shape)
+            # value = linear(value, 'fc1', n_hidden=self.num_actions, init_scale=np.sqrt(2))
+            # value = tf.reshape(value)
+            value = tf.contrib.layers.fully_connected(value, self.num_actions)
+            # value = tf.reshape(value, [dim, -1])
+            value = tf.reshape(value, [-1, self.num_actions])
+            value = tf.nn.softmax(value, dim=1)
+            print(value.shape)
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+                max_act = sess.run(tf.argmax(value, 1))
+                # value = sess.run(value[0])
+                # print(max_act)
+                print(max_act)
         if sample > eps_threshold and self.steps > self.learning_starts:
+            # print(max_act)
             return max_act
         else:
-            # max_act = tfpyth.torch_from_tensorflow(self.sess, max_act, max_act)
-            max_act = torch.from_numpy(max_act)
-            return torch.randint_like(max_act, self.num_actions)
-            # max_act = random.randrange(0, 101, 2)
             # return max_act
+            # print(tf.random_uniform([dim], 0, self.num_actions, dtype=tf.float32))
+            return tf.random_uniform([dim], 0, self.num_actions, dtype=tf.float32)
 
     # def value(self, state, act, next_state):
     def value(self, state):
@@ -534,17 +534,27 @@ class DQN():
     def new_value(self, state):
         if tf.is_tensor(state):
             pass
+            # state = tf.cast(state, dtype).to(self.device)
         else:
             state = tf.convert_to_tensor(state)
+            state = tf.transpose(state, [0, 3, 2, 1])
+            # state = tf.cast(state, dtype).to(self.device)
+        # scaled_images = tfpyth.tensorflow_from_torch(lambda a: a, Variable(state, volatile=True), tf.float32)
         state = tf.cast(state, tf.float32)
-        init = tf.compat.v1.global_variables_initializer()
-        self.sess.run(init)
-        state = self.sess.run(state)
-        self.q_values = self.sess.run(self.model, feed_dict={self.x: state})#.max(1) ## array
-        self.policy_proba = self.sess.run(tf.nn.softmax(self.q_values))
-        q_out = self.q_values.max(1)
-        print("new_value:", (self.policy_proba * self.q_values))
-        return q_out
+        with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+            value = self.model(state)
+            # value = tf.reduce_max(tf.nn.softmax(value), 1)
+            value = tf.contrib.layers.fully_connected(value, self.num_actions)
+            # value = tf.reshape(value, [dim, -1])
+            value = tf.reshape(value, [-1, self.num_actions])
+            value = tf.nn.softmax(value, dim=1)
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+                var_out = sess.run(value).max(1) ## array
+        # print("new_value:", np.max(var_out[0]))
+        # print(var_out.shape)
+        print("new_value:", var_out)
+        return value
 
     def update(self, batch_size=32, num_param_updates=0):
 
@@ -560,7 +570,7 @@ class DQN():
             # in which case there is no Q-value at the next state; at the end of an
             # episode, only the current state reward contributes to the target
             obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = self.replay.sample(batch_size)
-            # Convert numpy nd_array to tensorflow variables for calculation
+            # Convert numpy nd_array to torch variables for calculation
             obs_batch = Variable(torch.from_numpy(obs_batch).type(dtype))
             act_batch = Variable(torch.from_numpy(act_batch).long())
             rew_batch = Variable(torch.from_numpy(rew_batch))
@@ -570,56 +580,6 @@ class DQN():
             if USE_CUDA:
                 act_batch = act_batch.to(self.device)
                 rew_batch = rew_batch.to(self.device)
-
-            # Compute current Q value, q_func takes only state and output value for every state-action pair
-            # We choose Q based on action taken.
-            current_Q_values = self.Q(obs_batch).gather(1, act_batch.unsqueeze(1)).squeeze(1)
-            print((current_Q_values))
-            # Compute next Q value based on which action gives max Q values
-            # Detach variable from the current graph since we don't want gradients for next Q to propagated
-            next_max_q = self.target_Q(next_obs_batch).detach().max(1)[0]
-            next_Q_values = not_done_mask * next_max_q
-            # Compute the target of the current Q values
-            target_Q_values = rew_batch + (self.gamma * next_Q_values)
-            # Compute Bellman error
-            bellman_error = target_Q_values - current_Q_values
-            # clip the bellman error between [-1 , 1]
-            clipped_bellman_error = bellman_error.clamp(-1, 1)
-            # Note: clipped_bellman_delta * -1 will be right gradient
-            d_error = clipped_bellman_error * -1.0
-            # Clear previous gradients before backward pass
-            self.optimizer.zero_grad()
-            # run backward pass
-            current_Q_values.backward(d_error.data)
-
-            # Perfom the update
-            self.optimizer.step()
-            self.num_param_updates += 1
-
-            # Periodically update the target network by Q network to target Q network
-            if self.num_param_updates % self.target_update_freq == 0:
-                self.target_Q.load_state_dict(self.Q.state_dict())
-
-    def new_update(self, batch_size=32, num_param_updates=0):
-
-        ### Perform experience replay and train the network.
-        # Note that this is only done if the replay buffer contains enough samples
-        # for us to learn something useful -- until then, the model will not be
-        # initialized and random actions should be taken
-        if (self.steps > self.learning_starts and
-                self.steps % self.learning_freq == 0 and
-                self.replay.can_sample(batch_size)):
-            # Use the replay buffer to sample a batch of transitions
-            # Note: done_mask[i] is 1 if the next state corresponds to the end of an episode,
-            # in which case there is no Q-value at the next state; at the end of an
-            # episode, only the current state reward contributes to the target
-            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = self.replay.sample(batch_size)
-            # Convert numpy nd_array to torch variables for calculation
-            obs_batch = tf.convert_to_tensor(obs_batch)
-            act_batch = tf.cast(tf.convert_to_tensor(act_batch), tf.int32)
-            rew_batch = tf.convert_to_tensor(rew_batch)
-            next_obs_batch = tf.convert_to_tensor(next_obs_batch)
-            not_done_mask = tf.convert_to_tensor(1 - done_mask)
 
             # Compute current Q value, q_func takes only state and output value for every state-action pair
             # We choose Q based on action taken.
@@ -654,8 +614,3 @@ class DQN():
         pass
     def load(self, *kwargs):
         pass
-
-def process_batch(obs, tftype):
-    obs = tf.convert_to_tensor(obs)
-    obs = tf.cast(obs, tftype)
-    return obs

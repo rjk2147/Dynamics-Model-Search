@@ -58,7 +58,7 @@ class RealerWalkerWrapper(gym.Env):
         #    odd elements  [1::2] angular speed, scaled to show -1..+1
         # state[-4 to -1] = feet contacts
         self.timestep = 0
-        self.max_time = ep_len
+        self._max_episode_steps = ep_len
         self.rew = rew
 
     def reset(self):
@@ -85,7 +85,7 @@ class RealerWalkerWrapper(gym.Env):
         # obs =  np.clip(obs[self.front:-self.back], -5, +5)
         new_obs = new_obs[self.front:-self.back]
         self.timestep += 1
-        done = self.timestep >= self.max_time
+        done = self.timestep >= self._max_episode_steps
         self.ep_rew += r
         info = {}
         if done:

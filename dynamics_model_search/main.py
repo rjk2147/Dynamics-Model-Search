@@ -11,17 +11,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Algorithms
-    parser.add_argument('--env', type=str, default='AntBulletEnv-v0') # pybullet environment
+    parser.add_argument('--env', type=str, default='HalfCheetah-v2') # pybullet environment
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
-    parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
+    parser.add_argument('--rl', type=str, default='TD3') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
-    parser.add_argument('--model-arch', type=str, default='2dcnn') # type of self-model
+    parser.add_argument('--model-arch', type=str, default='mdrnn') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
 
     # Training Parameters
     parser.add_argument('--steps', type=int, default=1e6) # training steps
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
-    parser.add_argument('--seq-len', type=int, default=20) # SM sequence modeling window size
+    parser.add_argument('--seq-len', type=int, default=10) # SM sequence modeling window size
     parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
 
     parser.add_argument('--width', type=str, default=8) # width of the search tree at every level
@@ -59,6 +59,7 @@ if __name__ == '__main__':
 
     if args.seed is not None:
         torch.manual_seed(args.seed)
+        np.random.seed(args.seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed(args.seed)
         env.seed(args.seed)
@@ -74,6 +75,8 @@ if __name__ == '__main__':
         from models.rnn_dynamics_model import RNNDynamicsModel as DyanmicsModel
     elif args.model_arch == 'rnn-vae':
         from models.rnn_vae import RNNVAE as DyanmicsModel
+    elif args.model_arch == '1dcnn-vae':
+        from models.cnn1d_vae import CNNVAE as DyanmicsModel
     elif args.model_arch == 'mdrnn':
         from models.mdrnn_dynamics_model import MDRNNDynamicsModel as DyanmicsModel
     elif args.model_arch == 'mdn-seq':
@@ -88,6 +91,8 @@ if __name__ == '__main__':
         from models.biased_bayesian_dynamics_model import BayesianSequenceDynamicsModel as DyanmicsModel
     elif args.model_arch == 'seq-cnn':
         from models.cnn1D_dynamics_model import SeqCNNDynamicsModel as DyanmicsModel
+    elif args.model_arch == 'mlp':
+        from models.mlp_dynamics_model import SeqMLPDynamicsModel as DyanmicsModel
     elif args.model_arch == '1dcnn':
         from models.cnn1D_dynamics_model import SeqCNNDynamicsModel as DyanmicsModel
     elif args.model_arch == '2dcnn':

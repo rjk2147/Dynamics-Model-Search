@@ -30,8 +30,7 @@ class ReplayBuffer(object):
         self.action[self.ptr] = action
         self.next_state[self.ptr] = next_state
         self.reward[self.ptr] = reward
-        # self.not_done[self.ptr] = 1. - done
-        self.not_done[self.ptr] = 1.
+        self.not_done[self.ptr] = 1. - done
 
         self.ptr = (self.ptr + 1) % self.max_size
         self.size = min(self.size + 1, self.max_size)
@@ -108,20 +107,21 @@ class TD3(object):
     def __init__(
         self,
         env,
-        max_action=1,
         discount=0.99,
         tau=0.005,
         policy_noise=0.2,
         noise_clip=0.5,
-        policy_freq=2
+        policy_freq=2,
+        start_timesteps=25e3
     ):
-
+        self.action_space = env.action_space
         action_dim = env.action_space.shape[0]
         state_dim = env.observation_space.shape[0]
+        self.max_action = float(env.action_space.high[0])
 
         self.device = device
         self.replay = ReplayBuffer(state_dim, action_dim)
-        self.actor = Actor(state_dim, action_dim, max_action).to(self.device)
+        self.actor = Actor(state_dim, action_dim, self.max_action).to(self.device)
         self.actor_target = copy.deepcopy(self.actor)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
 
@@ -129,18 +129,18 @@ class TD3(object):
         self.critic_target = copy.deepcopy(self.critic)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
 
-        self.max_action = max_action
         self.discount = discount
         self.tau = tau
-        self.policy_noise = policy_noise
-        self.noise_clip = noise_clip
+        self.policy_noise = policy_noise * self.max_action
+        self.noise_clip = noise_clip * self.max_action
         self.policy_freq = policy_freq
         self.act_dim = action_dim
         self.state_dim = state_dim
 
-        self.expl_noise = 0.1
+        self.expl_noise = 0.1 * self.max_action
         self.total_it = 0
         self.steps = 0
+        self.start_timesteps = start_timesteps
 
     def to(self, dev):
         self.device = dev
@@ -152,6 +152,9 @@ class TD3(object):
         return self.actor(state).cpu().data.numpy().flatten()
 
     def act(self, obs):
+        if self.steps < self.start_timesteps:
+            sample = np.array([self.action_space.sample() for i in range(len(obs))])
+            return torch.from_numpy(sample).to(self.device)
         if torch.is_tensor(obs):
             obs = obs.to(self.device)
         else:
@@ -176,7 +179,7 @@ class TD3(object):
             target_Q = target_Q.unsqueeze(0)
         return target_Q.cpu().detach().numpy()
 
-    def update(self, batch_size=100, u=0):
+    def update(self, batch_size=256, u=0):
         self.total_it += 1
 
         # Sample replay buffer 

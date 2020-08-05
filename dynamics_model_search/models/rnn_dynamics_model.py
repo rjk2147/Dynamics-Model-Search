@@ -81,12 +81,7 @@ class RNNDynamicsModel(DynamicsModel):
         DynamicsModel.__init__(self, env_in)
         self.lr = 1e-5
         self.is_reset = False
-        self.val_seq_len = 100
-        self.train_seq = 1
-        self.look_ahead_per_epoch = 1
-        self.batch_size = 64
-        self.max_seq_len = seq_len
-        
+
         self.model = RNNModel(self.state_dim, self.act_dim)
         if dev is None:
             self.model.to(device)
@@ -94,22 +89,6 @@ class RNNDynamicsModel(DynamicsModel):
         else:
             self.model.to(dev)
             self.device = dev
-        self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
-        self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
-
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
-        self.model.eval()
-
-    def reinit(self, state_dim, state_mul_const, act_dim, act_mul_const):
-        self.state_mul_const = state_mul_const
-        self.state_mul_const[self.state_mul_const == np.inf] = 1
-
-        self.act_mul_const = act_mul_const
-        self.act_dim = act_dim
-        self.state_dim = state_dim
-
-        self.model = RNNModel(self.state_dim, self.act_dim)
-        self.model.to(self.device)
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
         self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
 
@@ -132,28 +111,6 @@ class RNNDynamicsModel(DynamicsModel):
     def to(self, in_device):
         self.model.to(in_device)
 
-    def get_loss(self, data):
-        np.random.seed(0)
-        Xs, As, Ys = self.__prep_data__(data)
-        Corr = 0
-        Single = 0
-        Seq = 0
-        Final = 0
-        idx = 0
-        self.model.eval()
-        for Xsi, Asi, Ysi \
-                in zip(enumerate(Xs), enumerate(As), enumerate(Ys)):
-            Ysi = torch.from_numpy(Ysi[1].astype(np.float32)).to(self.device)
-            Asi = torch.from_numpy(Asi[1].astype(np.float32)).to(self.device)
-            Xsi = torch.from_numpy(Xsi[1].astype(np.float32)).to(self.device)
-
-            single, seq, final, single_out, seq_out, final_out = self.model(Xsi, Asi, None, Ysi)
-            Single += single.item()
-            Seq += seq.item()
-            Final += final.item()
-            idx += 1
-        return Corr/idx, Single/idx, Seq/idx, Final/idx
-
     def update(self, data):
         self.model.train()
         self.optimizer.zero_grad()
@@ -164,56 +121,6 @@ class RNNDynamicsModel(DynamicsModel):
         seq.backward()
         self.optimizer.step()
         return single.item(), seq.item(), final.item()
-
-    def train_epoch(self, data):
-        import sys, math
-        big = True
-        start = time.time()
-        if not big:
-            Xs, As, Ys = self.__prep_data__(data, big=big)
-        else:
-            Xs, As, Ys, p = self.__prep_data__(data, big=big)
-        Single = 0
-        Seq = 0
-        Final = 0
-        idx = 0
-        self.model.train()
-        self.optimizer.zero_grad()
-        if big:
-            i = 0
-            while len(p) > 0:
-                pi = p[:self.batch_size]
-                p = p[self.batch_size:]
-
-                Xsi = []
-                Asi = []
-                Ysi = []
-                for i in range(len(pi)):
-                    Xsi.append(Xs[pi[i]])
-                    Ysi.append(Ys[pi[i]])
-                    Asi.append(As[pi[i]])
-
-                Xsi = np.array(Xsi)
-                Asi = np.array(Asi)
-                Ysi = np.array(Ysi)
-
-                Xsi = torch.from_numpy(Xsi.astype(np.float32)).to(self.device)
-                Asi = torch.from_numpy(Asi.astype(np.float32)).to(self.device)
-                Ysi = torch.from_numpy(Ysi.astype(np.float32)).to(self.device)
-
-                single, seq, final, single_out, seq_out, final_out = self.model(Xsi, Asi, None, Ysi)
-                Single += single.item()
-                Seq += seq.item()
-                Final += final.item()
-
-                idx += 1
-                sys.stdout.write(str(round(float(100*idx)/float(len(data)/self.batch_size), 2))+'% Done in '+str(round(time.time()-start, 2))+' s                                    \r')
-
-                seq.backward(retain_graph=True)
-                i += self.batch_size
-                self.optimizer.step()
-
-        return Single/idx, Seq/idx, Final/idx
 
     def reset(self, obs_in, h=None):
         # x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(1)
@@ -233,7 +140,7 @@ class RNNDynamicsModel(DynamicsModel):
         self.model.eval()
         if obs_in is not None and state_in:
             state_in = torch.cat(obs_in[1])
-            obs_in = obs_in[0]
+            obs_in = obs_in[0].float()
             # while len(obs_in.shape) < 3:
             # obs_in = obs_in.unsqueeze(1)
         else:

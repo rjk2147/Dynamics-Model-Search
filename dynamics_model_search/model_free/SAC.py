@@ -98,7 +98,7 @@ class ReplayMemory:
     def add(self, state, action, next_state, reward, done):
         if len(self.buffer) < self.capacity:
             self.buffer.append(None)
-        self.buffer[self.position] = (state, action, reward, next_state, 1.0)
+        self.buffer[self.position] = (state, action, reward*5, next_state, 1.0)
         self.position = (self.position + 1) % self.capacity
 
     def sample(self, batch_size):

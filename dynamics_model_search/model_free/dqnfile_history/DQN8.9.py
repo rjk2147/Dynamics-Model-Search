@@ -362,21 +362,19 @@ def cnn_model(scaled_images, **kwargs):
     :param kwargs: (dict) Extra keywords parameters for the convolutional layers of the CNN
     :return: (TensorFlow Tensor) The CNN output layer
     """
-    with tf.variable_scope(kwargs["name"]):
-        scaled_images = tf.cast(scaled_images, tf.float32) / 255.0
-        scaled_images = tf.transpose(scaled_images, [0, 3, 2, 1])
-        layer_out = nature_cnn(scaled_images)
-        action_scores = tf_layers.fully_connected(layer_out, num_outputs=kwargs["num_actions"], activation_fn=None)
+    scaled_images = tf.cast(scaled_images, tf.float32) / 255.0
+    scaled_images = tf.transpose(scaled_images, [0, 3, 2, 1])
+    layer_out = nature_cnn(scaled_images)
+    action_scores = tf_layers.fully_connected(layer_out, num_outputs=kwargs["num_actions"], activation_fn=None)
     return action_scores
 
 def linear_model(scaled_images, **kwargs):
-    with tf.variable_scope(kwargs["name"]):
-        extracted_features = tf.layers.flatten(scaled_images)
-        action_out = extracted_features
-        action_out = tf_layers.fully_connected(action_out, num_outputs=512, activation_fn=None)
-        action_out = tf.nn.relu(action_out)
-        # action_scores = tf_layers.fully_connected(action_out, num_outputs=self.n_actions, activation_fn=None)
-        action_scores = tf_layers.fully_connected(action_out, num_outputs=kwargs["num_actions"], activation_fn=None)
+    extracted_features = tf.layers.flatten(scaled_images)
+    action_out = extracted_features
+    action_out = tf_layers.fully_connected(action_out, num_outputs=512, activation_fn=None)
+    action_out = tf.nn.relu(action_out)
+    # action_scores = tf_layers.fully_connected(action_out, num_outputs=self.n_actions, activation_fn=None)
+    action_scores = tf_layers.fully_connected(action_out, num_outputs=kwargs["num_actions"], activation_fn=None)
     return action_scores
 
 
@@ -479,22 +477,31 @@ class DQN():
 
         # Modified by Yu
         self.optimizer_tf = tf.train.RMSPropOptimizer(lr, alpha, eps)
-        self.x = tf.placeholder(tf.float32, [None, 1, 84, 84], name="state")
-        self.target_x = tf.placeholder(tf.float32, [None, 1, 84, 84], name="target_state")
+        self.x = tf.placeholder(tf.float32, [None, 1, 84, 84])
+        self.target_x = tf.stop_gradient(tf.placeholder(tf.float32, [None, 1, 84, 84]))
         self.sess = tf.Session()
 
         with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
                 if len(env.observation_space.shape) == 1:
-                    self.model = linear_model(self.x, num_actions=self.num_actions, name="q_model")
-                    self.target_model = linear_model(self.target_x, num_actions=self.num_actions, name="target_q_model")
+                    with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+                        self.model = linear_model(self.x, num_actions=self.num_actions)
+                    with tf.variable_scope("target_model", reuse=tf.AUTO_REUSE):
+                        self.target_model = linear_model(self.target_x, num_actions=self.num_actions)
                 else:
-                    self.model = cnn_model(self.x, num_actions=self.num_actions, name="q_model")
-                    self.target_model = cnn_model(self.target_x, num_actions=self.num_actions, name="target_q_model")
-        # Get all the variables in the Q primary network.
-        q_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="q_model")
-        # Get all the variables in the Q target network.
-        q_target_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="target_q_model")
+                    with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+                        self.model = cnn_model(self.x, num_actions=self.num_actions)
+                    with tf.variable_scope("target_model", reuse=tf.AUTO_REUSE):
+                        self.target_model = cnn_model(self.target_x, num_actions=self.num_actions)
+        self.m_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/model")
+        self.t_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/target_model")
 
+        # with tf.variable_scope("model", reuse=tf.AUTO_REUSE):
+        #         if len(env.observation_space.shape) == 1:
+        #             self.model = linear_model(self.x, num_actions=self.num_actions)
+        #             self.target_model = linear_model(self.target_x, num_actions=self.num_actions)
+        #         else:
+        #             self.model = cnn_model(self.x, num_actions=self.num_actions)
+        #             self.target_model = cnn_model(self.target_x, num_actions=self.num_actions)
         # q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func")
         # q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func")
     def act(self, state):
@@ -636,37 +643,42 @@ class DQN():
 
             # Compute current Q value, q_func takes only state and output value for every state-action pair
             # We choose Q based on action taken.
+            act_batch = self.sess.run(act_batch)
             obs_batch = self.sess.run(obs_batch)
             next_obs_batch = self.sess.run(next_obs_batch)
-            current_Q_values = tf.gather(self.model, act_batch, axis=1)#act is the index of sec dim.
+            init = tf.compat.v1.global_variables_initializer()
+            self.sess.run(init)
+            rows = np.arange(act_batch.shape[0]) #tf.range create tensor.
+            current_Q_values = self.sess.run(self.model, feed_dict={self.x: obs_batch})[rows, act_batch] #act is the index of sec dim.
             #.squeeze() not work for multi dim.#tf also have gather
+            print("current_Q_values", current_Q_values.shape)
+            print(act_batch)
             # Compute next Q value based on which action gives max Q values
             # Detach variable from the current graph since we don't want gradients for next Q to propagated
-            next_max_q = tf.reduce_max(self.target_model, axis=1) #.detach().max(1)[0]
+            next_max_q = self.sess.run(self.target_model, feed_dict={self.target_x: next_obs_batch}).max(1) #.detach().max(1)[0]
+            print("next_max_q", next_max_q)
             next_Q_values = not_done_mask * next_max_q
 
             # Compute the target of the current Q values
             target_Q_values = rew_batch + (self.gamma * next_Q_values)
             # Compute Bellman error
-            bellman_error = tf.stop_gradient(target_Q_values) - current_Q_values
+            bellman_error = target_Q_values - current_Q_values
             # clip the bellman error between [-1 , 1]
             clipped_bellman_error = tf.clip_by_value(bellman_error, -1, 1) # tf.clip_by_value vs pytorch .clamp vs np.clip
             # Note: clipped_bellman_delta * -1 will be right gradient
             d_error = clipped_bellman_error * -1.0
-            # Clear previous gradients before backward pass # run backward pass
-            # grads = self.optimizer_tf.compute_gradients(d_error, var_list=self.m_vars)
-            loss = tf.reduce_mean(tf.square(d_error), name="loss")
+            # Clear previous gradients before backward pass
+            self.optimizer.zero_grad()
+            # run backward pass
+            grads = self.optimizer_tf.compute_gradients(d_error, var_list=self.m_vars)
 
             # Perform the update
-            train_op = self.optimizer_tf.minimize(loss, name="rms_optimizer"),
-            init = tf.compat.v1.global_variables_initializer()
-            self.sess.run(init)
-            self.sess.run(train_op, feed_dict={self.x: obs_batch, self.target_x: next_obs_batch})
+            self.optimizer_tf.apply_gradients(grads)
             self.num_param_updates += 1
 
             # Periodically update the target network by Q network to target Q network
             if self.num_param_updates % self.target_update_freq == 0:
-                self.optimizer_tf.apply_gradients([v_t.assign(v) for v_t, v in zip(self.q_vars, self.q_target_vars)])
+                self.optimizer_tf.apply_gradients(zip(grads, self.t_vars))
 
     # TODO Fill in later
     def save(self, *kwargs):

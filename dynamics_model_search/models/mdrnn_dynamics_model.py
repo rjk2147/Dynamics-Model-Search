@@ -6,7 +6,7 @@ import time, math
 from torch.distributions import Normal, Uniform, OneHotCategorical
 
 class MDN(nn.Module):
-    def __init__(self, in_features, out_features, num_gaussians, tanh=False):
+    def __init__(self, in_features, out_features, num_gaussians):
         super(MDN, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -15,7 +15,6 @@ class MDN(nn.Module):
             nn.Linear(in_features, num_gaussians),
             nn.Softmax(dim=1)
         )
-        self.tanh = tanh
         # self.pi = CategoricalNetwork(in_features, num_gaussians)
         self.sigma = nn.Linear(in_features, out_features*num_gaussians)
         self.mu = nn.Linear(in_features, out_features*num_gaussians)
@@ -24,8 +23,6 @@ class MDN(nn.Module):
         epsilon = 1e-20
         pi = torch.clamp(self.pi(x), min=epsilon)
         mu = self.mu(x)
-        if self.tanh:
-            mu = torch.tanh(mu)
         sigma = torch.exp(1+self.sigma(x))
         # sigma = torch.ones_like(mu)/100000.0
 
@@ -121,12 +118,7 @@ class MDRNNDynamicsModel(DynamicsModel):
         DynamicsModel.__init__(self, env_in)
         self.lr = 1e-5
         self.is_reset = False
-        self.val_seq_len = seq_len
-        self.train_seq = 1
-        self.look_ahead_per_epoch = 1
-        self.batch_size = 64
-        self.max_seq_len = seq_len
-        
+
         self.model = MDRNNModel(self.state_dim, self.act_dim)
         if dev is None:
             self.model.to(device)
@@ -135,23 +127,7 @@ class MDRNNDynamicsModel(DynamicsModel):
             self.model.to(dev)
             self.device = dev
         self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
-        self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
-
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
-        self.model.eval()
-
-    def reinit(self, state_dim, state_mul_const, act_dim, act_mul_const):
-        self.state_mul_const = state_mul_const
-        self.state_mul_const[self.state_mul_const == np.inf] = 1
-
-        self.act_mul_const = act_mul_const
-        self.act_dim = act_dim
-        self.state_dim = state_dim
-
-        self.model = MDRNNModel(self.state_dim, self.act_dim)
-        self.model.to(self.device)
-        self.state_mul_const_tensor = torch.Tensor(self.state_mul_const).to(self.device)
-        self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
+        # self.act_mul_const_tensor = torch.Tensor(self.act_mul_const).to(self.device)
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         self.model.eval()
@@ -201,7 +177,7 @@ class MDRNNDynamicsModel(DynamicsModel):
         self.model.eval()
         if obs_in is not None and state_in:
             state_in = torch.cat(obs_in[1])
-            obs_in = obs_in[0]
+            obs_in = obs_in[0].float()
             # while len(obs_in.shape) < 3:
             # obs_in = obs_in.unsqueeze(1)
         else:

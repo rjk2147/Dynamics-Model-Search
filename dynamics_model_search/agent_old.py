@@ -162,10 +162,9 @@ class Agent:
                 else:
                     # act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     # print(np.shape(np.expand_dims(obs[0], 0)))
-                    # print(3)
                     act = self.rl_learner.act(np.expand_dims(obs[0], 0))
                     ex_r = 0
-                    # print(4)
+
 
                     # modified by yu
                     # self.rl_learner.value(np.expand_dims(obs[0], 0))
@@ -193,7 +192,7 @@ class Agent:
                 else:
                     action = action.astype(int)
                 new_obs, r, done, info = env.step(action)
-                # print(action, done, self.steps)
+                print(action, done, self.steps)
 
                 if self.planner is not None and self.model is not None:
                     # TODO: Efficiently pass this h value from the search since it is already calculated
@@ -213,12 +212,9 @@ class Agent:
 
                 if training:
                     ## RL Learner Update
-                    # print(0)
                     self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
-                    # print(1)
                     self.from_update += 1
                     self.rl_update()
-                    # print(2)
                     self.rl_learner.steps += 1
 
                     ## Self-Model Update
@@ -228,7 +224,7 @@ class Agent:
                     obs_list.append(obs[0])
                 obs = new_obs
                 # print(done, 1)
-            # print(done, 2)
+            print(done, 2)
             if training:
                 print('Models saved to '+str(self.save_str))
                 self.rl_learner.save(self.save_str)
@@ -244,7 +240,7 @@ class Agent:
             self.u = 0
             if self.avg_train_loss is not None:
                 self.avg_train_loss = None
-            # print(done, 1)
+            print(done, 1)
         # self.planner.exit()
         if not training:
             return obs_lists

@@ -504,22 +504,22 @@ class DQN():
         #             self.target_model = cnn_model(self.target_x, num_actions=self.num_actions)
         # q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func")
         # q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func")
-    def act(self, state):
-        # print(state.shape)
-        sample = random.random()
-        eps_threshold = self.exploration.value(self.steps)
-        if torch.is_tensor(state):
-            state = state.type(dtype).to(self.device)
-        else:
-            state = torch.from_numpy(state).type(dtype).to(self.device)
-        # print(Variable(state, volatile=True))
-        max_act = self.Q(Variable(state, volatile=True)).data.max(1)[1]
-        # print(self.Q(Variable(state, volatile=True)).data)
-        # print("max_act:", max_act)
-        if sample > eps_threshold and self.steps > self.learning_starts:
-            return max_act
-        else:
-            return torch.randint_like(max_act, self.num_actions)
+    # def act(self, state):
+    #     # print(state.shape)
+    #     sample = random.random()
+    #     eps_threshold = self.exploration.value(self.steps)
+    #     if torch.is_tensor(state):
+    #         state = state.type(dtype).to(self.device)
+    #     else:
+    #         state = torch.from_numpy(state).type(dtype).to(self.device)
+    #     # print(Variable(state, volatile=True))
+    #     max_act = self.Q(Variable(state, volatile=True)).data.max(1)[1]
+    #     # print(self.Q(Variable(state, volatile=True)).data)
+    #     # print("max_act:", max_act)
+    #     if sample > eps_threshold and self.steps > self.learning_starts:
+    #         return max_act
+    #     else:
+    #         return torch.randint_like(max_act, self.num_actions)
 
     def new_act(self, state):
         sample = random.random()
@@ -540,15 +540,15 @@ class DQN():
             # max_act = random.randrange(0, 101, 2)
             # return max_act
 
-    # def value(self, state, act, next_state):
-    def value(self, state):
-        if torch.is_tensor(state):
-            state = state.type(dtype).to(self.device)
-        else:
-            state = torch.from_numpy(state).type(dtype).to(self.device)
-        value = self.Q(Variable(state, volatile=True)).data.max(1)[0].unsqueeze(1)
-        # print("value:", value)
-        return value
+    # # def value(self, state, act, next_state):
+    # def value(self, state): # model free
+    #     if torch.is_tensor(state):
+    #         state = state.type(dtype).to(self.device)
+    #     else:
+    #         state = torch.from_numpy(state).type(dtype).to(self.device)
+    #     value = self.Q(Variable(state, volatile=True)).data.max(1)[0].unsqueeze(1)
+    #     # print("value:", value)
+    #     return value
 
     def new_value(self, state):
         if tf.is_tensor(state):
@@ -565,60 +565,60 @@ class DQN():
         print("new_value:", (self.policy_proba * self.q_values))
         return q_out
 
-    def update(self, batch_size=32, num_param_updates=0):
-
-        ### Perform experience replay and train the network.
-        # Note that this is only done if the replay buffer contains enough samples
-        # for us to learn something useful -- until then, the model will not be
-        # initialized and random actions should be taken
-        if (self.steps > self.learning_starts and
-                self.steps % self.learning_freq == 0 and
-                self.replay.can_sample(batch_size)):
-            # Use the replay buffer to sample a batch of transitions
-            # Note: done_mask[i] is 1 if the next state corresponds to the end of an episode,
-            # in which case there is no Q-value at the next state; at the end of an
-            # episode, only the current state reward contributes to the target
-            obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = self.replay.sample(batch_size)
-            # Convert numpy nd_array to tensorflow variables for calculation
-            obs_batch = Variable(torch.from_numpy(obs_batch).type(dtype))
-            act_batch = Variable(torch.from_numpy(act_batch).long())
-            rew_batch = Variable(torch.from_numpy(rew_batch))
-            next_obs_batch = Variable(torch.from_numpy(next_obs_batch).type(dtype))
-            not_done_mask = Variable(torch.from_numpy(1 - done_mask)).type(dtype)
-
-            if USE_CUDA:
-                act_batch = act_batch.to(self.device)
-                rew_batch = rew_batch.to(self.device)
-
-            # Compute current Q value, q_func takes only state and output value for every state-action pair
-            # We choose Q based on action taken.
-            current_Q_values = self.Q(obs_batch).gather(1, act_batch.unsqueeze(1)).squeeze(1)
-            print("current_Q_values", current_Q_values)
-            # Compute next Q value based on which action gives max Q values
-            # Detach variable from the current graph since we don't want gradients for next Q to propagated
-            next_max_q = self.target_Q(next_obs_batch).detach().max(1)[0]
-            print("next_max_q", next_max_q)
-            next_Q_values = not_done_mask * next_max_q
-            # Compute the target of the current Q values
-            target_Q_values = rew_batch + (self.gamma * next_Q_values)
-            # Compute Bellman error
-            bellman_error = target_Q_values - current_Q_values
-            # clip the bellman error between [-1 , 1]
-            clipped_bellman_error = bellman_error.clamp(-1, 1)
-            # Note: clipped_bellman_delta * -1 will be right gradient
-            d_error = clipped_bellman_error * -1.0
-            # Clear previous gradients before backward pass
-            self.optimizer.zero_grad()
-            # run backward pass
-            current_Q_values.backward(d_error.data)
-
-            # Perfom the update
-            self.optimizer.step()
-            self.num_param_updates += 1
-
-            # Periodically update the target network by Q network to target Q network
-            if self.num_param_updates % self.target_update_freq == 0:
-                self.target_Q.load_state_dict(self.Q.state_dict())
+    # def update(self, batch_size=32, num_param_updates=0):
+    #
+    #     ### Perform experience replay and train the network.
+    #     # Note that this is only done if the replay buffer contains enough samples
+    #     # for us to learn something useful -- until then, the model will not be
+    #     # initialized and random actions should be taken
+    #     if (self.steps > self.learning_starts and
+    #             self.steps % self.learning_freq == 0 and
+    #             self.replay.can_sample(batch_size)):
+    #         # Use the replay buffer to sample a batch of transitions
+    #         # Note: done_mask[i] is 1 if the next state corresponds to the end of an episode,
+    #         # in which case there is no Q-value at the next state; at the end of an
+    #         # episode, only the current state reward contributes to the target
+    #         obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = self.replay.sample(batch_size)
+    #         # Convert numpy nd_array to tensorflow variables for calculation
+    #         obs_batch = Variable(torch.from_numpy(obs_batch).type(dtype))
+    #         act_batch = Variable(torch.from_numpy(act_batch).long())
+    #         rew_batch = Variable(torch.from_numpy(rew_batch))
+    #         next_obs_batch = Variable(torch.from_numpy(next_obs_batch).type(dtype))
+    #         not_done_mask = Variable(torch.from_numpy(1 - done_mask)).type(dtype)
+    #
+    #         if USE_CUDA:
+    #             act_batch = act_batch.to(self.device)
+    #             rew_batch = rew_batch.to(self.device)
+    #
+    #         # Compute current Q value, q_func takes only state and output value for every state-action pair
+    #         # We choose Q based on action taken.
+    #         current_Q_values = self.Q(obs_batch).gather(1, act_batch.unsqueeze(1)).squeeze(1)
+    #         print("current_Q_values", current_Q_values)
+    #         # Compute next Q value based on which action gives max Q values
+    #         # Detach variable from the current graph since we don't want gradients for next Q to propagated
+    #         next_max_q = self.target_Q(next_obs_batch).detach().max(1)[0]
+    #         print("next_max_q", next_max_q)
+    #         next_Q_values = not_done_mask * next_max_q
+    #         # Compute the target of the current Q values
+    #         target_Q_values = rew_batch + (self.gamma * next_Q_values)
+    #         # Compute Bellman error
+    #         bellman_error = target_Q_values - current_Q_values
+    #         # clip the bellman error between [-1 , 1]
+    #         clipped_bellman_error = bellman_error.clamp(-1, 1)
+    #         # Note: clipped_bellman_delta * -1 will be right gradient
+    #         d_error = clipped_bellman_error * -1.0
+    #         # Clear previous gradients before backward pass
+    #         self.optimizer.zero_grad()
+    #         # run backward pass
+    #         current_Q_values.backward(d_error.data)
+    #
+    #         # Perfom the update
+    #         self.optimizer.step()
+    #         self.num_param_updates += 1
+    #
+    #         # Periodically update the target network by Q network to target Q network
+    #         if self.num_param_updates % self.target_update_freq == 0:
+    #             self.target_Q.load_state_dict(self.Q.state_dict())
 
     def new_update(self, batch_size=32, num_param_updates=0):
 

@@ -30,6 +30,15 @@ class Agent:
             self.model.replay = deque(maxlen=int(replay_size))
         else:
             self.act_mul_const = 1.0
+
+        # Added for Mujoco
+        self.act_mul_const = 1.0
+        self.state_mul_const = 1.0
+
+        if dynamics_model is not None:
+            self.model.act_mul_const = 1.0
+            self.model.state_mul_const = 1.0
+            self.model.state_mul_const_tensor = torch.Tensor([self.model.state_mul_const]).to(self.model.device)
         
         if not os.path.exists('rl_models/'):
             os.mkdir('rl_models/')
@@ -80,7 +89,7 @@ class Agent:
 
     def rl_update(self, batch_size=256):
         if len(self.rl_learner.replay) > batch_size:
-            self.rl_learner.update(batch_size, self.n_updates) ### modified by Yu. test new
+            self.rl_learner.new_update(batch_size, self.n_updates) ### modified by Yu. test new
             self.n_updates += 1
 
     def sm_update(self, obs, act, new_obs, done):
@@ -106,6 +115,10 @@ class Agent:
 
             self.model.model.norm_mean = obs_mean
             self.model.model.norm_std = obs_std
+
+            # self.model.model.norm_mean = 0
+            # self.model.model.norm_std = 1
+
             train_loss = self.model.update(data)
             train_loss = np.array(train_loss)
             if self.avg_train_loss is None:
@@ -125,9 +138,6 @@ class Agent:
         return self.run(training=False, env=env, max_timesteps=max_timesteps)
 
     def run(self, training, env, max_timesteps=1e6):
-        if self.model is not None:
-            self.model.max_seq_len = self.seq_len
-            # self.seq_len = self.model.max_seq_len
         self.x_seq = deque(maxlen=self.seq_len)
         self.a_seq = deque(maxlen=self.seq_len)
         self.y_seq = deque(maxlen=self.seq_len)
@@ -140,7 +150,7 @@ class Agent:
         self.ep_rs = deque(maxlen=100)
         self.ex_ep_rs = deque(maxlen=100)
         self.ep_lens = deque(maxlen=100)
-        # self.steps = 0
+
         self.start_time = time.time()
         while self.steps < max_timesteps:
             obs_list = []
@@ -160,21 +170,14 @@ class Agent:
                     ex_r = best_r
                     self.planner.clear()
                 else:
-                    # act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
-                    # print(np.shape(np.expand_dims(obs[0], 0)))
-                    # print(3)
-                    act = self.rl_learner.act(np.expand_dims(obs[0], 0))
+                    act = self.rl_learner.act(np.expand_dims(obs[0], 0)).cpu().numpy().flatten()
                     ex_r = 0
-                    # print(4)
-
                     # modified by yu
-                    # self.rl_learner.value(np.expand_dims(obs[0], 0))
+                    self.rl_learner.value(np.expand_dims(obs[0], 0))
                     # input should be a batch of states
                     # print("1", np.expand_dims(obs[0], 0))
-
-                    # self.batch_size = 32
-                    # self.rl_update(batch_size=32)
-
+                    self.batch_size = 32
+                    self.rl_update(batch_size=32)
                     # if self.rl_learner.replay.can_sample(self.batch_size):
                     #     data = self.rl_learner.replay.sample(self.batch_size)
                     #     act_test = self.rl_learner.new_act(data[0])
@@ -185,15 +188,11 @@ class Agent:
                 # modified by yu
                 # action.int()
                 action = act*self.act_mul_const
-                # print(action,type(action))
-                if type(action) is not np.ndarray:
-                    action = action.numpy()
                 if type(action) == int:
                     pass
                 else:
                     action = action.astype(int)
                 new_obs, r, done, info = env.step(action)
-                # print(action, done, self.steps)
 
                 if self.planner is not None and self.model is not None:
                     # TODO: Efficiently pass this h value from the search since it is already calculated
@@ -213,12 +212,11 @@ class Agent:
 
                 if training:
                     ## RL Learner Update
-                    # print(0)
-                    self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
-                    # print(1)
+                    done_bool = float(done) if ep_len < env._max_episode_steps else 0
+                    self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done_bool)
+                    # self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                     self.from_update += 1
                     self.rl_update()
-                    # print(2)
                     self.rl_learner.steps += 1
 
                     ## Self-Model Update
@@ -227,8 +225,7 @@ class Agent:
                 else:
                     obs_list.append(obs[0])
                 obs = new_obs
-                # print(done, 1)
-            # print(done, 2)
+
             if training:
                 print('Models saved to '+str(self.save_str))
                 self.rl_learner.save(self.save_str)
@@ -244,7 +241,6 @@ class Agent:
             self.u = 0
             if self.avg_train_loss is not None:
                 self.avg_train_loss = None
-            # print(done, 1)
         # self.planner.exit()
         if not training:
             return obs_lists

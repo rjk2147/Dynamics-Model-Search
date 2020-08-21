@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # Algorithms
     parser.add_argument('--env', type=str, default='HalfCheetah-v2') # pybullet environment
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
-    parser.add_argument('--rl', type=str, default='TD3') # model free agent algorithm
+    parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm
     parser.add_argument('--model-arch', type=str, default='mdrnn') # type of self-model
     parser.add_argument('--atari', action='store_true', default=False)
@@ -56,6 +56,11 @@ if __name__ == '__main__':
         env = wrap_pytorch(env)
     else:
         env = gym.make(args.env)
+        try:
+            env = env.env
+        except:
+            print('Env not wrapped')
+    env._max_episode_steps = 1000
 
     if args.seed is not None:
         torch.manual_seed(args.seed)
@@ -117,7 +122,7 @@ if __name__ == '__main__':
         from model_free.TD3 import TD3
         rl_learner = TD3(env)
     elif args.rl.upper() == 'SAC':
-        from model_free.SAC import SAC
+        from model_free.new_SAC import SAC
         rl_learner = SAC(env)
     elif args.rl.upper() == 'DQN':
         from model_free.DQN import DQN

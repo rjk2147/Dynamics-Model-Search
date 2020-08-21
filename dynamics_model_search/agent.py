@@ -161,10 +161,13 @@ class Agent:
                 ep_r += r
                 ep_exp_r += ex_r
                 ep_len += 1
+                
+                if ep_len >= env._max_episode_steps: done=True
 
                 if training:
                     ## RL Learner Update
-                    done_bool = float(done) if ep_len < env._max_episode_steps else 0
+                    # done_bool = float(done) if ep_len < env._max_episode_steps else 0
+                    done_bool = float(False) if ep_len==env._max_episode_steps else float(done)
                     self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done_bool)
                     # self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                     self.from_update += 1

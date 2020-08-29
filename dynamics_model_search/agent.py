@@ -11,6 +11,11 @@ from model_free.DQN import DQN
 from model_free.DDQN import DDQN
 import tensorflow as tf
 
+import openpyxl
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Agent:
@@ -66,15 +71,15 @@ class Agent:
         if self.start_time:
             print('Total Time: '+str(round(time.time()-self.start_time, 2)))
         print('--------------------------------------\n')
-        # # Modifed By Yu
-        # # os.system("tensorboard --logdir runs/test")
-        # # print(self.rl_learner)
-        # self.writer.add_scalar('Reward',
-        #                   self.ep_rs[-1],
-        #                   self.steps)
-        # if self.ep_rs[-1] > 20:
-        #     print('Target achived!')
-        # # self.writer.close()
+        # Modifed By Yu
+        # os.system("tensorboard --logdir runs/test")
+        # print(self.rl_learner)
+        self.writer.add_scalar('Reward',
+                          self.ep_rs[-1],
+                          self.steps)
+        if self.ep_rs[-1] > 20:
+            print('Target achived!')
+        # self.writer.close()
 
 
 
@@ -244,6 +249,32 @@ class Agent:
             self.u = 0
             if self.avg_train_loss is not None:
                 self.avg_train_loss = None
+            print(len(self.ep_rs))
+            wb = openpyxl.load_workbook('E:\Materials\Research\Research_Robert\TF_dqn_data.xlsx')
+            writer = pd.ExcelWriter('E:\Materials\Research\Research_Robert\TF_dqn_data.xlsx', engine='openpyxl')
+            writer.book = wb
+            # self.ep_rs = np.arange(1, 101, 1).astype(int).tolist()
+            # print(self.ep_rs)
+            if len(self.ep_rs) == 100:
+                episodes = np.arange(1, 101, 1).astype(int).tolist()
+                # episodes = np.arange(1, 3, 1).astype(int).tolist()
+                # print(episode_rewards[-len(episode_rewards)-1:0])
+                list_tmp = list(self.ep_rs)
+                list1 = list(map(lambda x: list_tmp[:][x - 1], episodes))
+
+                df = pd.DataFrame(
+                    {"episodes": episodes,
+                     "episode_rewards": list1,
+                     }
+                )
+                df.plot(x='episodes', y='episode_rewards', color='g')
+                plt.show()
+
+                df.to_excel(writer, sheet_name='Sheet0', index=False)
+                writer.save()  # important
+                writer.close()
+
+                print("Record Done!")
             # print(done, 1)
         # self.planner.exit()
         if not training:

@@ -31,12 +31,10 @@ def get_wrapper_by_name(env, classname):
         elif isinstance(env, gym.Wrapper):
             currentenv = currentenv.env
         else:
-            raise ValueError("Couldn't find wrapper named %s" % classname)
-
+            raise ValueError("Couldn't find wrapper named %s"%classname)
 
 USE_CUDA = torch.cuda.is_available()
 dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
-
 
 class LinearSchedule(object):
     def __init__(self, schedule_timesteps, final_p, initial_p=1.0):
@@ -54,14 +52,13 @@ class LinearSchedule(object):
             final output value
         """
         self.schedule_timesteps = schedule_timesteps
-        self.final_p = final_p
-        self.initial_p = initial_p
+        self.final_p            = final_p
+        self.initial_p          = initial_p
 
     def value(self, t):
         """See Schedule.value"""
-        fraction = min(float(t) / self.schedule_timesteps, 1.0)
+        fraction  = min(float(t) / self.schedule_timesteps, 1.0)
         return self.initial_p + fraction * (self.final_p - self.initial_p)
-
 
 def linear_interpolation(left, right, alpha):
     """
@@ -73,7 +70,6 @@ def linear_interpolation(left, right, alpha):
     """
 
     return left + alpha * (right - left)
-
 
 class PiecewiseSchedule(object):
     """
@@ -112,7 +108,6 @@ class PiecewiseSchedule(object):
         assert self._outside_value is not None
         return self._outside_value
 
-
 class ReplayBuffer(object):
     def __init__(self, size, frame_history_len):
         """This is a memory efficient implementation of the replay buffer.
@@ -143,13 +138,13 @@ class ReplayBuffer(object):
         self.size = size
         self.frame_history_len = frame_history_len
 
-        self.next_idx = 0
+        self.next_idx      = 0
         self.num_in_buffer = 0
 
-        self.obs = None
-        self.action = None
-        self.reward = None
-        self.done = None
+        self.obs      = None
+        self.action   = None
+        self.reward   = None
+        self.done     = None
 
     def can_sample(self, batch_size):
         """Returns true if `batch_size` different transitions can be sampled from the buffer."""
@@ -157,11 +152,11 @@ class ReplayBuffer(object):
         return batch_size + 1 <= self.num_in_buffer
 
     def _encode_sample(self, idxes):
-        obs_batch = np.concatenate([self._encode_observation(idx)[np.newaxis, :] for idx in idxes], 0)
-        act_batch = self.action[idxes]
-        rew_batch = self.reward[idxes]
+        obs_batch      = np.concatenate([self._encode_observation(idx)[np.newaxis, :] for idx in idxes], 0)
+        act_batch      = self.action[idxes]
+        rew_batch      = self.reward[idxes]
         next_obs_batch = np.concatenate([self._encode_observation(idx + 1)[np.newaxis, :] for idx in idxes], 0)
-        done_mask = np.array([1.0 if self.done[idx] else 0.0 for idx in idxes], dtype=np.float32)
+        done_mask      = np.array([1.0 if self.done[idx] else 0.0 for idx in idxes], dtype=np.float32)
 
         return obs_batch, act_batch, rew_batch, next_obs_batch, done_mask
 
@@ -220,7 +215,6 @@ class ReplayBuffer(object):
                 if candidate not in res:
                     res.append(candidate)
             return res
-
         assert self.can_sample(batch_size)
         idxes = sample_n_unique(lambda: random.randint(0, self.num_in_buffer - 2), batch_size)
         return self._encode_sample(idxes)
@@ -282,13 +276,13 @@ class ReplayBuffer(object):
         # make sure we are not using low-dimensional observations, such as RAM
         # if len(frame.shape) > 1:
         #     transpose image frame into (img_c, img_h, img_w)
-        # frame = frame.transpose(2, 0, 1)
+            # frame = frame.transpose(2, 0, 1)
 
         if self.obs is None:
-            self.obs = np.empty([self.size] + list(frame.shape), dtype=np.uint8)
-            self.action = np.empty([self.size], dtype=np.int32)
-            self.reward = np.empty([self.size], dtype=np.float32)
-            self.done = np.empty([self.size], dtype=np.bool)
+            self.obs      = np.empty([self.size] + list(frame.shape), dtype=np.uint8)
+            self.action   = np.empty([self.size],                     dtype=np.int32)
+            self.reward   = np.empty([self.size],                     dtype=np.float32)
+            self.done     = np.empty([self.size],                     dtype=np.bool)
 
         self.obs[self.next_idx] = frame
 
@@ -317,14 +311,13 @@ class ReplayBuffer(object):
         """
         self.action[idx] = action
         self.reward[idx] = reward
-        self.done[idx] = done
+        self.done[idx]   = done
 
 
 class Variable(autograd.Variable):
     def __init__(self, data, *args, **kwargs):
         data = data.to(self.device)
         super(Variable, self).__init__(data, *args, **kwargs)
-
 
 # class DQNCNNModel(nn.Module):
 #     def __init__(self, in_channels=4, num_actions=18):
@@ -378,8 +371,6 @@ def cnn_model(scaled_images, **kwargs):
         action_scores = tf_layers.fully_connected(layer_out, num_outputs=kwargs["num_actions"], activation_fn=None)
     return action_scores
 
-
-
 def linear_model(scaled_images, **kwargs):
     with tf.compat.v1.variable_scope(kwargs["name"]):
         extracted_features = tf.layers.flatten(scaled_images)
@@ -391,50 +382,26 @@ def linear_model(scaled_images, **kwargs):
     return action_scores
 
 
-# def build_calculation(self) -> None:
-#     self.o_b = tf.compat.v1.placeholder(tf.uint8, [None, 1, 84, 84], name="obs_batch")
-#     self.a_b = tf.compat.v1.placeholder(tf.int32, [None], name="act_batch")
-#     self.r_b = tf.compat.v1.placeholder(tf.float32, [None], name="rew_batch")
-#     self.next_o_b = tf.compat.v1.placeholder(tf.uint8, [None, 1, 84, 84], name="next_obs_batch")
-#     self.d_m = tf.compat.v1.placeholder(tf.float32, [None], name="done_mask")
-#     not_done_mask = tf.convert_to_tensor(1 - self.d_m)
-#     current_Q_values = tf.gather(self.model, self.a_b, axis=1)  # act is the index of sec dim.
-#     # .squeeze() not work for multi dim.#tf also have gather
-#     # Compute next Q value based on which action gives max Q values
-#     # Detach variable from the current graph since we don't want gradients for next Q to propagated
-#     next_max_q = tf.reduce_max(self.target_model, axis=1)  # .detach().max(1)[0]
-#     next_Q_values = not_done_mask * next_max_q
-#
-#     # Compute the target of the current Q values
-#     target_Q_values = self.r_b + (self.gamma * next_Q_values)
-#     # Compute Bellman error
-#     bellman_error = tf.stop_gradient(target_Q_values) - current_Q_values
-#     # clip the bellman error between [-1 , 1]
-#     clipped_bellman_error = tf.clip_by_value(bellman_error, -1, 1)  # tf.clip_by_value vs pytorch .clamp vs np.clip
-#     # Note: clipped_bellman_delta * -1 will be right gradient
-#     self.d_error = clipped_bellman_error * -1.0
-
-
 class DQN():
     def __init__(self,
-                 env,
-                 exploration=PiecewiseSchedule([
-                     (0, 1.0),
-                     (1e6, 0.1),
-                     (2e6, 0.1),
-                     (5e6, 0.01),
-                     (8e6, 0.005)
-                 ], outside_value=0.005),
-                 replay_buffer_size=90000,
-                 gamma=0.99,
-                 lr=0.00008,
-                 alpha=0.90,
-                 eps=0.01,
-                 learning_starts=10000,  # 10000
-                 learning_freq=4,
-                 frame_history_len=4,
-                 target_update_freq=10000 # 10000
-                 ):
+        env,
+        exploration=PiecewiseSchedule([
+            (0, 1.0),
+            (1e6, 0.1),
+            (2e6, 0.1),
+            (5e6, 0.01),
+            (8e6, 0.005)
+            ], outside_value=0.005),
+        replay_buffer_size=90000,
+        gamma=0.99,
+        lr=0.00008,
+        alpha = 0.90,
+        eps = 0.01,
+        learning_starts=10000,#10000
+        learning_freq=4,
+        frame_history_len=4,
+        target_update_freq=10000
+        ):
         # LinearSchedule(1e6, 0.1)
         """Run Deep Q-learning algorithm.
 
@@ -478,7 +445,7 @@ class DQN():
             each update to the target Q network
         """
         assert type(env.observation_space) == gym.spaces.Box
-        assert type(env.action_space) == gym.spaces.Discrete
+        assert type(env.action_space)      == gym.spaces.Discrete
 
         ###############
         # BUILD MODEL #
@@ -526,113 +493,140 @@ class DQN():
                 self.model = cnn_model(self.x, num_actions=self.num_actions, name="q_model")
                 self.target_model = cnn_model(self.target_x, num_actions=self.num_actions, name="target_q_model")
         # Get all the variables in the Q primary network.
-        self.q_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="model/q_model")
+        self.q_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="q_model")
         # Get all the variables in the Q target network.
-        self.q_target_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="model/target_q_model")
-        self.predict = tf.argmax(self.model, 1)
-        self.target_predict = tf.argmax(self.target_model, 1)
-
-        self.build_calculation()
-
-        # self.error = tf.placeholder(tf.float32, shape=[None, self.num_actions])
-        self.error = tf.placeholder(tf.float32, shape=[None])
-        self.loss = tf.losses.mean_squared_error(self.error, tf.reduce_max(self.model, axis=1))
-        # self.loss = tf.reduce_mean(tf.square(self.error), name="loss")
-        # self.train_op = self.optimizer_tf.minimize(self.loss, var_list=self.model, name="rms_optimizer")
-        self.train_op = self.optimizer_tf.minimize(self.loss, name="rms_optimizer")
-        # self.train_op = self.optimizer_tf.minimize(tf.reduce_mean(tf.square(self.error), name="rms_optimizer"))
-
-        self.update_ops = self._update_target_vars()
-
+        self.q_target_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="target_q_model")
         init = tf.compat.v1.global_variables_initializer()
         self.sess.run(init)
-        self.sess.graph.finalize()
-        writer = tf.summary.FileWriter('./name_scope', graph=tf.get_default_graph())
-        writer.close()
 
+        # q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func")
+        # q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=tf.get_variable_scope().name + "/q_func")
+    # def act(self, state):
+    #     # print(state.shape)
+    #     sample = random.random()
+    #     eps_threshold = self.exploration.value(self.steps)
+    #     if torch.is_tensor(state):
+    #         state = state.type(dtype).to(self.device)
+    #     else:
+    #         state = torch.from_numpy(state).type(dtype).to(self.device)
+    #     # print(Variable(state, volatile=True))
+    #     max_act = self.Q(Variable(state, volatile=True)).data.max(1)[1]
+    #     # print(self.Q(Variable(state, volatile=True)).data)
+    #     # print("max_act:", max_act)
+    #     if sample > eps_threshold and self.steps > self.learning_starts:
+    #         return max_act
+    #     else:
+    #         return torch.randint_like(max_act, self.num_actions)
 
-    def build_calculation(self) -> None:
-        # self.o_b = tf.compat.v1.placeholder(tf.uint8, [None, 1, 84, 84], name="obs_batch")
-        self.a_b = tf.compat.v1.placeholder(tf.int32, [None], name="act_batch")
-        self.r_b = tf.compat.v1.placeholder(tf.float32, [None], name="rew_batch")
-        # self.next_o_b = tf.compat.v1.placeholder(tf.uint8, [None, 1, 84, 84], name="next_obs_batch")
-        self.d_m = tf.compat.v1.placeholder(tf.float32, [None], name="done_mask")
-        # not_done_mask = tf.convert_to_tensor(tf.ones_like(self.d_m) - self.d_m)
-        not_done_mask = tf.convert_to_tensor(1 - self.d_m)
-        # self.a_b = tf.expand_dims(self.a_b, -1)
-        # dims = tf.range(self.a_b.shape()[0])  # tensor does not have len.
-        self.dims = tf.compat.v1.placeholder(tf.int32, [None]) # tensor does not have len.
-        new_slice = tf.stack([self.dims, self.a_b], 1)
-        self.current_Q_values = tf.gather_nd(self.model, new_slice)  # act is the index of sec dim.
-        # self.current_Q_values = self.model[index_dim_0, self.a_b]  # act is the index of sec dim.
-        # self.current_Q_values = tf.gather(self.model, self.a_b, axis=1)  # act is the index of sec dim.
-        # .squeeze() not work for multi dim.#tf also have gather
-        # Compute next Q value based on which action gives max Q values
-        # Detach variable from the current graph since we don't want gradients for next Q to propagated
-        next_max_q = tf.reduce_max(self.target_model, axis=1)  # .detach().max(1)[0]
-        next_Q_values = not_done_mask * next_max_q
-
-        # Compute the target of the current Q values
-        target_Q_values = self.r_b + (self.gamma * next_Q_values)
-        # Compute Bellman error
-        bellman_error = tf.stop_gradient(target_Q_values) - self.current_Q_values
-        # clip the bellman error between [-1 , 1]
-        clipped_bellman_error = tf.clip_by_value(bellman_error, -1, 1)  # tf.clip_by_value vs pytorch .clamp vs np.clip
-        # Note: clipped_bellman_delta * -1 will be right gradient
-        self.d_error = clipped_bellman_error * -1.0
-
-    def _update_target_vars(self):
-        update_ops = []
-        for i, var in enumerate(self.q_vars):
-            copy_op = self.q_target_vars[i].assign(var.value())
-            # copy_op = self.q_target_vars[i].load(self.sess.run(var.value()), self.sess)
-            update_ops.append(copy_op)
-        return update_ops
-
-    # def update_networks(self):
-    #     """
-    #     Args:
-    #         sess: A Tensorflow session object
-    #     Assigns the values of the parameters of the main network to the
-    #     parameters of the target network
-    #     """
-    #     update_ops = self._update_target_vars()
-    #     for copy_op in update_ops:
-    #         self.sess.run(copy_op)
-
-    def update_networks(self):
-        """
-        Args:
-            sess: A Tensorflow session object
-        Assigns the values of the parameters of the main network to the
-        parameters of the target network
-        """
-
-        # for copy_op in update_ops:
-        #         #     self.sess.run(copy_op)
-        self.sess.run(self.update_ops)
-
+    # def new_act(self, state):
     def act(self, state):
         # print(np.shape(state)) # 1
         sample = random.random()
         eps_threshold = self.exploration.value(self.steps)
-        max_act = self.sess.run(self.predict, feed_dict={self.x: state})
-        # max_act = self.sess.run(max_act) # max_act is still a tensor without assignment.
+        # q_out = self.new_value(state)
+        # print(type(state))
+        q_out = self.value(state)
+        # print(8)
+        max_act = tf.argmax(self.q_values, 1)
+        # init = tf.compat.v1.global_variables_initializer()
+        # self.sess.run(init)
+        # print(9)
+        max_act = self.sess.run(max_act) # max_act is still a tensor without assignment.
+        # print(10)
+        # print("new_act:", max_act)
+        # print(self.sess.run(self.policy_proba))
         if sample > eps_threshold and self.steps > self.learning_starts:
             return max_act
         else:
+            # max_act = tfpyth.torch_from_tensorflow(self.sess, max_act, max_act)
             max_act = torch.from_numpy(max_act)
             return torch.randint_like(max_act, self.num_actions)
+            # max_act = random.randrange(0, 101, 2)
+            # return max_act
 
+    # # def value(self, state, act, next_state):
+    # def value(self, state): # model free
+    #     if torch.is_tensor(state):
+    #         state = state.type(dtype).to(self.device)
+    #     else:
+    #         state = torch.from_numpy(state).type(dtype).to(self.device)
+    #     value = self.Q(Variable(state, volatile=True)).data.max(1)[0].unsqueeze(1)
+    #     # print("value:", value)
+    #     return value
+
+    # def new_value(self, state):
     def value(self, state):
         if type(state) is not np.ndarray:
             state = state.numpy()
-        q_values = self.sess.run(self.model, feed_dict={self.x: state})  # .max(1) ## array
-        q_out = q_values.max(1)
+        # init = tf.global_variables_initializer()
+        # self.sess.run(init)
+        self.q_values = self.sess.run(self.model, feed_dict={self.x: state})#.max(1) ## array
+        # print(5)
+        self.policy_proba = self.sess.run(tf.nn.softmax(self.q_values))
+        # print(6)
+        q_out = self.q_values.max(1)
+        # print(7)
+        # print("new_value:", (self.policy_proba * self.q_values))
+        # print("new_value:", q_out, np.shape(self.q_values))
         return q_out
 
     # def update(self, batch_size=32, num_param_updates=0):
-    def update(self, batch_size=1, num_param_updates=0):
+    #
+    #     ### Perform experience replay and train the network.
+    #     # Note that this is only done if the replay buffer contains enough samples
+    #     # for us to learn something useful -- until then, the model will not be
+    #     # initialized and random actions should be taken
+    #     if (self.steps > self.learning_starts and
+    #             self.steps % self.learning_freq == 0 and
+    #             self.replay.can_sample(batch_size)):
+    #         # Use the replay buffer to sample a batch of transitions
+    #         # Note: done_mask[i] is 1 if the next state corresponds to the end of an episode,
+    #         # in which case there is no Q-value at the next state; at the end of an
+    #         # episode, only the current state reward contributes to the target
+    #         obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = self.replay.sample(batch_size)
+    #         # Convert numpy nd_array to tensorflow variables for calculation
+    #         obs_batch = Variable(torch.from_numpy(obs_batch).type(dtype))
+    #         act_batch = Variable(torch.from_numpy(act_batch).long())
+    #         rew_batch = Variable(torch.from_numpy(rew_batch))
+    #         next_obs_batch = Variable(torch.from_numpy(next_obs_batch).type(dtype))
+    #         not_done_mask = Variable(torch.from_numpy(1 - done_mask)).type(dtype)
+    #
+    #         if USE_CUDA:
+    #             act_batch = act_batch.to(self.device)
+    #             rew_batch = rew_batch.to(self.device)
+    #
+    #         # Compute current Q value, q_func takes only state and output value for every state-action pair
+    #         # We choose Q based on action taken.
+    #         current_Q_values = self.Q(obs_batch).gather(1, act_batch.unsqueeze(1)).squeeze(1)
+    #         print("current_Q_values", current_Q_values)
+    #         # Compute next Q value based on which action gives max Q values
+    #         # Detach variable from the current graph since we don't want gradients for next Q to propagated
+    #         next_max_q = self.target_Q(next_obs_batch).detach().max(1)[0]
+    #         print("next_max_q", next_max_q)
+    #         next_Q_values = not_done_mask * next_max_q
+    #         # Compute the target of the current Q values
+    #         target_Q_values = rew_batch + (self.gamma * next_Q_values)
+    #         # Compute Bellman error
+    #         bellman_error = target_Q_values - current_Q_values
+    #         # clip the bellman error between [-1 , 1]
+    #         clipped_bellman_error = bellman_error.clamp(-1, 1)
+    #         # Note: clipped_bellman_delta * -1 will be right gradient
+    #         d_error = clipped_bellman_error * -1.0
+    #         # Clear previous gradients before backward pass
+    #         self.optimizer.zero_grad()
+    #         # run backward pass
+    #         current_Q_values.backward(d_error.data)
+    #
+    #         # Perfom the update
+    #         self.optimizer.step()
+    #         self.num_param_updates += 1
+    #
+    #         # Periodically update the target network by Q network to target Q network
+    #         if self.num_param_updates % self.target_update_freq == 0:
+    #             self.target_Q.load_state_dict(self.Q.state_dict())
+
+    # def new_update(self, batch_size=32, num_param_updates=0):
+    def update(self, batch_size=32, num_param_updates=0):
 
         ### Perform experience replay and train the network.
         # Note that this is only done if the replay buffer contains enough samples
@@ -641,51 +635,58 @@ class DQN():
         if (self.steps > self.learning_starts and
                 self.steps % self.learning_freq == 0 and
                 self.replay.can_sample(batch_size)):
+            # Use the replay buffer to sample a batch of transitions
+            # Note: done_mask[i] is 1 if the next state corresponds to the end of an episode,
+            # in which case there is no Q-value at the next state; at the end of an
+            # episode, only the current state reward contributes to the target
             obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = self.replay.sample(batch_size)
-            # print(next_obs_batch.dtype, np.shape(next_obs_batch))
-            # print(next_obs_batch)
-            act_batch.astype(np.int32)
-            # print(act_batch)
-            # print(self.sess.run(tf.expand_dims(act_batch, -1)))
-            # print(np.shape(self.sess.run(tf.gather(self.model, tf.expand_dims(act_batch, -1), axis=1),
-            #               feed_dict={self.x: obs_batch})))
-            # print(self.sess.run(tf.gather(self.model, tf.expand_dims(act_batch, -1), axis=1),
-            #                              feed_dict={self.x: obs_batch}))
-            # act_batch = tf.convert_to_tensor(act_batch)
-            # rew_batch = tf.convert_to_tensor(rew_batch)
-            dims = np.arange(0, len(act_batch))  # tensor does not have len.
-            # print(dims)
-            # new_slice = tf.stack([dims, self.a_b], 1)
-            # print(self.sess.run(new_slice, feed_dict={self.a_b: act_batch}))
-            # self.current_Q_values = tf.gather_nd(self.model, new_slice)
-            # print(self.sess.run(current_Q_values, feed_dict={self.a_b: act_batch}))
-            # error = self.sess.run(self.d_error,
-            #                       feed_dict={self.o_b: obs_batch, self.a_b: act_batch, self.r_b: rew_batch,
-            #                                  self.next_o_b: next_obs_batch, self.d_m: done_mask,
-            #                                  self.x: obs_batch, self.target_x: next_obs_batch})
-            error = self.sess.run(self.d_error,
-                                  feed_dict={self.a_b: act_batch, self.r_b: rew_batch,
-                                             self.d_m: done_mask, self.dims: dims,
-                                             self.x: obs_batch, self.target_x: next_obs_batch})
-            # print(error)
-            # # print(np.shape(self.current_Q_values))
-            self.sess.run(self.train_op,
-                          feed_dict={self.error: error, self.x: obs_batch, self.target_x: next_obs_batch})
+            # Convert numpy nd_array to torch variables for calculation
+            # obs_batch = tf.convert_to_tensor(obs_batch)
+            # act_batch = tf.cast(tf.convert_to_tensor(act_batch), tf.int32)
+            act_batch = tf.convert_to_tensor(act_batch.astype(np.int32))
+            rew_batch = tf.convert_to_tensor(rew_batch)
+            # next_obs_batch = tf.convert_to_tensor(next_obs_batch)
+            not_done_mask = tf.convert_to_tensor(1 - done_mask)
+
+            # Compute current Q value, q_func takes only state and output value for every state-action pair
+            # We choose Q based on action taken.
+            # obs_batch = self.sess.run(obs_batch)
+            # next_obs_batch = self.sess.run(next_obs_batch)
+            current_Q_values = tf.gather(self.model, act_batch, axis=1)#act is the index of sec dim.
+            #.squeeze() not work for multi dim.#tf also have gather
+            # Compute next Q value based on which action gives max Q values
+            # Detach variable from the current graph since we don't want gradients for next Q to propagated
+            next_max_q = tf.reduce_max(self.target_model, axis=1) #.detach().max(1)[0]
+            next_Q_values = not_done_mask * next_max_q
+
+            # Compute the target of the current Q values
+            target_Q_values = rew_batch + (self.gamma * next_Q_values)
+            # Compute Bellman error
+            bellman_error = tf.stop_gradient(target_Q_values) - current_Q_values
+            # clip the bellman error between [-1 , 1]
+            clipped_bellman_error = tf.clip_by_value(bellman_error, -1, 1) # tf.clip_by_value vs pytorch .clamp vs np.clip
+            # Note: clipped_bellman_delta * -1 will be right gradient
+            d_error = clipped_bellman_error * -1.0
+            # Clear previous gradients before backward pass # run backward pass
+            # grads = self.optimizer_tf.compute_gradients(d_error, var_list=self.m_vars)
+            loss = tf.reduce_mean(tf.square(d_error), name="loss")
+
+            # Perform the update
+            train_op = self.optimizer_tf.minimize(loss, name="rms_optimizer"),
+            # init = tf.compat.v1.global_variables_initializer()
+            # self.sess.run(init)
+            self.sess.run(train_op, feed_dict={self.x: obs_batch, self.target_x: next_obs_batch})
             self.num_param_updates += 1
 
-            # print(self.q_vars)
             # Periodically update the target network by Q network to target Q network
             if self.num_param_updates % self.target_update_freq == 0:
-                # self.optimizer_tf.apply_gradients([v_t.assign(v) for v_t, v in zip(self.q_target_vars, self.q_vars)])
-                self.update_networks()
+                self.optimizer_tf.apply_gradients([v_t.assign(v) for v_t, v in zip(self.q_target_vars, self.q_vars)])
 
     # TODO Fill in later
     def save(self, *kwargs):
         pass
-
     def load(self, *kwargs):
         pass
-
 
 def process_batch(obs, tftype):
     obs = tf.convert_to_tensor(obs)

@@ -431,9 +431,9 @@ class DQN():
                     (8e6, 0.001)  # (8e6, 0.005)
                 ], outside_value=0.001),
                  replay_buffer_size=100000,
-                 gamma=0.99,
-                 lr=0.0001, # 0.00008
-                 alpha=0.95,
+                 gamma=0.95,
+                 lr=0.0005, # 0.00008
+                 alpha=0.90,
                  eps=0.01,
                  learning_starts=50000,  # 10000
                  learning_freq=4,

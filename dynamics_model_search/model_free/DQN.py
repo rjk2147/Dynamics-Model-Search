@@ -435,10 +435,10 @@ class DQN():
                  lr=0.0005, # 0.00008
                  alpha=0.90,
                  eps=0.01,
-                 learning_starts=50000,  # 10000
+                 learning_starts=1,  # 50000
                  learning_freq=4,
                  frame_history_len=4,
-                 target_update_freq=10000 # 10000
+                 target_update_freq=1 # 10000
                  ):
         # LinearSchedule(1e6, 0.1)
         """Run Deep Q-learning algorithm.
@@ -544,14 +544,21 @@ class DQN():
         self.loss = tf.losses.mean_squared_error(self.error, tf.reduce_max(self.model, axis=1))
         # self.loss = tf.reduce_mean(tf.square(self.error), name="loss")
         # self.train_op = self.optimizer_tf.minimize(self.loss, var_list=self.model, name="rms_optimizer")
-        self.train_op = self.optimizer_tf.minimize(self.loss, name="rms_optimizer")
+        self.train_op = self.optimizer_tf.minimize(self.loss, name="rms_optimizer") #####
         # self.train_op = self.optimizer_tf.minimize(tf.reduce_mean(tf.square(self.error), name="rms_optimizer"))
 
-        self.update_ops = self._update_target_vars()
+        # self.grads = tf.gradients(self.loss, self.q_vars)
+        # self.train_op = self.optimizer_tf.apply_gradient(zip(self.grads, self.q_vars), global_step=global_step)
+
+        # self.update_ops = self._update_target_vars()
+        self.sync = tf.group(
+            *(
+                [v1.assign(v2) for v1, v2 in zip(self.q_target_vars, self.q_vars)]
+            ))
 
         init = tf.compat.v1.global_variables_initializer()
         self.sess.run(init)
-        self.sess.graph.finalize()
+        # self.sess.graph.finalize()
         writer = tf.summary.FileWriter('./name_scope', graph=tf.get_default_graph())
         writer.close()
 
@@ -677,12 +684,15 @@ class DQN():
             self.sess.run(self.train_op,
                           feed_dict={self.error: error, self.x: obs_batch, self.target_x: next_obs_batch})
             self.num_param_updates += 1
-
+            # print(self.train_op)
             # print(self.q_vars)
+            # print(tf.gradients(self.loss, self.q_vars))
             # Periodically update the target network by Q network to target Q network
             if self.num_param_updates % self.target_update_freq == 0:
                 # self.optimizer_tf.apply_gradients([v_t.assign(v) for v_t, v in zip(self.q_target_vars, self.q_vars)])
-                self.update_networks()
+                # self.update_networks()
+                # self.optimizer_tf.apply_gradient(zip(grads, self.q_target_vars), global_step=global_step)
+                self.sess.run(self.sync)
 
     # TODO Fill in later
     def save(self, *kwargs):

@@ -435,10 +435,10 @@ class DQN():
                  lr=0.0005, # 0.00008
                  alpha=0.90,
                  eps=0.01,
-                 learning_starts=1,  # 50000
+                 learning_starts=50000,  # 50000
                  learning_freq=4,
                  frame_history_len=4,
-                 target_update_freq=1 # 10000
+                 target_update_freq=10000 # 10000
                  ):
         # LinearSchedule(1e6, 0.1)
         """Run Deep Q-learning algorithm.

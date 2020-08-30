@@ -424,7 +424,7 @@ def linear_model(scaled_images, **kwargs):
 class DQN():
     def __init__(self,
                  env,
-                 exploration=LinearSchedule(1000000, 0.01, 0.1),
+                 exploration=LinearSchedule(1000000, 1.0, 0.01),
                  replay_buffer_size=90000,
                  gamma=0.99,
                  lr=0.000008, # 0.00008

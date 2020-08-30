@@ -414,16 +414,17 @@ def linear_model(scaled_images, **kwargs):
 #     # Note: clipped_bellman_delta * -1 will be right gradient
 #     self.d_error = clipped_bellman_error * -1.0
 
+# exploration = PiecewiseSchedule([
+#     (0, 1.0),  # (0, 1.0),
+#     (1e6, 0.1),  # (1e6, 0.1)
+#     (2e6, 0.01),  # (2e6, 0.1)  # 0.01 (5e6, 0.01)
+#     (8e6, 0.001)  # (8e6, 0.005)
+# ], outside_value=0.001),  # 0.005
 
 class DQN():
     def __init__(self,
                  env,
-                 exploration=PiecewiseSchedule([
-                     (0, 1.0), # (0, 1.0),
-                     (1e6, 0.1), # (1e6, 0.1)
-                     (2e6, 0.01), # (2e6, 0.1)  # 0.01 (5e6, 0.01)
-                     (8e6, 0.001) # (8e6, 0.005)
-                 ], outside_value=0.001), # 0.005
+                 exploration=LinearSchedule(1000000, 0.01, 0.1),
                  replay_buffer_size=90000,
                  gamma=0.99,
                  lr=0.000008, # 0.00008
@@ -631,7 +632,7 @@ class DQN():
         return q_out
 
     # def update(self, batch_size=32, num_param_updates=0):
-    def update(self, batch_size=1, num_param_updates=0):
+    def update(self, batch_size=32, num_param_updates=0):
 
         ### Perform experience replay and train the network.
         # Note that this is only done if the replay buffer contains enough samples

@@ -557,9 +557,9 @@ class DQN():
         #         [v1.assign(v2) for v1, v2 in zip(self.q_target_vars, self.q_vars)]
         #     ))
 
-        online_vars = {var.name[len(scope.name):]: var
+        online_vars = {var.name[len("model/q_model"):]: var
                        for var in self.q_target_vars}
-        target_vars = {var.name[len(scope.name):]: var
+        target_vars = {var.name[len("model/target_q_model"):]: var
                                   for var in self.q_target_vars}
 
         # We need an operation to copy the online DQN to the target DQN

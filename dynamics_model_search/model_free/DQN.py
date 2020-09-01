@@ -558,10 +558,11 @@ class DQN():
         #     ))
 
         online_vars = {var.name[len("model/q_model"):]: var
-                       for var in self.q_target_vars}
+                       for var in self.q_vars}
         target_vars = {var.name[len("model/target_q_model"):]: var
-                                  for var in self.q_target_vars}
-
+                       for var in self.q_target_vars}
+        # print(online_vars['q_model/c1/w:0'])
+        # print("target:", target_vars['target_q_model/c1/w:0'])
         # We need an operation to copy the online DQN to the target DQN
         copy_ops = [target_var.assign(online_vars[var_name])
                     for var_name, target_var in target_vars.items()]

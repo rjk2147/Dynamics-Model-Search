@@ -708,7 +708,8 @@ class DQN():
                 # self.update_networks()
                 # self.optimizer_tf.apply_gradient(zip(grads, self.q_target_vars), global_step=global_step)
                 # self.sess.run(self.sync)
-                self.copy_online_to_target.run()
+                with self.sess.as_default():
+                    self.copy_online_to_target.run()
     # TODO Fill in later
     def save(self, *kwargs):
         pass

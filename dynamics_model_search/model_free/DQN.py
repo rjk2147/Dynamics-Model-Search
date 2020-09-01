@@ -549,11 +549,26 @@ class DQN():
         # self.grads = tf.gradients(self.loss, self.q_vars)
         # self.train_op = self.optimizer_tf.apply_gradient(zip(self.grads, self.q_vars), global_step=global_step)
 
+        """update target"""
+
         # self.update_ops = self._update_target_vars()
-        self.sync = tf.group(
-            *(
-                [v1.assign(v2) for v1, v2 in zip(self.q_target_vars, self.q_vars)]
-            ))
+        # self.sync = tf.group(
+        #     *(
+        #         [v1.assign(v2) for v1, v2 in zip(self.q_target_vars, self.q_vars)]
+        #     ))
+
+        online_vars = {var.name[len(scope.name):]: var
+                       for var in self.q_target_vars}
+        target_vars = {var.name[len(scope.name):]: var
+                                  for var in self.q_target_vars}
+
+        # We need an operation to copy the online DQN to the target DQN
+        copy_ops = [target_var.assign(online_vars[var_name])
+                    for var_name, target_var in target_vars.items()]
+        self.copy_online_to_target = tf.group(*copy_ops)
+
+
+
 
         init = tf.compat.v1.global_variables_initializer()
         self.sess.run(init)
@@ -691,8 +706,8 @@ class DQN():
                 # self.optimizer_tf.apply_gradients([v_t.assign(v) for v_t, v in zip(self.q_target_vars, self.q_vars)])
                 # self.update_networks()
                 # self.optimizer_tf.apply_gradient(zip(grads, self.q_target_vars), global_step=global_step)
-                self.sess.run(self.sync)
-
+                # self.sess.run(self.sync)
+                self.copy_online_to_target.run()
     # TODO Fill in later
     def save(self, *kwargs):
         pass

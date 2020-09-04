@@ -7,6 +7,29 @@ from pybullet_wrappers import RealerWalkerWrapper
 import argparse
 import torch
 torch.autograd.set_detect_anomaly(True)
+
+class SynthWrapper(gym.Env):
+    def __init__(self, env):
+        self.env = env
+        obs_high = np.concatenate([np.array([1.0]), env.observation_space.high])
+        obs_low = np.concatenate([np.array([-1.0]), env.observation_space.low])
+        self.observation_space = gym.spaces.Box(high=obs_high, low=obs_low)
+        self.action_space = env.action_space
+        self._max_episode_steps = env._max_episode_steps
+
+    def reset(self):
+        obs = self.env.reset()
+        obs = np.concatenate([np.array([0.0]), obs])
+        return obs
+
+    def step(self, action):
+        new_obs, r, done, info = self.env.step(action)
+        new_obs = np.concatenate([np.array([r]), new_obs])
+        return new_obs, r, done, info
+
+    def render(self, mode='human'):
+        return env.render(mode)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -23,6 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=512) # SM batch size
     parser.add_argument('--seq-len', type=int, default=10) # SM sequence modeling window size
     parser.add_argument('--replay-size', type=int, default=100000) # SM replay memory size
+    parser.add_argument('--synth', action='store_true', default=False)
 
     parser.add_argument('--width', type=str, default=8) # width of the search tree at every level
     parser.add_argument('--depth', type=int, default=5) # depth of the search tree
@@ -61,6 +85,9 @@ if __name__ == '__main__':
         except:
             print('Env not wrapped')
     env._max_episode_steps = 1000
+
+    if args.synth:
+        env = SynthWrapper(env)
 
     if args.seed is not None:
         torch.manual_seed(args.seed)
@@ -156,7 +183,7 @@ if __name__ == '__main__':
         print('Error: Cannot have a null model with a planner')
         exit(1)
 
-    agent = Agent(dynamics_model, rl_learner, planner,
+    agent = Agent(dynamics_model, rl_learner, planner, synth=args.synth,
                   batch_size=int(args.batch_size), replay_size=int(args.replay_size), seq_len=int(args.seq_len))
     if args.load_all is not None:
         args.load_model = args.load_all

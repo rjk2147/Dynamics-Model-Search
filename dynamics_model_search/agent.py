@@ -10,9 +10,11 @@ import os
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Agent:
-    def __init__(self, dynamics_model, rl, planner, batch_size=512, replay_size=1e5, seq_len=10):
+    def __init__(self, dynamics_model, rl, planner, synth=False, batch_size=512, replay_size=1e5, seq_len=10):
         self.from_update = 0
         self.batch_size = batch_size
+        self.synth = synth
+        self.synth_G = 20
 
         self.model = dynamics_model
         self.seq_len = seq_len
@@ -167,11 +169,28 @@ class Agent:
                 if training:
                     ## RL Learner Update
                     # done_bool = float(done) if ep_len < env._max_episode_steps else 0
-                    done_bool = float(False) if ep_len==env._max_episode_steps else float(done)
-                    self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done_bool)
+                    if self.synth and self.steps > 10000:
+                        explored.reverse()
+                        for node, depth in explored:
+                            this_obs = node.obs[0].cpu().numpy()
+                            for i in range(len(node.future)):
+                                this_act = node.acts[i].cpu().numpy()
+                                next_obs = node.future[i].obs[0].cpu().numpy()
+                                this_done = ep_len==env._max_episode_steps
+                                r = next_obs[0]
+                                # next_obs = next_obs[1:]
+                                done_bool = float(False) if ep_len==env._max_episode_steps else float(this_done)
+                                transition = (this_obs, this_act, next_obs, r, done_bool)
+                                self.rl_learner.replay.add(*transition)
+                    else:
+                        done_bool = float(False) if ep_len==env._max_episode_steps else float(done)
+                        self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done_bool)
                     # self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                     self.from_update += 1
-                    self.rl_update()
+                    if self.synth and self.steps > 10000:
+                        for _ in range(self.synth_G):   self.rl_update()
+                    else:
+                        self.rl_update()
                     self.rl_learner.steps += 1
 
                     ## Self-Model Update

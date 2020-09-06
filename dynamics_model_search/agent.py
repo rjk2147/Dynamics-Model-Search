@@ -192,9 +192,9 @@ class Agent:
                         sample_obs = torch.stack([torch.from_numpy(sample_trans[i][0]).to(device) for i in range(len(sample_trans))])
                         all_obs, all_act, all_next = self.synth_rollout(sample_obs)
                         for i in range(self.synth_M):
-                            this_obs = all_obs[0].squeeze().cpu().numpy()
-                            this_act = all_act[0].squeeze().cpu().numpy()
-                            next_obs = all_next[0].squeeze().cpu().numpy()
+                            this_obs = all_obs[i].squeeze().cpu().numpy()
+                            this_act = all_act[i].squeeze().cpu().numpy()
+                            next_obs = all_next[i].squeeze().cpu().numpy()
                             this_done = False # Verified same as HalfCheetah MBPO
                             r = next_obs[0]
                             transition = (this_obs, this_act, next_obs, r, this_done)

@@ -14,7 +14,9 @@ class Agent:
         self.from_update = 0
         self.batch_size = batch_size
         self.synth = synth
-        self.synth_G = 20
+        self.synth_G = 40
+        self.synth_M = 200
+        self.synth_replay= deque(maxlen=int(replay_size))
 
         self.model = dynamics_model
         self.seq_len = seq_len
@@ -111,6 +113,19 @@ class Agent:
     def play(self, env, max_timesteps=1000):
         return self.run(training=False, env=env, max_timesteps=max_timesteps)
 
+    def synth_rollout(self, obs, k=1):
+        # obs_in = (torch.cat([obs[i][0].unsqueeze(0) for i in range(len(obs))]).unsqueeze(1),
+        #        [obs[i][1] for i in range(len(obs))])
+        obs = obs.unsqueeze(1)
+        obs_tmp = self.planner.dynamics_model.reset(obs, None)
+        h_tmp = [obs_tmp[1] for _ in range(len(obs))]
+        obs_tmp = (obs, h_tmp)
+        acts_in = self.planner.agent.act(obs.squeeze(1)).unsqueeze(1)
+        tmp_obs, tmp_h, uncertainty = self.planner.dynamics_model.step(obs_in=obs_tmp, action_in=acts_in, state=True,
+                                                    state_in=True,certainty=True)
+        # new_obs = (tmp_obs, tmp_h)
+        return obs, acts_in, tmp_obs
+
     def run(self, training, env, max_timesteps=1e6):
         self.x_seq = deque(maxlen=self.seq_len)
         self.a_seq = deque(maxlen=self.seq_len)
@@ -169,25 +184,40 @@ class Agent:
                 if training:
                     ## RL Learner Update
                     # done_bool = float(done) if ep_len < env._max_episode_steps else 0
-                    if self.synth and self.steps > 10000:
-                        explored.reverse()
-                        for node, depth in explored:
-                            this_obs = node.obs[0].cpu().numpy()
-                            for i in range(len(node.future)):
-                                this_act = node.acts[i].cpu().numpy()
-                                next_obs = node.future[i].obs[0].cpu().numpy()
-                                this_done = ep_len==env._max_episode_steps
-                                r = next_obs[0]
-                                # next_obs = next_obs[1:]
-                                done_bool = float(False) if ep_len==env._max_episode_steps else float(this_done)
-                                transition = (this_obs, this_act, next_obs, r, done_bool)
-                                self.rl_learner.replay.add(*transition)
+                    if self.synth:
+                        self.synth_replay.append(obs)
+                    if self.synth and len(self.synth_replay) > 1000:
+                        # for i in range(self.synth_M):
+                        sample_trans = random.sample(self.synth_replay, self.synth_M)
+                        sample_obs = torch.stack([torch.from_numpy(sample_trans[i][0]).to(device) for i in range(len(sample_trans))])
+                        all_obs, all_act, all_next = self.synth_rollout(sample_obs)
+                        for i in range(self.synth_M):
+                            this_obs = all_obs[0].squeeze().cpu().numpy()
+                            this_act = all_act[0].squeeze().cpu().numpy()
+                            next_obs = all_next[0].squeeze().cpu().numpy()
+                            this_done = False # Verified same as HalfCheetah MBPO
+                            r = next_obs[0]
+                            transition = (this_obs, this_act, next_obs, r, this_done)
+                            self.rl_learner.replay.add(*transition)
+                            # _, _, explored = self.planner.best_move(sample_obs)
+                            # explored.reverse()
+                            # for node, depth in explored:
+                            #     this_obs = node.obs[0].cpu().numpy()
+                            #     for j in range(len(node.future)):
+                            #         this_act = node.acts[j].cpu().numpy()
+                            #         next_obs = node.future[j].obs[0].cpu().numpy()
+                            #         this_done = ep_len==env._max_episode_steps
+                            #         r = next_obs[0]
+                            #         # next_obs = next_obs[1:]
+                            #         done_bool = float(False) if ep_len==env._max_episode_steps else float(this_done)
+                            #         transition = (this_obs, this_act, next_obs, r, done_bool)
+                            #         self.rl_learner.replay.add(*transition)
                     else:
                         done_bool = float(False) if ep_len==env._max_episode_steps else float(done)
                         self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done_bool)
                     # self.rl_learner.replay.add(obs[0], act, new_obs[0], r, done)
                     self.from_update += 1
-                    if self.synth and self.steps > 10000:
+                    if self.synth and len(self.synth_replay) > 10000:
                         for _ in range(self.synth_G):   self.rl_update()
                     else:
                         self.rl_update()

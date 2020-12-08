@@ -401,7 +401,7 @@ if __name__ == '__main__':
         gamma=args.gamma, seed=args.seed)
 
     # Prepare for interaction with environment
-    total_steps = 100000
+    total_steps = 200000
     start_time = time.time()
     o, ep_ret, ep_len = env.reset(), 0, 0
     ep_n = 0

@@ -15,11 +15,12 @@ class DummyModel:
             model.model.eval()
 
 class Ensemble(DynamicsModel):
-    def __init__(self, model, env_in, size=8, *kwargs):
+    def __init__(self, model, env_in, size=4, *kwargs):
         DynamicsModel.__init__(self, env_in)
         self.ensemble_size = size
         self.ensemble = [model(env_in, *kwargs) for _ in range(self.ensemble_size)]
         self.model = DummyModel(self)
+        self.device = self.ensemble[0].device
 
     def exec_reset(self, obs_in, h_split):
         reset_out = []
@@ -39,7 +40,7 @@ class Ensemble(DynamicsModel):
     def process_step(self, steps, choice, certainty=False, state=False):
         new_obs = []
         state_out = []
-        unc = []
+        uncertainties = []
 
         for step in steps:
             state_out_step =    None
@@ -52,7 +53,7 @@ class Ensemble(DynamicsModel):
 
             new_obs.append(new_obs_step.unsqueeze(0))
             state_out.append(state_out_step)
-            unc.append(unc_step)
+            uncertainties.append(unc_step)
 
         new_obs = torch.cat(new_obs)
         new_obs_mean = torch.mean(new_obs, 0)
@@ -63,12 +64,12 @@ class Ensemble(DynamicsModel):
         # if certainty:   unc = unc[choice]
         # new_obs = new_obs[choice]
 
-        if certainty:   unc = new_obs_std
+        if certainty:   uncertainty = new_obs_std
         new_obs = new_obs_sample
 
-        if state and certainty:     return new_obs, state_out, unc
+        if state and certainty:     return new_obs, state_out, uncertainty
         if state:                   return new_obs, state_out
-        if certainty:               return new_obs, unc
+        if certainty:               return new_obs, uncertainty
         else:                       return new_obs
 
     def exec_step(self, action_in, obs_in, save, state, state_in, certainty):

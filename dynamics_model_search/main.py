@@ -11,7 +11,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Algorithms
-    parser.add_argument('--env', type=str, default='HalfCheetah-v2') # pybullet environment
+    parser.add_argument('--env', type=str, default='HalfCheetahBulletEnv-v0') # pybullet environment
     # parser.add_argument('--env', type=str, default='Pong-v0') # pybullet environment
     parser.add_argument('--rl', type=str, default='SAC') # model free agent algorithm
     parser.add_argument('--planner', type=str, default='MCTS-UCT') # model based algorithm

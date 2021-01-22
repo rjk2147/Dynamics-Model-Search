@@ -354,7 +354,7 @@ class SAC:
     def get_action(self, o, deterministic=False):
         return self.ac.act(o, deterministic)
 
-    def value(self, obs, act, new_obs):
+    def value(self, obs):
         if not torch.is_tensor(obs):
            obs = torch.Tensor(obs).to(self.device)
         if len(obs.shape) > 2:

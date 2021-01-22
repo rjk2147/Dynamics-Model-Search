@@ -208,11 +208,13 @@ class MDRNNDynamicsModel(DynamicsModel):
             new_obs = new_obs.squeeze(0)
         if state:
             if certainty:
-                return new_obs, state_out.detach(), torch.exp(-sd).squeeze(0)
+                # return new_obs, state_out.detach(), torch.exp(-sd).squeeze(0)
+                return new_obs, state_out.detach(), sd.squeeze(0)
             return new_obs, state_out.detach()
         else:
             if certainty:
-                return new_obs, torch.exp(-sd).squeeze(0)
+                # return new_obs, torch.exp(-sd).squeeze(0)
+                return new_obs, sd.squeeze(0)
             return new_obs
 
     def step(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):

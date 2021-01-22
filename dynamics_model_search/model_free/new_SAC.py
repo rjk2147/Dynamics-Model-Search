@@ -379,7 +379,7 @@ class SAC(object):
         action = self.get_action(obs).detach()
         return action
 
-    def value(self, obs, act, new_obs):
+    def value(self, obs):
         if not torch.is_tensor(obs):
            obs = torch.Tensor(obs).to(device)
         if len(obs.shape) > 2:

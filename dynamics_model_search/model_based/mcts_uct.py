@@ -38,11 +38,11 @@ class State:
         self.Qs = []
         for i in range(len(self.future)):
             assert self.future[i].updated == True
-            Q = self.rs[i] + self.future[i].Q * discount
+            Q = self.rs[i] + self.future[i].p * self.future[i].Q
             self.Qs.append(Q)
 
-        # self.Q = sum(self.Qs) / len(self.Qs)
-        self.Q = self.p * max(self.Qs)
+        # self.Q = (sum(self.Qs) / len(self.Qs))
+        self.Q = max(self.Qs)
         return self.Q
 
 if torch.cuda.is_available():
@@ -108,7 +108,9 @@ class MCTS(MPC):
             p = torch.mean(torch.exp(-new_obs_sd), -1).detach().cpu().numpy()
             N = torch.distributions.normal.Normal(new_obs_mean, new_obs_sd)
             new_s = N.sample((n_samples,))
-            probs = torch.exp(torch.sum(N.log_prob(new_s), -1))
+            # new_s = torch.cat([new_obs_mean.unsqueeze(0) for i in range(n_samples)], 0)
+            # probs = torch.exp(torch.sum(N.log_prob(new_s), -1))
+            probs = torch.mean(torch.ones_like(new_s), -1)
 
             new_s = new_s.view(-1, new_obs_mean.shape[-1]) # Merging components
             V = self.agent.value(new_s).view(n_samples, new_obs_mean.shape[0]) # V(s')

@@ -1,15 +1,13 @@
+from copy import deepcopy
+import itertools
 import numpy as np
-
+from torch.optim import Adam
+import gym
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions.normal import Normal
-
-from copy import deepcopy
-import itertools
-from torch.optim import Adam
-import gym
-import time
 
 def combined_shape(length, shape=None):
     if shape is None:
@@ -70,6 +68,7 @@ class SquashedGaussianMLPActor(nn.Module):
 
         return pi_action, logp_pi
 
+
 class MLPQFunction(nn.Module):
 
     def __init__(self, obs_dim, act_dim, hidden_sizes, activation):
@@ -98,6 +97,7 @@ class MLPActorCritic(nn.Module):
     def act(self, obs, deterministic=False):
         with torch.no_grad():
             a, _ = self.pi(obs, deterministic, False)
+            # return a.cpu().numpy()
             return a
 
 class ReplayBuffer:
@@ -112,6 +112,7 @@ class ReplayBuffer:
         self.rew_buf = np.zeros(size, dtype=np.float32)
         self.done_buf = np.zeros(size, dtype=np.float32)
         self.ptr, self.size, self.max_size = 0, 0, size
+
 
     def add(self, state, action, next_state, reward, done):
         return self.store(state, action, reward, next_state, done)
@@ -137,25 +138,28 @@ class ReplayBuffer:
     def __len__(self):
         return self.size
 
-class SAC:
-    def __init__(self, env, actor_critic=MLPActorCritic, ac_kwargs=dict(hidden_sizes=[256] * 2),
-                 seed=0, replay_size=int(1e6), gamma=0.99, polyak=0.995, lr=1e-3, alpha=0.2,
-                 batch_size=100, start_steps=10000, update_after=1000, update_every=50):
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+class SAC(object):
+    def __init__(self, env, actor_critic=MLPActorCritic, ac_kwargs=dict(), seed=0,
+        steps_per_epoch=4000, epochs=100, replay_size=int(1e6), gamma=0.99,
+        polyak=0.995, lr=1e-3, alpha=0.2, batch_size=100, start_steps=10000,
+        update_after=1000, update_every=50, num_test_episodes=10, max_ep_len=1000,
+        logger_kwargs=dict(), save_freq=1):
         """
         Soft Actor-Critic (SAC)
-    
-    
+
         Args:
             env_fn : A function which creates a copy of the environment.
                 The environment must satisfy the OpenAI Gym API.
-    
+
             actor_critic: The constructor method for a PyTorch Module with an ``act``
                 method, a ``pi`` module, a ``q1`` module, and a ``q2`` module.
                 The ``act`` method and ``pi`` module should accept batches of
                 observations as inputs, and ``q1`` and ``q2`` should accept a batch
                 of observations and a batch of actions as inputs. When called,
                 ``act``, ``q1``, and ``q2`` should return:
-    
+
                 ===========  ================  ======================================
                 Call         Output Shape      Description
                 ===========  ================  ======================================
@@ -170,9 +174,9 @@ class SAC:
                                                | and actions. (Critical: make sure to
                                                | flatten this!)
                 ===========  ================  ======================================
-    
+
                 Calling ``pi`` should return:
-    
+
                 ===========  ================  ======================================
                 Symbol       Shape             Description
                 ===========  ================  ======================================
@@ -182,95 +186,105 @@ class SAC:
                                                | actions in ``a``. Importantly: gradients
                                                | should be able to flow back into ``a``.
                 ===========  ================  ======================================
-    
+
             ac_kwargs (dict): Any kwargs appropriate for the ActorCritic object
                 you provided to SAC.
-    
+
             seed (int): Seed for random number generators.
-    
+
+            steps_per_epoch (int): Number of steps of interaction (state-action pairs)
+                for the agent and the environment in each epoch.
+
+            epochs (int): Number of epochs to run and train agent.
+
             replay_size (int): Maximum length of replay buffer.
-    
+
             gamma (float): Discount factor. (Always between 0 and 1.)
-    
+
             polyak (float): Interpolation factor in polyak averaging for target
                 networks. Target networks are updated towards main networks
                 according to:
-    
+
                 .. math:: \\theta_{\\text{targ}} \\leftarrow
                     \\rho \\theta_{\\text{targ}} + (1-\\rho) \\theta
-    
+
                 where :math:`\\rho` is polyak. (Always between 0 and 1, usually
                 close to 1.)
-    
+
             lr (float): Learning rate (used for both policy and value learning).
-    
+
             alpha (float): Entropy regularization coefficient. (Equivalent to
                 inverse of reward scale in the original SAC paper.)
-    
+
             batch_size (int): Minibatch size for SGD.
-    
+
             start_steps (int): Number of steps for uniform-random action selection,
                 before running real policy. Helps exploration.
-    
+
             update_after (int): Number of env interactions to collect before
                 starting to do gradient descent updates. Ensures replay buffer
                 is full enough for useful updates.
-    
+
             update_every (int): Number of env interactions that should elapse
                 between gradient descent updates. Note: Regardless of how long
                 you wait between updates, the ratio of env steps to gradient steps
                 is locked to 1.
-    
+
+            num_test_episodes (int): Number of episodes to test the deterministic
+                policy at the end of each epoch.
+
             max_ep_len (int): Maximum length of trajectory / episode / rollout.
-    
+
+            logger_kwargs (dict): Keyword args for EpochLogger.
+
+            save_freq (int): How often (in terms of gap between epochs) to save
+                the current policy and value function.
+
         """
+
         self.gamma = gamma
-        self.polyak = polyak
-        self.lr = lr
         self.alpha = alpha
+        self.polyak = polyak
         self.batch_size = batch_size
         self.update_after = update_after
         self.update_every = update_every
-
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.start_steps = start_steps
         self.steps = 0
-        
+
         torch.manual_seed(seed)
         np.random.seed(seed)
 
+        # env, test_env = env_fn(), env_fn()
         obs_dim = env.observation_space.shape
         act_dim = env.action_space.shape[0]
         self.action_space = env.action_space
-    
-        # Action limit for clamping: critically, assumes all dimensions share the same bound!
-        # act_limit = env.action_space.high[0]
-        self.start_steps = start_steps
-    
+
         # Create actor-critic module and target networks
-        self.ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs).to(self.device)
+        self.ac = actor_critic(env.observation_space, env.action_space, **ac_kwargs)
+        self.ac = self.ac.to(device)
         self.ac_targ = deepcopy(self.ac)
-    
+
         # Freeze target networks with respect to optimizers (only update via polyak averaging)
         for p in self.ac_targ.parameters():
             p.requires_grad = False
-    
+
         # List of parameters for both Q-networks (save this for convenience)
         self.q_params = itertools.chain(self.ac.q1.parameters(), self.ac.q2.parameters())
-    
+
         # Experience buffer
         self.replay = ReplayBuffer(obs_dim=obs_dim, act_dim=act_dim, size=replay_size)
-    
-        # Count variables (protip: try to get a feel for how different size networks behave!)
-        self.var_counts = tuple(count_vars(module) for module in [self.ac.pi, self.ac.q1, self.ac.q2])
 
-        # Set up optimizers for policy and q-function
-        self.pi_optimizer = Adam(self.ac.pi.parameters(), lr=self.lr)
-        self.q_optimizer = Adam(self.q_params, lr=self.lr)
-    
+        self.pi_optimizer = Adam(self.ac.pi.parameters(), lr=lr)
+        self.q_optimizer = Adam(self.q_params, lr=lr)
+
     # Set up function for computing SAC Q-losses
     def compute_loss_q(self, data):
         o, a, r, o2, d = data['obs'], data['act'], data['rew'], data['obs2'], data['done']
-        o, a, r, o2, d = o.to(self.device), a.to(self.device), r.to(self.device), o2.to(self.device), d.to(self.device)
+        o = o.to(device)
+        a = a.to(device)
+        r = r.to(device)
+        o2 = o2.to(device)
+        d = d.to(device)
 
         q1 = self.ac.q1(o, a)
         q2 = self.ac.q2(o, a)
@@ -284,7 +298,7 @@ class SAC:
             q1_pi_targ = self.ac_targ.q1(o2, a2)
             q2_pi_targ = self.ac_targ.q2(o2, a2)
             q_pi_targ = torch.min(q1_pi_targ, q2_pi_targ)
-            backup = r + self.gamma * (1 - d) * (q_pi_targ - self.polyak * logp_a2)
+            backup = r + self.gamma * (1 - d) * (q_pi_targ - self.alpha * logp_a2)
 
         # MSE loss against Bellman backup
         loss_q1 = ((q1 - backup) ** 2).mean()
@@ -299,23 +313,22 @@ class SAC:
 
     # Set up function for computing SAC pi loss
     def compute_loss_pi(self, data):
-        o = data['obs'].to(self.device)
+        o = data['obs']
+        o = o.to(device)
         pi, logp_pi = self.ac.pi(o)
         q1_pi = self.ac.q1(o, pi)
         q2_pi = self.ac.q2(o, pi)
         q_pi = torch.min(q1_pi, q2_pi)
 
         # Entropy-regularized policy loss
-        loss_pi = (self.polyak * logp_pi - q_pi).mean()
+        loss_pi = (self.alpha * logp_pi - q_pi).mean()
 
         # Useful info for logging
         pi_info = dict(LogPi=logp_pi.cpu().detach().numpy())
 
         return loss_pi, pi_info
 
-    # Set up model saving
-
-    def update(self, batch_size=None, updates=None):
+    def update(self, batch_size=None, n_updates=None):
         if self.steps >= self.update_after and self.steps % self.update_every == 0:
             for j in range(self.update_every):
                 batch = self.replay.sample_batch(self.batch_size)
@@ -352,11 +365,24 @@ class SAC:
                 p_targ.data.add_((1 - self.polyak) * p.data)
 
     def get_action(self, o, deterministic=False):
-        return self.ac.act(o, deterministic)
+        return self.ac.act(torch.as_tensor(o, dtype=torch.float32).to(device),
+                      deterministic)
+
+    def act(self, obs):
+        if self.steps < self.start_steps:
+            # sample = np.array([self.action_space.sample() for i in range(len(obs))])
+            sample = 2*torch.rand(obs.shape[0], self.action_space.shape[0], device=device)-1
+            return sample
+        if torch.is_tensor(obs):
+            obs = obs.to(device)
+        else:
+            obs = torch.FloatTensor(obs.reshape(1, -1)).to(device)
+        action = self.get_action(obs).detach()
+        return action
 
     def value(self, obs):
         if not torch.is_tensor(obs):
-           obs = torch.Tensor(obs).to(self.device)
+           obs = torch.Tensor(obs).to(device)
         if len(obs.shape) > 2:
             obs = obs.unsqueeze(1)
         pi, logp_pi = self.ac.pi(obs)
@@ -364,17 +390,6 @@ class SAC:
         q2_pi = self.ac.q2(obs, pi)
         q_pi = torch.min(q1_pi, q2_pi)
         return q_pi
-
-    def act(self, obs):
-        if self.steps < self.start_steps:
-            sample = np.array([self.action_space.sample() for i in range(len(obs))])
-            return torch.from_numpy(sample).to(self.device)
-        if torch.is_tensor(obs):
-            obs = obs.to(self.device)
-        else:
-            obs = torch.FloatTensor(obs.reshape(1, -1)).to(self.device)
-        action = self.get_action(obs).detach()
-        return action
 
     def save(self, filename):
         pass
@@ -391,30 +406,31 @@ if __name__ == '__main__':
     parser.add_argument('--l', type=int, default=2)
     parser.add_argument('--gamma', type=float, default=0.99)
     parser.add_argument('--seed', '-s', type=int, default=0)
+    parser.add_argument('--epochs', type=int, default=25)
     parser.add_argument('--exp_name', type=str, default='sac')
     args = parser.parse_args()
 
     torch.set_num_threads(torch.get_num_threads())
     env = gym.make(args.env)
+    env = env.env
     sac = SAC(env, actor_critic=MLPActorCritic,
         ac_kwargs=dict(hidden_sizes=[args.hid] * args.l),
-        gamma=args.gamma, seed=args.seed)
-
+        gamma=args.gamma, seed=args.seed, epochs=args.epochs)
     # Prepare for interaction with environment
-    total_steps = 200000
+    total_steps = 1000000
     start_time = time.time()
     o, ep_ret, ep_len = env.reset(), 0, 0
-    ep_n = 0
 
     from collections import deque
-    rews = deque(maxlen = 100)
+    rews = deque(maxlen = 4)
+    ep_n = 0
+    max_ep_len = 1000
 
     # Main loop: collect experience in env and update/log each epoch
     for t in range(total_steps):
+        sac.steps = t
+        # a = sac.act(o)
 
-        # Until start_steps have elapsed, randomly sample actions
-        # from a uniform distribution for better exploration. Afterwards,
-        # use the learned policy.
         a = sac.act(np.expand_dims(o, 0))
         a = a.cpu().detach().numpy().flatten()
 
@@ -426,17 +442,17 @@ if __name__ == '__main__':
         # Ignore the "done" signal if it comes from hitting the time
         # horizon (that is, when it's an artificial terminal signal
         # that isn't based on the agent's state)
-        d = False if env._max_episode_steps else d
+        d = False if ep_len == max_ep_len else d
 
         # Store experience to replay buffer
-        sac.replay.store(o, a, r, o2, d)
+        sac.replay.add(o, a, o2, r, d)
 
         # Super critical, easy to overlook step: make sure to update
         # most recent observation!
         o = o2
 
         # End of trajectory handling
-        if d or (ep_len == env._max_episode_steps):
+        if d or (ep_len == max_ep_len):
             rews.append(ep_ret)
             ep_n += 1
 
@@ -447,13 +463,11 @@ if __name__ == '__main__':
             print('Length: '+str(ep_len))
             print('Return: '+str(ep_ret))
             print('')
-
             o, ep_ret, ep_len = env.reset(), 0, 0
 
         # Update handling
-        sac.steps = t+1
-        # sac.update()
-        if t >= sac.update_after and t % sac.update_every == 0:
-            for j in range(sac.update_every):
-                batch = sac.replay.sample_batch(100)
-                sac.__update__(data=batch)
+        sac.update()
+
+        # End of epoch handling
+        # if (t + 1) % steps_per_epoch == 0:
+        #     epoch = (t + 1) // steps_per_epoch

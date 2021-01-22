@@ -90,7 +90,7 @@ class MDRNNModel(nn.Module):
         # act = torch.transpose(a, 0, 1).to(self.layer1._parameters['weight'].device)
         # new_obs = torch.transpose(y, 0, 1).to(self.layer1._parameters['weight'].device)
 
-        seq_pi, seq_normal, seq_h = self.pred(obs, act)
+        seq_pi, seq_normal, seq_h = self.pred(obs, act, h)
 
         # Added training to learn the change not the whole state
         # seq_normal = Normal(seq_normal.loc + obs.unsqueeze(-2).expand_as(seq_normal.loc), seq_normal.scale)
@@ -104,14 +104,14 @@ class MDRNNModel(nn.Module):
             mae = torch.mean(torch.abs(mean - new_obs))
             return torch.mean(seq), mae, torch.mean(seq_normal.stddev)
         else:
-            seq_out = torch.sum(seq_pi.sample().unsqueeze(-1) * seq_normal.sample(), dim=-2)
+            # seq_out = torch.sum(seq_pi.sample().unsqueeze(-1) * seq_normal.sample(), dim=-2)
             # sd = seq_normal.stddev
             mean = torch.sum(seq_pi.mean.unsqueeze(-1)*seq_normal.mean, dim=-2)
             sd = torch.sum(seq_pi.mean.unsqueeze(-1)*seq_normal.stddev, dim=-2)
             # Should not divide sd by seq_out so sd is a percentage [0-1] of the original value
             # if we did that we would be very certain about things with a large mean and very uncertain about small means
             # sd = sd / mean
-            return seq_out, sd, seq_h.transpose(0, 1)
+            return mean, sd, seq_h.transpose(0, 1)
 
 class MDRNNDynamicsModel(DynamicsModel):
     def __init__(self, env_in, dev=None, seq_len=100):
@@ -173,49 +173,61 @@ class MDRNNDynamicsModel(DynamicsModel):
     # l is length of sequence
     # b is batch size
     # d is dimension of state
+    # def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
+    #     self.model.eval()
+    #     if obs_in is not None and state_in:
+    #         state_in = torch.cat(obs_in[1])
+    #         obs_in = obs_in[0].float()
+    #         # while len(obs_in.shape) < 3:
+    #         # obs_in = obs_in.unsqueeze(1)
+    #     else:
+    #         state_in = None
+    #     tensor = True
+    #     a = action_in.float()
+    #     if state_in is not None:
+    #         new_obs, sd, state_out = self.model(obs_in, a, state_in)
+    #     elif obs_in is not None:
+    #         x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(0)
+    #         if save:
+    #             new_obs, sd, self.h = self.model(x, a, self.h)
+    #             self.h = self.h.detach()
+    #             state_out = self.h
+    #         else:
+    #             new_obs, sd, h = self.model(x, a, None)
+    #             state_out = h
+    #     else:
+    #         new_obs, sd, h = self.model(obs_in, a, self.h, None)
+    #         self.h = h.detach()
+    #         state_out = self.h
+    #     self.is_reset = False
+    #
+    #     new_obs = new_obs.squeeze(1).detach()*self.state_mul_const_tensor.to(new_obs.device)
+    #     if not tensor:
+    #         new_obs = new_obs.detach().cpu().numpy()
+    #     if new_obs.shape[0] == 1:
+    #         new_obs = new_obs.squeeze(0)
+    #     if state:
+    #         if certainty:
+    #             # return new_obs, state_out.detach(), torch.exp(-sd).squeeze(0)
+    #             return new_obs, state_out.detach(), sd.squeeze(0)
+    #         return new_obs, state_out.detach()
+    #     else:
+    #         if certainty:
+    #             # return new_obs, torch.exp(-sd).squeeze(0)
+    #             return new_obs, sd.squeeze(0)
+    #         return new_obs
+    #
     def step_parallel(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
         self.model.eval()
-        if obs_in is not None and state_in:
-            state_in = torch.cat(obs_in[1])
-            obs_in = obs_in[0].float()
-            # while len(obs_in.shape) < 3:
-            # obs_in = obs_in.unsqueeze(1)
-        else:
-            state_in = None
-        tensor = True
+        state_in = torch.cat(obs_in[1])
+        obs_in = obs_in[0].float()
         a = action_in.float()
-        if state_in is not None:
-            new_obs, sd, state_out = self.model(obs_in, a, state_in)
-        elif obs_in is not None:
-            x = torch.from_numpy(np.array([obs_in.astype(np.float32)/self.state_mul_const])).to(self.device).unsqueeze(0)
-            if save:
-                new_obs, sd, self.h = self.model(x, a, self.h)
-                self.h = self.h.detach()
-                state_out = self.h
-            else:
-                new_obs, sd, h = self.model(x, a, None)
-                state_out = h
-        else:
-            new_obs, sd, h = self.model(obs_in, a, self.h, None)
-            self.h = h.detach()
-            state_out = self.h
-        self.is_reset = False
+        new_obs, sd, state_out = self.model(obs_in, a, state_in)
 
-        new_obs = new_obs.squeeze(1).detach()*self.state_mul_const_tensor.to(new_obs.device)
-        if not tensor:
-            new_obs = new_obs.detach().cpu().numpy()
-        if new_obs.shape[0] == 1:
-            new_obs = new_obs.squeeze(0)
-        if state:
-            if certainty:
-                # return new_obs, state_out.detach(), torch.exp(-sd).squeeze(0)
-                return new_obs, state_out.detach(), sd.squeeze(0)
-            return new_obs, state_out.detach()
-        else:
-            if certainty:
-                # return new_obs, torch.exp(-sd).squeeze(0)
-                return new_obs, sd.squeeze(0)
-            return new_obs
+        new_obs = new_obs.squeeze(1).detach()*self.state_mul_const_tensor
+        new_obs = new_obs.squeeze(0)
+
+        return new_obs, state_out.detach(), sd.squeeze(0)
 
     def step(self, action_in, obs_in=None, save=True, state=False, state_in=None, certainty=False):
         return self.step_parallel(action_in, obs_in, save, state, state_in, certainty)

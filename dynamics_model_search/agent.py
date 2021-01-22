@@ -124,6 +124,7 @@ class Agent:
         self.ep_lens = deque(maxlen=100)
 
         self.start_time = time.time()
+
         while self.steps < max_timesteps:
             obs_list = []
             obs = env.reset()
@@ -137,7 +138,7 @@ class Agent:
             ep_len = 0
             while not done:
                 if self.planner is not None:
-                    act, best_r, explored = self.planner.best_move(obs)
+                    act, best_r, explored, best_h = self.planner.best_move(obs)
                     act = act.cpu().data.numpy().flatten()
                     ex_r = best_r
                     self.planner.clear()
@@ -147,12 +148,12 @@ class Agent:
                 new_obs, r, done, info = env.step(act*self.act_mul_const)
 
                 if self.planner is not None and self.model is not None:
-                    # TODO: Efficiently pass this h value from the search since it is already calculated
-                    _, h = self.planner.dynamics_model.step(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), [obs[1].to(device)]),
-                                                                  action_in=torch.from_numpy(act).unsqueeze(0).unsqueeze(1).to(device),
-                                                                  state=True, state_in=True)
+                    # # TODO: Efficiently pass this h value from the search since it is already calculated
+                    # _, h = self.planner.dynamics_model.step(obs_in=(torch.from_numpy(obs[0]).unsqueeze(0).unsqueeze(1).to(device), [obs[1].to(device)]),
+                    #                                               action_in=torch.from_numpy(act).unsqueeze(0).unsqueeze(1).to(device),
+                    #                                               state=True, state_in=True)
                     # _, h = self.planner.dynamics_model.step_parallel(obs, act)
-                    new_obs = self.planner.dynamics_model.reset(new_obs, h)
+                    new_obs = self.planner.dynamics_model.reset(new_obs, best_h)
                 else:
                     new_obs = (new_obs, None)
 
